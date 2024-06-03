@@ -156,7 +156,7 @@ watch(components, () => {
 
 <style scoped>
 .droppable-area {
-  border: 2px dashed #ccc;
+  border: 1px dashed #ccc;
   padding: 20px;
   width: 100%;
 }

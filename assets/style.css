@@ -54,7 +54,7 @@
 }
 
 .selectedComponent{
-    border: 2px solid rgba(255,0,0,.5);
+    border: 1px inset rgba(255,0,0,.5);
 }
 .component-icons{
     position: absolute;
@@ -71,6 +71,7 @@
     opacity: 0.4;
     width: 16px;
     height: 16px;
+    border-radius: 2px;
 }
 .component-icon:hover{
     cursor: pointer;
