@@ -1,6 +1,39 @@
 const defaultProps = { class:'', id:'', style:''}
 const defaultAttrs = { }
 export const availableComponents = [
+
+    { name: 'DroppableComponent', cat:'Layout', tag: 'div', props: {
+            ...defaultProps,
+            attrs: {
+                ...defaultAttrs
+            }
+        },
+    },
+    { label: 'Grid', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells', props: {
+            class: 'grid w-full',
+            attrs: {
+                ...defaultAttrs
+            }
+        },
+    },
+    { label: 'Col 6', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-grip-lines-vertical',
+        props: {
+            id: '',
+            class: 'col-6',
+            attrs: {
+                ...defaultAttrs
+            },
+        },
+    },
+    { label: 'Grid: Col 6', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells-large',
+        props: {
+            id: '',
+            class: 'grid w-full',
+            attrs: {
+                ...defaultAttrs
+            },
+        },
+    },
     { name: 'ButtonComponent', cat:'Form', tag: 'button', props: {
             ...defaultProps,
             text: 'Button',
@@ -10,7 +43,7 @@ export const availableComponents = [
             }
         },
     },
-    { id:2, name: 'InputComponent', cat:'Form', tag: 'input', props: {
+    { name: 'InputComponent', cat:'Form', tag: 'input', props: {
             ...defaultProps,
             placeholder: 'Input',
             attrs: {
@@ -19,7 +52,7 @@ export const availableComponents = [
             }
         },
     },
-    { id:3, name: 'TextComponent', cat:'Form', tag: 'span', props: {
+    { name: 'TextComponent', cat:'Form', tag: 'span', props: {
             ...defaultProps,
             text: "text",
             attrs: {
@@ -27,15 +60,8 @@ export const availableComponents = [
             }
         },
     },
-    { id:4, name: 'VCGInputText', cat:'PrimeVue', tag: 'InputText', props: {
+    { name: 'VCGInputText', cat:'PrimeVue', tag: 'InputText', props: {
             ...defaultProps,
-        },
-    },
-    { id:5, name: 'DroppableComponent', cat:'Layout', tag: 'div', props: {
-            ...defaultProps,
-            attrs: {
-                ...defaultAttrs
-            }
         },
     },
 ];

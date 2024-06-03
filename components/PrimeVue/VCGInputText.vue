@@ -1,11 +1,14 @@
-<script setup lang="ts">
-
-</script>
-
 <template>
-  
+  <div>
+    <label :for="id">{{ label }}</label>
+    <input-text :id="id" v-bind="attrs" />
+  </div>
 </template>
 
-<style scoped>
-
-</style>
+<script setup>
+const props = defineProps({
+  id: String,
+  label: String,
+  attrs: Object
+});
+</script>

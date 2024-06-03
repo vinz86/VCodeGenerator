@@ -1,16 +1,20 @@
 <template>
-  <button>{{ options.text }}</button>
+  <button v-bind="attrs">{{ text }}</button>
 </template>
 
 <script setup>
 import { defineProps } from 'vue';
 
-const options = defineProps({
+const props = defineProps({
   text: {
     type: String,
     default: 'Button',
   },
+  attrs: {
+    type: Object,
+  },
 });
+
 </script>
 
 <style scoped>

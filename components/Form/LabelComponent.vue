@@ -1,5 +1,5 @@
 <template>
-  <span>{{text}}</span>
+  <label v-bind="attrs">{{text}}</label>
 </template>
 
 <script setup>
@@ -9,6 +9,9 @@ const props = defineProps({
   text: {
     type: String,
     default: 'text',
+  },
+  attrs: {
+    type: Object,
   },
 });
 </script>

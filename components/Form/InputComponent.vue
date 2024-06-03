@@ -1,5 +1,5 @@
 <template>
-  <input :placeholder="placeholder" />
+  <input v-bind="attrs" :placeholder="placeholder" />
 </template>
 
 <script setup>
@@ -9,6 +9,9 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: 'Input',
+  },
+  attrs: {
+    type: Object,
   },
 });
 </script>
