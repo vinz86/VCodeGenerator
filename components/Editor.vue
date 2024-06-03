@@ -267,7 +267,7 @@ watch(components, () => {
 
         <Splitter class="w-full" layout="vertical">
           <SplitterPanel size="75">
-            <div class="editor" :key="keyEditor">
+            <div class="editor" :key="keyEditor" @click="selectedComponent=null">
               <div
                   class="drop-area"
                   @drop="onDrop"
@@ -277,10 +277,12 @@ watch(components, () => {
                 <div
                     v-for="(component, index) in components"
                     :key="`${component.id}-${component.name}`"
+                    :class="{'selectedComponent': selectedComponent?.id === component.id, [component.props.class]: component.props.class.length>0}"
                     class="draggable-component"
                     @drop="onDropComponent(index)"
                 >
                   <component
+                      v-model:selectedComponent="selectedComponent"
                       :is="component.name"
                       :componentId="component.id"
                       v-bind="component.props"
@@ -325,92 +327,5 @@ watch(components, () => {
 </template>
 
 <style scoped>
-.separator{
-  width: 96%;
-  margin: 15px 2% 0;
-  border-bottom: 1px solid #ddd;
-}
-.container {
-  display: flex;
-  height: 98vh;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.editor {
-  height: 100%;
-  width: 100%;
-  flex-grow: 1;
-  padding: 10px;
-}
-
-.drop-area {
-  flex-grow: 1;
-  border: 2px dashed #ccc;
-  padding: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  min-height: 100px;
-  min-height: 50px;
-}
-
-.generated-code {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  padding: 10px;
-  margin: 0;
-  resize: none;
-}
-
-.draggable-component {
-  min-width: 100px;
-  max-width: 100%;
-  margin: 5px;
-  position: relative;
-  border: 1px dotted #ccc;
-}
-
-.draggable-component.drag-over {
-  border-color: #000;
-}
-
-.draggable-component:hover > .component-icons {
-  display: block;
-}
-
-.component-icons{
-  position: absolute;
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
-  background-color: #fff;
-  padding: 3px 5px;
-  border: 1px solid #ccc;
-  display: none;
-}
-
-.component-icon{
-  z-index: 2;
-  margin-right: 5px;
-  opacity: 0.4;
-  width: 16px;
-  height: 16px;
-}
-.component-icon:hover{
-  cursor: pointer;
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.8);
-}
-.drag-icon {
-  color: blue;
-}
-.delete-icon {
-  color: red;
-}
-.edit-icon {
-  color: darkcyan;
-}
 
 </style>

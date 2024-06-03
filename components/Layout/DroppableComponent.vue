@@ -17,7 +17,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['updateNestedComponents']);
 const components = ref([]);
-const selectedComponent = ref();
+const selectedComponent = defineModel('selectedComponent');
 const draggedComponentIndex = ref(null);
 const dragOverIndex = ref(null);
 
@@ -105,7 +105,7 @@ const setDroppableAreaHeight = ()=>{
   draggableComponents.forEach((draggableComponent) => {
     const childComponent = draggableComponent.querySelector(':scope > *:not(.component-icons)');
     if (childComponent) {
-      const childWidth = childComponent.offsetWidth;
+      const childWidth = childComponent.style.width;
       draggableComponent.style.width = `${childWidth}px`;
     }
   });
@@ -126,15 +126,16 @@ watch(components, () => {
         v-for="(component, index) in components"
         :key="`${component.id}-${component.name}`"
         class="draggable-component"
-        :class="{ 'drag-over': index === dragOverIndex }"
+        :class="{'drag-over': index === dragOverIndex, [component.props.class]: component.props.class.length>0, 'selectedComponent': selectedComponent?.id === component.id}"
         draggable="true"
         @dragstart="onDragStart(index)"
         @dragenter="onDragEnter(index)"
-        @dragleave="onDragLeave(index)"
+        @dragleave="onDragLeave()"
         @drop="onDropComponent(index)"
     >
       <component :is="component.name" :componentId="component.id" v-bind="component.props"
                  :parentComponents="component.slot"
+                 v-model:selectedComponent="selectedComponent"
                  @@click.stop="handleComponentClick"
                  @updateNestedComponents="updateNestedComponents"
                  @updateSelectedComponent="handleComponentClick"
@@ -146,7 +147,7 @@ watch(components, () => {
            draggable="true"
            @dragstart="onDragStart(index)"
            @dragenter="onDragEnter(index)"
-           @dragleave="onDragLeave(index)"
+           @dragleave="onDragLeave()"
         />
       </div>
     </div>
@@ -156,56 +157,7 @@ watch(components, () => {
 <style scoped>
 .droppable-area {
   border: 2px dashed #ccc;
-  padding: 5px;
+  padding: 20px;
   width: 100%;
-}
-
-.draggable-component {
-  min-width: 100px;
-  margin: 7px;
-  position: relative;
-  border: 1px dotted #ccc;
-}
-
-.draggable-component.drag-over {
-  border-color: #000;
-}
-
-.draggable-component:hover > .component-icons {
-  display: block;
-}
-
-.component-icons{
-  position: absolute;
-  z-index: 999;
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
-  background-color: #fff;
-  padding: 0 5px;
-  margin-top: -1px;
-  border: 1px solid #ccc;
-  display: none;
-}
-
-.component-icon{
-  z-index: 3;
-  margin-right: 5px;
-  opacity: 0.4;
-  width: 16px;
-  height: 16px;
-}
-.component-icon:hover{
-  cursor: pointer;
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.8);
-}
-.drag-icon {
-  color: blue;
-}
-.delete-icon {
-  color: red;
-}
-.edit-icon {
-  color: darkcyan;
 }
 </style>

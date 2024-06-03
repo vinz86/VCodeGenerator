@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     }
   },
   css: [
+    '@/assets/style.css',
     'primevue/resources/themes/aura-light-blue/theme.css',
     'primeflex/primeflex.min.css',
     '@/assets/vendor/fontawesome/css/all.css',
