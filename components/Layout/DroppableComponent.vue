@@ -136,19 +136,19 @@ watch(components, () => {
       <component :is="component.name" :componentId="component.id" v-bind="component.props"
                  :parentComponents="component.slot"
                  v-model:selectedComponent="selectedComponent"
-                 @@click.stop="handleComponentClick"
+                 @click.stop="handleComponentClick(component)"
                  @updateNestedComponents="updateNestedComponents"
                  @updateSelectedComponent="handleComponentClick"
       />
       <div class="component-icons">
         <i class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)"/>
-        <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
+<!--        <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
         <i class="fa-solid fa-arrows-up-down-left-right drag-icon component-icon"
            draggable="true"
            @dragstart="onDragStart(index)"
            @dragenter="onDragEnter(index)"
            @dragleave="onDragLeave()"
-        />
+        />-->
       </div>
     </div>
   </div>

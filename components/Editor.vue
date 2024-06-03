@@ -263,10 +263,9 @@ watch(components, () => {
            </div>
           </div>
       </SplitterPanel>
-      <SplitterPanel size="60">
+      <SplitterPanel size="60" class="flex flex-column h-full">
 
-        <Splitter class="w-full" layout="vertical">
-          <SplitterPanel size="75">
+        <Panel class="overflow-y-auto flex-grow-1" header="Editor">
             <div class="editor" :key="keyEditor" @click="selectedComponent=null">
               <div
                   class="drop-area"
@@ -280,6 +279,10 @@ watch(components, () => {
                     :class="{'selectedComponent': selectedComponent?.id === component.id, [component.props.class]: component.props.class.length>0}"
                     class="draggable-component"
                     @drop="onDropComponent(index)"
+                    draggable="true"
+                    @dragstart="onDragStart(index)"
+                    @dragenter="onDragEnter(index)"
+                    @dragleave="onDragLeave()"
                 >
                   <component
                       v-model:selectedComponent="selectedComponent"
@@ -289,27 +292,41 @@ watch(components, () => {
                       :parentComponents="component.slot"
                       @updateSelectedComponent="handleComponentClick"
                       @updateNestedComponents="updateNestedComponents"
+                      @click.stop="handleComponentClick(component)"
                   />
                   <div class="component-icons">
                     <i class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)"/>
-                    <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
+<!--                    <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
                     <i class="fa-solid fa-arrows-up-down-left-right drag-icon component-icon"
                        draggable="true"
                        @dragstart="onDragStart(index)"
                        @dragenter="onDragEnter(index)"
                        @dragleave="onDragLeave()"
-                    />
+                    />-->
                   </div>
                 </div>
               </div>
             </div>
+        </Panel>
+        <Panel class="overflow-y-auto" header="Codice generato" toggleable>
+<!--          <pre class="generated-code w-full text-sm">{{generatedCode}}</pre>-->
+          <textarea v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
+        </Panel>
+
+
+<!--        <Accordion :activeIndex="0">
+          <AccordionTab header="Codice generato" style="max-height:30%" class="overflow-y-auto">
+            <pre class="generated-code w-full text-sm">{{generatedCode}}</pre>s
+          </AccordionTab>
+        </Accordion>-->
+<!--
+        <Splitter class="w-full" layout="vertical">
+          <SplitterPanel size="75">
           </SplitterPanel>
           <SplitterPanel size="25">
-            <Panel class="h-full overflow-y-auto" header="Codice generato" toggleable>
-              <pre class="generated-code w-full text-sm">{{generatedCode}}</pre>
-            </Panel>
           </SplitterPanel>
         </Splitter>
+-->
 
 
       </SplitterPanel>
