@@ -1,3 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Seymour+One&display=swap');
+
+html, body{
+    margin: 0;
+    padding: 0;
+}
+.logo{
+    font-family: "Roboto Mono", monospace;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 1.5rem;
+    margin: 3px;
+}
 .separator{
     width: 96%;
     margin: 15px 2% 0;
@@ -5,7 +19,7 @@
 }
 .container {
     display: flex;
-    height: 98vh;
+    height: calc(97vh - 35px);
     width: 100%;
     margin: 0;
     padding: 0;

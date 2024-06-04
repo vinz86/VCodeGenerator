@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import DraggableComponent from '~/components/DraggableComponent.vue';
 import ComponentOptions from '~/components/ComponentOptions.vue';
 
-const components = ref([]);
+const components = ref([{"name":"DroppableComponent","locked": true,"cat":"Layout","tag":"div","props":{"class":"","id":"","style":"","attrs":{}},"id":1717452042378,"slot":[]}]);
 const selectedComponent = ref(null);
 const keyEditor = ref(0);
 const keyOptions = ref(0);
@@ -107,6 +107,10 @@ const generateCodeRecursive = (component) => {
 
   if (component.props && component.props.class && component.props.class.trim() !== '') {
     code += `class="${component.props.class}" `;
+  }
+
+  if (component.props && component.props.style && component.props.style.trim() !== '') {
+    code += `style="${component.props.style}" `;
   }
 
   if (component.props && component.props.attrs) {
@@ -227,6 +231,13 @@ const importProject = (event) => {
   debugger
 };
 
+function copyToClipboard() {
+  const textarea = document.getElementById('textarea-generated-code');
+  textarea.disabled = false;
+  textarea.select();
+  document.execCommand("copy");
+  textarea.disabled = true;
+}
 
 watch(components, () => {
   updateGeneratedCode();
@@ -242,24 +253,30 @@ watch(components, () => {
 
     <Splitter class="w-full m-0" layout="horizontal">
       <SplitterPanel size="20">
-         <div class="flex flex-column m-2 h-full">
+         <div class="flex flex-column h-full">
             <div class="flex-grow-1">
               <DraggableComponent/>
             </div>
            <div class="flex-none">
-             <Button text class="w-full" @click="isPreviewVisible = true" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
+             <Panel toggleable>
+               <template #header>
+                 <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
+               </template>
+               <Button outlined class="w-full mb-1" @click="isPreviewVisible = true" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
+
+               <Button @click="exportHTML" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
+             </Panel>
            </div>
            <div class="flex-none">
-             <Button outlined @click="exportHTML" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
-           </div>
-           <div class="flex-none separator" />
-            <div class="flex-none">
-              <Button text @click="exportProject" severity="warning"><i class="fa fa-file-export" />&nbsp;Esporta progetto</Button>
-            </div>
-           <div class="flex-none mb-2">
-             <FileUpload class="p-button-text" mode="basic" accept="application/json" :maxFileSize="1000000" @select="importProject($event)" :auto="true" chooseLabel="Importa progetto">
-               <template #uploadicon> <i class="fa fa-file-import" />&nbsp; </template>
-             </FileUpload>
+             <Panel toggleable collapsed>
+               <template #header>
+                 <i class="fa fa-save" />&nbsp;<small>Salva Progetto</small>
+               </template>
+               <Button text @click="exportProject" severity="secondary"><i class="fa fa-file-export" />&nbsp;Esporta progetto</Button>
+               <FileUpload class="p-button-text" mode="basic" accept="application/json" :maxFileSize="1000000" @select="importProject($event)" :auto="true" chooseLabel="Importa progetto">
+                 <template #uploadicon> <i class="fa fa-file-import" />&nbsp; </template>
+               </FileUpload>
+             </Panel>
            </div>
           </div>
       </SplitterPanel>
@@ -295,7 +312,7 @@ watch(components, () => {
                       @click.stop="handleComponentClick(component)"
                   />
                   <div class="component-icons">
-                    <i class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)"/>
+                    <i v-if="!component.locked" class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)"/>
 <!--                    <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
                     <i class="fa-solid fa-arrows-up-down-left-right drag-icon component-icon"
                        draggable="true"
@@ -308,9 +325,16 @@ watch(components, () => {
               </div>
             </div>
         </Panel>
+
+
         <Panel class="overflow-y-auto" header="Codice generato" toggleable>
+          <template #icons>
+          </template>
 <!--          <pre class="generated-code w-full text-sm">{{generatedCode}}</pre>-->
-          <textarea v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
+          <div class="text-right text-green-400 mb-1">
+            <Button size="small" outlined  icon="fa fa-copy" @click="copyToClipboard" />
+          </div>
+          <textarea id="textarea-generated-code" v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
         </Panel>
 
 
@@ -331,13 +355,11 @@ watch(components, () => {
 
       </SplitterPanel>
       <SplitterPanel size="20">
-        <div class="m-2">
           <ComponentOptions
               v-if="selectedComponent"
               v-model="selectedComponent"
               @update:model-value="updateComponent"
           />
-        </div>
       </SplitterPanel>
     </Splitter>
   </div>

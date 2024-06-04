@@ -35,10 +35,17 @@ const onDragStart = (component) => {
 
 <style scoped>
 .draggable-component {
+  width: 100%;
   padding: 2px 5px;
-  border: 1px solid #eee;
+  border: 1px solid #ddd;
   margin: 5px;
   cursor: grab;
   font-size: .8rem;
+  border-radius: 2px;
+  background-color: #eee;
+}
+
+.draggable-component:before {
+  content:"⇒ ";
 }
 </style>
