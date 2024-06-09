@@ -3,7 +3,6 @@ export default defineNuxtConfig({
   ssr: false,
   components: true,
   devtools: { enabled: true },
-
   modules: [
     'nuxt-primevue'
   ],
@@ -18,5 +17,6 @@ export default defineNuxtConfig({
     'primevue/resources/themes/aura-light-blue/theme.css',
     'primeflex/primeflex.min.css',
     '@/assets/vendor/fontawesome/css/all.css',
-  ]
+  ],
 })
+
