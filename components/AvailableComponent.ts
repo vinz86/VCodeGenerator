@@ -1,16 +1,12 @@
-import {formComponents, FormComponents} from '@/components/Form/FormComponents';
+import {formComponents} from '@/components/Form/FormComponents';
+import {layoutComponents} from "~/components/Layout/LayoutComponents";
 
 const defaultProps = { class:'', id:'', style:''}
 const defaultAttrs = { }
 export const availableComponents = [
 
-    { name: 'DroppableComponent', cat:'Layout', tag: 'div', props: {
-            ...defaultProps,
-            attrs: {
-                ...defaultAttrs
-            }
-        },
-    },
+    ...layoutComponents, // LAYOUT
+
     { label: 'Grid', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells', props: {
             class: 'grid w-full',
             attrs: {
@@ -36,9 +32,9 @@ export const availableComponents = [
             },
         },
     },
-        ...formComponents,
     { name: 'VCGInputText', cat:'PrimeVue', tag: 'InputText', props: {
             ...defaultProps,
         },
     },
+    ...formComponents, // FORM
 ];

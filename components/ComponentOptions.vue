@@ -1,49 +1,51 @@
- <script setup>
- import { defineModel } from 'vue';
+<script setup lang="ts">
 
- const options = defineModel({
-   modelValue: Object,
-   emits: ['update:modelValue']
- });
+import {defineModel, type Ref} from 'vue';
+import type { DroppableComponent } from './models/DroppableComponent';
 
- let showCustomAttrs = ref(false);
+ const selectedComponent: Ref<DroppableComponent | undefined> = defineModel<DroppableComponent>('selectedComponent');
+ 
  let newCustomAttrName = ref('');
  let newCustomAttrValue = ref('');
 
  onMounted(()=>{
-   if (!options.value.props.attrs) {
-     options.value.props.attrs = {};
+   if (selectedComponent.value) {
+     if(!selectedComponent.value.props)
+       return;
+
+     selectedComponent.value.props.attrs = !selectedComponent.value.props.attrs ? {} : selectedComponent.value.props.attrs;
+
    }
  })
 
- const toggleCustomAttrsForm = () => {
-   showCustomAttrs.value = !showCustomAttrs.value;
+ const addCustomAttr = (): void => {
+   if (selectedComponent.value) {
+     selectedComponent.value.props.attrs[newCustomAttrName.value] = newCustomAttrValue.value;
+     newCustomAttrName.value = '';
+     newCustomAttrValue.value = '';
+     //showCustomAttrs.value = false;
+   }
  };
 
- const addCustomAttr = () => {
-   options.value.props.attrs[newCustomAttrName.value] = newCustomAttrValue.value;
-   newCustomAttrName.value = '';
-   newCustomAttrValue.value = '';
-   //showCustomAttrs.value = false;
- };
- const removeAttrs = (key) => {
-   delete options.value.props.attrs[key];
+ const removeAttrs = (key: number) => {
+   if(selectedComponent.value)
+   delete selectedComponent.value.props.attrs[key];
  };
  </script>
 
  <template>
    <div class="flex flex-column h-full">
      <div class="flex-grow-1 overflow-y-auto">
-       <Panel class="h-full" toggleable>
+       <Panel  v-if="selectedComponent?.id" class="h-full" toggleable>
          <template #header>
-           <i class="fa fa-cog" />&nbsp;<small>{{ options.label || options.name }} #ID:{{ options.id }}</small>
+           <i class="fa fa-cog" />&nbsp;<small>{{ selectedComponent.label || selectedComponent.name }} #ID:{{ selectedComponent.id }}</small>
          </template>
          <!-- Props -->
-         <div v-for="(value, key) in options.props" :key="key" class="w-full form-group">
+         <div v-for="(value, key) in selectedComponent.props" :key="key" class="w-full form-group">
            <div v-if="key !== 'attrs' && key !== 'parentComponents'">
-             <label :for="key">{{ key }}</label><br>
-             <InputText v-if="key !== 'style'" v-model="options.props[key]" :id="key" class="w-full form-control" />
-             <Textarea v-else v-model="options.props[key]" :id="key" class="w-full form-control" />
+             <label :for="`props-${key}`">{{ key }}</label><br>
+             <InputText v-if="key !== 'style'" v-model="selectedComponent.props[key]" :id="`props-${key}`" class="w-full form-control" />
+             <Textarea v-else v-model="selectedComponent.props[key]" :id="key" class="w-full form-control" />
            </div>
          </div>
          <!-- Attrs -->
@@ -51,14 +53,14 @@
            <h4>Attributi</h4>
          </div>
 
-         <div v-if="options.props && options.props.attrs">
-           <div v-for="(value, key) in options.props.attrs" :key="key" class="w-full form-group">
-             <label :for="key">{{ key }}</label><br>
+         <div v-if="selectedComponent.props && selectedComponent.props?.attrs">
+           <div v-for="(value, key) in selectedComponent.props.attrs" :key="key" class="w-full form-group">
+             <label :for="`attrs-${key}`">{{ key }}</label><br>
              <InputGroup>
 
-               <InputText v-model="options.props.attrs[key]" :id="'input'+key" class="w-full form-control" />
+               <InputText v-model="selectedComponent.props.attrs[key]" :id="`attrs-${key}`" class="w-full form-control" />
                <InputGroupAddon>
-                 <Button severity="danger" icon="fa fa-times" @click="removeAttrs(key)" />
+                 <Button severity="danger" icon="fa fa-times" @click="removeAttrs(parseInt(<string>key))" />
                </InputGroupAddon>
              </InputGroup>
            </div>

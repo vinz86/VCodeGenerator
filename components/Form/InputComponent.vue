@@ -1,8 +1,8 @@
 <template>
-  <input v-bind="attrs" :placeholder="placeholder" />
+  <input v-bind="props.attrs" :placeholder="props.placeholder" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineProps } from 'vue';
 
 const props = defineProps({

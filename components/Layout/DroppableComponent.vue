@@ -1,163 +1,303 @@
-<script setup>
-import { ref, watch, defineProps } from 'vue';
+<script setup lang="ts">
+import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
+import type {DroppableComponent} from "~/components/models/DroppableComponent";
+import {DragDropHelper} from "~/Utils/helpers/DragDropHelper";
 
 const props = defineProps({
   parentComponents: {
-    type: Array,
-    required: false,
+    type: Array as PropType<DroppableComponent[]>,
     default: () => []
   },
   attrs: {
     type: Object,
+    default: () => ({})
   },
   componentId: {
-    type: Number,
+    type: String,
     required: true,
   }
 });
-const emit = defineEmits(['updateNestedComponents']);
-const components = ref([]);
-const selectedComponent = defineModel('selectedComponent');
-const draggedComponentIndex = ref(null);
-const dragOverIndex = ref(null);
+const emit = defineEmits(['updateNestedComponents', 'updateSelectedComponent', 'removeComponent']);
 
-const onDragOver = (event) => {
+const DD = new DragDropHelper();
+
+const contextMenu = ref();
+
+const itemsContextComponent: Ref<{label: string, icon: string, command: () => void}[]> = ref([
+  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as DroppableComponent)},
+  {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
+  {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
+]);
+
+const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
+
+const selectedComponent: Ref<DroppableComponent | undefined>  = defineModel<DroppableComponent>('selectedComponent');
+const draggedComponentIndex: Ref<number> = ref(-1);
+const dragOverIndex: Ref<number> = ref(-1);
+
+const onComponentRightClick = (event: any, component: DroppableComponent) => {
+  contextMenu.value.hide();
+  nextTick(() => {
+    selectedComponent.value = component;
+    contextMenu.value.show(event);
+  });
+};
+
+const duplicateComponent = async (component: any) => {
+  if (component) {
+    const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
+    newComponent.id = Date.now().toString();
+    newComponent.props.class = (component.props.class || '').replace('selectedComponent', '');
+    components.value.push(newComponent);
+    if (component.slot && component.slot.length > 0) {
+      await duplicateComponent(component.slot);
+    }
+  }
+};
+
+const removeComponent = (index = -1) => {
+  if (index < 0) {
+    if(selectedComponent.value){
+      index = components.value.findIndex(x => x.id === selectedComponent.value?.id);
+    }
+  }
+  if (index >= 0) {
+    components.value.splice(index, 1);
+  }
+};
+
+const onDragOver = (event: any) => {
   event.preventDefault();
 };
 
-const onDrop = (event) => {
+const onDragEnter = (index: any) => {
+  console.log('dragOverIndex.value', dragOverIndex.value)
+  dragOverIndex.value = index;
+};
+
+const onDragLeave = () => {
+  dragOverIndex.value = -1;
+};
+
+const onDragStart = (event: any, index: number, parentComponentId:string|null = null, component: DroppableComponent) => {
+  event.stopPropagation();
+
+  event.dataTransfer.setData('component', JSON.stringify({fromDroppableComponent: true, index, parentComponentId, component}));
+  draggedComponentIndex.value = index;
+};
+
+const onDrop = (event: any) => {
   event.preventDefault();
   event.stopPropagation();
 
-  const dropTarget = event.target.dataset.dropTarget;
-  const componentData = JSON.parse(event.dataTransfer.getData('component'));
-
-  if (componentData.fromDroppableComponent) return;
-
-  if (dropTarget === 'droppable') {
-    addComponent(componentData, components.value);
+  const dropTarget = event.target.closest('[data-drop-target]');
+  if (!dropTarget) {
+    console.warn('Drop target not found.');
+    return;
   }
-};
 
-const addComponent = (component, targetComponents) => {
-  if (Array.isArray(targetComponents)) {
-    const newComponent = { ...component, id: Date.now(), slot: [] };
-    targetComponents.push(newComponent);
-  } else {
-    console.error('targetComponents is not an array', targetComponents);
+  const dropTargetId = dropTarget.dataset.componentId;
+  if (!dropTargetId) {
+    console.warn('Drop target ID not found.');
+    return;
   }
-};
 
-const onDragStart = (index) => {
-  draggedComponentIndex.value = index;
-  event.dataTransfer.setData('component', JSON.stringify({fromDroppableComponent: true, ...components.value[index]}));
-};
+  let componentData;
+  try {
+    componentData = JSON.parse(event.dataTransfer.getData('component'));
+  } catch (error) {
+    console.error('Errore nel parsing del componente:', error);
+    return;
+  }
 
-const onDragEnter = (index) => {
-  dragOverIndex.value = index;
-};
-const onDragLeave = () => {
-  dragOverIndex.value = null;
-}
-const removeComponent = (index) => {
-  components.value.splice(index, 1);
-};
+  if (!componentData) {
+    console.warn('componentData undefined');
+    return;
+  }
 
-const onDropComponent = (index) => {
-  if (draggedComponentIndex.value !== null) {
-    const draggedItem = components.value.splice(draggedComponentIndex.value, 1)[0];
+  const {index: draggedIndex, parentComponentId, fromDroppableComponent, fromEditor} = componentData;
+  if (fromEditor) {
+    emit('removeComponent', componentData);
+    delete componentData.fromEditor;
+  }
 
-    if (index !== null) {
-      components.value.splice(index, 0, draggedItem);
+  let draggedComponent;
+  if (fromDroppableComponent) {
+    if (componentData.parentComponentId) {
+      emit('removeComponent', {parentComponentId, draggedIndex});
     } else {
-      const insertIndex = Math.min(index, draggedComponentIndex.value);
-      components.value.splice(insertIndex, 0, draggedItem);
+      // Trova e rimuove il componente dall'array principale
+      const pathToComponent = DD.findObjectById(components.value, componentData.id);
+      if (pathToComponent !== null) {
+        draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent)));
+      }
     }
-
-    draggedComponentIndex.value = null;
-    dragOverIndex.value = null;
+  } else if (fromEditor) {
+    draggedComponent = {...componentData, id: `n-${Date.now()}`, slot: []};
+  } else {
+    draggedComponent = {...componentData, id: Date.now().toString(), slot: []};
   }
+
+
+  if (!draggedComponent) {
+    draggedComponent = componentData.component ? componentData.component : DD.findObjectById(components.value, componentData.parentComponentId);
+  }
+  if (draggedComponent) {
+    const targetComponent = DD.findParentComponent(dropTargetId, components.value);
+    if (targetComponent && targetComponent.slot) {
+      targetComponent.slot.push(draggedComponent);
+    } else {
+      components.value.push(draggedComponent);
+    }
+    emit('updateNestedComponents', props.componentId, components.value);
+  }
+
 };
 
-const updateNestedComponents = (id, nestedComponents) => {
-  const updateComponents = (componentsArray) => {
+const onDropComponent = (event: any) => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  let componentData;
+  try {
+    componentData = JSON.parse(event.dataTransfer.getData('component'));
+  } catch (error) {
+    console.error('Errore nel parsing del componente', error);
+    return;
+  }
+
+  const {index: draggedIndex, fromDroppableComponent, parentComponentId, component} = componentData;
+
+  if (fromDroppableComponent) {
+    if (parentComponentId) {
+      if (draggedIndex>=0) {
+        const removedComponent = components.value.splice(draggedIndex, 1)[0];
+        components.value.splice(dragOverIndex.value, 0, removedComponent);
+
+      } else {
+        const insertIndex = Math.min(draggedIndex, draggedComponentIndex.value);
+        components.value.splice(insertIndex, 0, component);
+      }
+    }
+  }
+  emit('updateNestedComponents', props.componentId, components.value);
+};
+
+const findParentComponent = (id: string, componentsArray: DroppableComponent[]): DroppableComponent | null => {
+  for (const component of componentsArray) {
+    if (component.id === id) {
+      return component;
+    }
+    if (component.slot && component.slot.length > 0) {
+      const foundComponent = findParentComponent(id, component.slot);
+      if (foundComponent) {
+        return foundComponent;
+      }
+    }
+  }
+  return null;
+};
+
+
+const updateNestedComponents = (id:string, nestedComponents: any) => {
+  const updateComponents = (componentsArray: DroppableComponent[]) => {
     for (const component of componentsArray) {
       if (component.id === id) {
         component.slot = nestedComponents;
-        return componentsArray;
+        return;
       }
       if (component.slot && component.slot.length > 0) {
         updateComponents(component.slot);
       }
     }
   };
-  updateComponents(components.value)
+  updateComponents(components.value);
 };
 
-const handleComponentClick = (component) => {
+const handleComponentClick = (component: DroppableComponent) => {
   selectedComponent.value = component;
+  contextMenu.value.hide();
   emit('updateSelectedComponent', component);
 };
 
-const setDroppableAreaHeight = ()=>{
-  const draggableComponents = document.querySelectorAll('.draggable-component');
+const setDroppableAreaHeight = (): void => {
+  const draggableComponents: NodeListOf<HTMLElement> = document.querySelectorAll('.draggable-component');
 
-  draggableComponents.forEach((draggableComponent) => {
-    const childComponent = draggableComponent.querySelector(':scope > *:not(.component-icons)');
+  draggableComponents.forEach((draggableComponent: HTMLElement) => {
+    const childComponent: HTMLElement | null = draggableComponent.querySelector(':scope > *:not(.component-icons)');
     if (childComponent) {
-      const childWidth = childComponent.style.width;
-      draggableComponent.style.width = `${childWidth}px`;
+      draggableComponent.style.width = childComponent.style.width; // No need to interpolate, as childWidth is already a string or null
     }
   });
-}
-onMounted(()=>{
+};
+
+const onRemoveComponent = (val:any) => {
+  emit('removeComponent', val);
+};
+
+onMounted(() => {
   components.value = props.parentComponents;
   setDroppableAreaHeight();
 });
-watch(components, () => {
-  setDroppableAreaHeight();
-  emit('updateNestedComponents', props.componentId, components.value);
-}, {deep: true});
+
+watch(selectedComponent, (val: Record<string, any>) => {
+  if (Object.keys(val).length > 0) {
+    contextMenu.value.hide();
+  }
+}, { deep: true });
+
 </script>
+
 <template>
-  <div class="droppable-area" @drop="onDrop" @dragover="onDragOver" ref="draggableComponents" data-drop-target="droppable">
+  <div
+      class="droppable-area"
+      @drop="onDrop"
+      @dragover="onDragOver"
+      ref="draggableComponents"
+      data-drop-target="droppable"
+      :data-component-id="`droppable-${Date.now()}`"
+      @click="selectedComponent = {} as DroppableComponent"
+  >
+    <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
     <div
         v-bind="attrs"
         v-for="(component, index) in components"
-        :key="`${component.id}-${component.name}`"
+        :key="`draggable-component-${index}`"
         class="draggable-component"
-        :class="{'drag-over': index === dragOverIndex, [component.props.class]: component.props.class.length>0, 'selectedComponent': selectedComponent?.id === component.id}"
+        :class="{
+        'drag-over': index === dragOverIndex,
+        [component.props?.class]: component.props?.class,
+        'selectedComponent': selectedComponent?.id === component.id
+      }"
         draggable="true"
-        @dragstart="onDragStart(index)"
+        @dragstart="onDragStart($event, index, props.componentId?.toString(), component)"
         @dragenter="onDragEnter(index)"
         @dragleave="onDragLeave()"
-        @drop="onDropComponent(index)"
+        @drop="onDropComponent($event)"
+        :data-component-id="component.id"
     >
-      <component :is="component.name" :componentId="component.id" v-bind="component.props"
-                 :parentComponents="component.slot"
-                 v-model:selectedComponent="selectedComponent"
-                 @click.stop="handleComponentClick(component)"
-                 @updateNestedComponents="updateNestedComponents"
-                 @updateSelectedComponent="handleComponentClick"
+      <component
+          :is="component.name"
+          :componentId="component.id?.toString()"
+          v-bind="component.props"
+          :parentComponents="component.slot"
+          v-model:selectedComponent="selectedComponent"
+          @click.stop="handleComponentClick(component);"
+          @updateNestedComponents="updateNestedComponents"
+          @updateSelectedComponent="handleComponentClick"
+          @contextmenu.stop="onComponentRightClick($event, component)"
+          @removeComponent="onRemoveComponent"
       />
-      <div class="component-icons">
-        <i class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)"/>
-<!--        <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
-        <i class="fa-solid fa-arrows-up-down-left-right drag-icon component-icon"
-           draggable="true"
-           @dragstart="onDragStart(index)"
-           @dragenter="onDragEnter(index)"
-           @dragleave="onDragLeave()"
-        />-->
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.droppable-area {
-  border: 1px dashed #ccc;
-  padding: 20px;
-  width: 100%;
+.draggable-component {
+  position: relative;
+}
+
+.drag-over {
+  border: 2px dashed #000;
 }
 </style>

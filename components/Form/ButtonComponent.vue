@@ -1,8 +1,8 @@
 <template>
-  <button v-bind="attrs">{{ text }}</button>
+  <button v-bind="props.attrs">{{ props.text }}</button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineProps } from 'vue';
 
 const props = defineProps({

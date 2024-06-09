@@ -29,7 +29,8 @@ html, body{
     height: 100%;
     width: 100%;
     flex-grow: 1;
-    padding: 20px 10px 10px;
+/*    padding: 20px 10px 10px;
+    background-color: #eee;*/
 }
 
 .drop-area {
@@ -37,7 +38,7 @@ html, body{
     flex-grow: 1;
     flex-wrap: wrap;
     flex-direction: column;
-    /* border: 2px dashed #ccc; */
+     border: 2px dashed #ccc;
     padding: 10px;
     min-height: 50px;
     height: 100%;
@@ -61,6 +62,14 @@ html, body{
 
 .draggable-component.drag-over {
     border-color: #000;
+}
+.droppable-area {
+    border: 1px dashed #ccc;
+    padding: 20px;
+    width: 100%;
+}
+.drag-over {
+    border: 2px dashed #000;
 }
 
 .draggable-component:hover > .component-icons {

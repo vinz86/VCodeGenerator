@@ -1,14 +1,14 @@
 <template>
-  <label v-bind="attrs">{{text}}</label>
+  <label v-bind="props.attrs">{{props.text}}</label>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineProps } from 'vue';
 
 const props = defineProps({
   text: {
     type: String,
-    default: 'text',
+    default: 'Label text',
   },
   attrs: {
     type: Object,

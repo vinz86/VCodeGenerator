@@ -1,40 +1,125 @@
-<script setup>
-import { ref, watch } from 'vue';
-import DraggableComponent from '~/components/DraggableComponent.vue';
-import ComponentOptions from '~/components/ComponentOptions.vue';
+<script setup lang="ts">
+/** TODO: FIX:
+ * -se droppo un DroppableComponent con contenuto all'interno dentro all'editor scompare tutto tranne il DroppableComponent parent
+ * -se ci sono solo 2 DroppableComponent e ne trascino uno nell'altro, uno dei due scompare
+ */
+/** TODO: new:
+ * Aggiungere un ulteriore layer per gestire un albero di files
+ * Aggiungere History UNDO/REDO
+ */
 
-const components = ref([{"name":"DroppableComponent","locked": true,"cat":"Layout","tag":"div","props":{"class":"","id":"","style":"","attrs":{}},"id":1717452042378,"slot":[]}]);
-const selectedComponent = ref(null);
-const keyEditor = ref(0);
-const keyOptions = ref(0);
-const draggedComponentIndex = ref(null);
-const draggedFrom = ref(null);
-const dragOverIndex = ref(null);
-const isPreviewVisible = ref(false);
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import DraggableComponent from '~/DraggableComponent.vue';
+import ComponentOptions from "~/components/ComponentOptions.vue";
+import { DragDropHelper } from "~/Utils/helpers/DragDropHelper";
+import type { DroppableComponent } from "~/components/models/DroppableComponent";
+import type { Ref } from "vue";
+import type { DroppableProps } from "~/components/models/DroppableProps";
+import { saveState, undoState } from '~/store/History';
 
-const onDrop = (event) => {
+const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
+components.value = [{
+  "name":"DroppableComponent",
+  "locked": true,
+  "cat":"Layout",
+  "tag":"div",
+  "props":{"class":"","id":"","style":"","attrs":{}},
+  "id": "1717452042378",
+  "slot":[]
+}];
+const selectedComponent: Ref<DroppableComponent> = ref({} as DroppableComponent);
+const keyEditor: Ref<number> = ref(0);
+const keyOptions: Ref<number> = ref(0);
+const draggedComponentIndex: Ref<number|null> = ref(null);
+const draggedFrom: Ref<any> = ref(null);
+const dragOverIndex: Ref<any> = ref(null);
+const isPreviewVisible: Ref<boolean> = ref(false);
+
+const DD = new DragDropHelper();
+
+onMounted(() => {
+  // TODO: parziale
+  // Aggiungo listener per Ctrl+Z
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.ctrlKey && event.key === 'z') {
+      event.preventDefault();
+      const previousState = undoState();
+      if (previousState) {
+        components.value = previousState;
+        updateGeneratedCode();
+      }
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+
+  onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+  });
+});
+
+const removeDraggedComponent = (event: any) => {
+  if (!event) return;
+
+  const cmpId = event.parentComponentId ? event.parentComponentId : event.id;
+  const index = event.draggedIndex;
+  const pathToComponent = DD.findObjectById(components.value, cmpId.toString());
+  if (pathToComponent !== null) {
+    if (event.parentComponentId && index >= 0) {
+      DD.removeObjectByPath(components.value, pathToComponent, index);
+    } else {
+      DD.removeObjectByPath(components.value, pathToComponent)
+    }
+  }
+};
+
+const onDrop = (event: any) => {
   event.preventDefault();
-  const dropTarget = event.target.dataset.dropTarget;
+
+  const dropTarget = event.target.closest('[data-drop-target]');
   const componentData = JSON.parse(event.dataTransfer.getData('component'));
 
   if (componentData.fromEditor) return;
 
-  if (dropTarget === 'editor') {
-    addComponent(componentData, components.value);
+  let draggedComponent;
+  if (componentData.fromDroppableComponent) {
+    if (componentData.parentComponentId) {
+      const pathToComponent = DD.findObjectById(components.value, componentData.parentComponentId);
+      if (pathToComponent !== null) {
+        draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent, componentData.index)));
+      }
+    } else {
+      const pathToComponent = DD.findObjectById(components.value, componentData.id);
+      if (pathToComponent !== null) {
+        draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent)));
+      }
+    }
+  } else {
+    draggedComponent = { ...componentData, id: `n-${Date.now()}`, slot: [] };
+  }
+
+  if (draggedComponent) {
+    if (dropTarget && dropTarget.dataset.dropTarget === 'editor') {
+      addComponent(draggedComponent, components.value);
+    }
   }
 };
 
-const onDragOver = (event) => {
+const onDragOver = (event: any) => {
   event.preventDefault();
 };
 
-const onDragStart = (index) => {
-  draggedComponentIndex.value = index;
-  draggedFrom.value = 'index';
-  event.dataTransfer.setData('component', JSON.stringify({fromEditor: true, ...components.value[index]}));
+const onDragStart = (event: any, index: number) => {
+  let componentData = event.dataTransfer.getData('component');
+  componentData = componentData && JSON.parse(componentData);
+  if (!componentData.fromDroppableComponent) {
+    draggedComponentIndex.value = index;
+    draggedFrom.value = 'index';
+    event.dataTransfer.setData('component', JSON.stringify({ fromEditor: true, ...components.value[index] }));
+  }
 };
 
-const onDragEnter = (index) => {
+const onDragEnter = (index: number) => {
   dragOverIndex.value = index;
 };
 
@@ -42,23 +127,21 @@ const onDragLeave = () => {
   dragOverIndex.value = null;
 };
 
-const onDropComponent = (index) => {
+const onDropComponent = (index: number) => {
   if (draggedComponentIndex.value !== null) {
     const draggedItem = components.value.splice(draggedComponentIndex.value, 1)[0];
-
-    if (index !== null) {
+    if (index) {
       components.value.splice(index, 0, draggedItem);
     } else {
       const insertIndex = Math.min(index, draggedComponentIndex.value);
       components.value.splice(insertIndex, 0, draggedItem);
     }
-
     draggedComponentIndex.value = null;
     dragOverIndex.value = null;
   }
 };
 
-const addComponent = (component, targetComponents) => {
+const addComponent = (component: any, targetComponents: any) => {
   if (Array.isArray(targetComponents)) {
     const newComponent = { ...component, id: Date.now(), slot: [] };
     targetComponents.push(newComponent);
@@ -67,16 +150,9 @@ const addComponent = (component, targetComponents) => {
   }
 };
 
-const addInDroppableComponent = (value, component) => {
-  const index = components.value.findIndex(c => c.id === component.id);
-  if (index !== -1 && components.value[index]) {
-    components.value[index].slot = value;
-  }
-  console.log('components', components.value);
-};
+const updateComponent = (updatedProps: DroppableProps) => {
+  if (!selectedComponent.value.id) return;
 
-
-const updateComponent = (updatedProps) => {
   const index = components.value.findIndex(c => c.id === selectedComponent.value.id);
   if (index !== -1) {
     components.value[index].props = updatedProps;
@@ -85,43 +161,43 @@ const updateComponent = (updatedProps) => {
   }
 };
 
-const handleComponentClick = (component) => {
+const handleComponentClick = (component: DroppableComponent) => {
   selectedComponent.value = component;
   keyOptions.value = keyOptions.value + 1;
 };
 
 const generatedCode = ref('');
 
-const generateCodeRecursive = (component) => {
+const generateCodeRecursive = (component: DroppableComponent) => {
   let code = '';
 
-  if (component.tag) {
-    code += `<${component.tag} `;
-  } else {
+  if (!component || !component.tag) {
     return code;
   }
 
-  if (component.props && component.props.id && component.props.id.trim() !== '') {
-    code += `id="${component.props.id}" `;
-  }
+  code += `<${component.tag} `;
 
-  if (component.props && component.props.class && component.props.class.trim() !== '') {
-    code += `class="${component.props.class}" `;
-  }
+  if (component.props) {
+    if (component.props.id && component.props.id.trim() !== '') {
+      code += `id="${component.props.id}" `;
+    }
 
-  if (component.props && component.props.style && component.props.style.trim() !== '') {
-    code += `style="${component.props.style}" `;
-  }
+    if (component.props.class && component.props.class.trim() !== '') {
+      code += `class="${component.props.class}" `;
+    }
 
-  if (component.props && component.props.attrs) {
-    for (const key in component.props.attrs) {
-      code += `${key}="${component.props.attrs[key]}" `;
+    if (component.props.style && component.props.style.trim() !== '') {
+      code += `style="${component.props.style}" `;
+    }
+
+    if (component.props.attrs) {
+      for (const key in component.props.attrs) {
+        code += `${key}="${component.props.attrs[key]}" `;
+      }
     }
   }
 
-
-  if(component.props.text || (component.slot && component.slot.length>0)){
-
+  if (component.props?.text || (component.slot && component.slot.length > 0)) {
     code += '>\n';
 
     if (component.props.text) {
@@ -133,7 +209,6 @@ const generateCodeRecursive = (component) => {
     }
 
     code += `\n</${component.tag}>\n`;
-
   } else {
     code += '/>\n';
   }
@@ -141,7 +216,7 @@ const generateCodeRecursive = (component) => {
   return code;
 };
 
-const processSlotContent = (slotContent) => {
+const processSlotContent = (slotContent: DroppableComponent[]) => {
   let slotCode = '';
 
   if (Array.isArray(slotContent)) {
@@ -167,14 +242,19 @@ const updateGeneratedCode = () => {
   generatedCode.value = generatedCodeValue;
 };
 
-const removeComponent = (index) => {
-  components.value.splice(index, 1);
+const removeComponent = (index = -1) => {
+  if (index < 0) {
+    index = components.value.findIndex(x => x.id === selectedComponent.value.id);
+  }
+  if (index >= 0) {
+    components.value.splice(index, 1);
+  }
 };
 
-const updateNestedComponents = (id, nestedComponents) => {
-  const updateComponents = (componentsArray) => {
+const updateNestedComponents = (id: string, nestedComponents: any) => {
+  const updateComponents = (componentsArray: DroppableComponent[]) => {
     for (const component of componentsArray) {
-      if (component.id === id) {
+      if (component.id?.toString() === id) {
         component.slot = nestedComponents;
         return componentsArray;
       }
@@ -187,7 +267,7 @@ const updateNestedComponents = (id, nestedComponents) => {
 };
 
 const exportHTML = () => {
-  if (!generatedCode.value || generatedCode.value?.length===0) return;
+  if (!generatedCode.value || generatedCode.value?.length === 0) return;
 
   let _ncode = `<template>\n${generatedCode.value}\n</template>`;
   const blob = new Blob([_ncode], { type: 'text/html' });
@@ -200,7 +280,7 @@ const exportHTML = () => {
 };
 
 const exportProject = () => {
-  if (!Array.isArray(components.value) && components.value?.length===0) return;
+  if (!Array.isArray(components.value) || components.value?.length === 0) return;
 
   const jsonData = JSON.stringify(components.value);
   const blob = new Blob([jsonData], { type: 'application/json' });
@@ -212,159 +292,142 @@ const exportProject = () => {
   window.URL.revokeObjectURL(url);
 };
 
-
-const importProject = (event) => {
+const importProject = (event: any) => {
   const file = event.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const importedComponents = JSON.parse(e.target.result);
-      components.value = importedComponents;
-      console.log('Progetto importato:', importedComponents);
+      if (e.target && event.target.result !== null) {
+        const importedComponents = JSON.parse(e.target.result as string);
+        components.value = importedComponents;
+        console.log('Progetto importato:', importedComponents);
+      }
     } catch (error) {
       console.error('Errore durante il parsing del JSON:', error);
     }
   };
   reader.readAsText(file);
-  debugger
 };
 
-function copyToClipboard() {
-  const textarea = document.getElementById('textarea-generated-code');
-  textarea.disabled = false;
-  textarea.select();
-  document.execCommand("copy");
-  textarea.disabled = true;
+function copyToClipboard(): void {
+  const textarea = document.getElementById('textarea-generated-code') as HTMLTextAreaElement;
+  if (textarea) {
+    textarea.disabled = false;
+    textarea.select();
+    document.execCommand("copy");
+    textarea.disabled = true;
+  }
 }
 
+const cmpType = ref('');
+const componentsTypeValues = ref([
+  { name: 'Basic HTML', code: 'HTML' },
+  { name: 'PrimeVue / PrimeFlex', code: 'PRIMEVUE' },
+  { name: 'Bootstrap', code: 'BOOTSTRAP' },
+]);
+
 watch(components, () => {
+  saveState(components.value);
   updateGeneratedCode();
-}, {deep: true});
+}, { deep: true });
+
 </script>
 
 <template>
   <div class="container">
-
     <Sidebar v-model:visible="isPreviewVisible" style="width:90%" header="Preview">
       <div v-html="generatedCode" />
     </Sidebar>
-
     <Splitter class="w-full m-0" layout="horizontal">
-      <SplitterPanel size="20">
-         <div class="flex flex-column h-full">
-            <div class="flex-grow-1">
-              <DraggableComponent/>
-            </div>
-           <div class="flex-none">
-             <Panel toggleable>
-               <template #header>
-                 <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
-               </template>
-               <Button outlined class="w-full mb-1" @click="isPreviewVisible = true" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
-
-               <Button @click="exportHTML" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
-             </Panel>
-           </div>
-           <div class="flex-none">
-             <Panel toggleable collapsed>
-               <template #header>
-                 <i class="fa fa-save" />&nbsp;<small>Salva Progetto</small>
-               </template>
-               <Button text @click="exportProject" severity="secondary"><i class="fa fa-file-export" />&nbsp;Esporta progetto</Button>
-               <FileUpload class="p-button-text" mode="basic" accept="application/json" :maxFileSize="1000000" @select="importProject($event)" :auto="true" chooseLabel="Importa progetto">
-                 <template #uploadicon> <i class="fa fa-file-import" />&nbsp; </template>
-               </FileUpload>
-             </Panel>
-           </div>
+      <SplitterPanel :size="20">
+        <div class="flex flex-column h-full">
+          <div class="flex-none">
+            <Dropdown v-model="cmpType" :options="componentsTypeValues" optionLabel="name" option-value="code" placeholder="Seleziona il tipo dei componenti" class="w-full" />
           </div>
+          <div class="flex-grow-1">
+            <DraggableComponent v-model="cmpType" />
+          </div>
+          <div class="flex-none">
+            <Panel toggleable>
+              <template #header>
+                <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
+              </template>
+              <Button outlined class="w-full mb-1" @click="isPreviewVisible = true" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
+              <Button @click="exportHTML" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
+            </Panel>
+          </div>
+          <div class="flex-none">
+            <Panel toggleable collapsed>
+              <template #header>
+                <i class="fa fa-save" />&nbsp;<small>Salva Progetto</small>
+              </template>
+              <Button text @click="exportProject" severity="secondary"><i class="fa fa-file-export" />&nbsp;Esporta progetto</Button>
+              <FileUpload class="p-button-text" mode="basic" accept="application/json" :maxFileSize="1000000" @select="importProject($event)" :auto="true" chooseLabel="Importa progetto">
+                <template #uploadicon> <i class="fa fa-file-import" />&nbsp; </template>
+              </FileUpload>
+            </Panel>
+          </div>
+        </div>
       </SplitterPanel>
-      <SplitterPanel size="60" class="flex flex-column h-full">
-
+      <SplitterPanel :size="60" class="flex flex-column h-full">
         <Panel class="overflow-y-auto flex-grow-1" header="Editor">
-            <div class="editor" :key="keyEditor" @click="selectedComponent=null">
+          <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent">
+            <div
+                class="drop-area"
+                @drop="onDrop"
+                @dragover="onDragOver"
+                data-drop-target="editor"
+                data-component-id="editor"
+            >
               <div
-                  class="drop-area"
-                  @drop="onDrop"
-                  @dragover="onDragOver"
-                  data-drop-target="editor"
+                  v-for="(component, index) in components"
+                  :key="`${component.id}-${component.name}`"
+                  :class="{'selectedComponent': selectedComponent?.id === component?.id, [component?.props?.class]: component?.props?.class?.length>0}"
+                  class="draggable-component"
+                  @drop="onDropComponent(index)"
+                  draggable="true"
+                  @dragstart="onDragStart($event, index)"
+                  @dragenter="onDragEnter(index)"
+                  @dragleave="onDragLeave()"
               >
-                <div
-                    v-for="(component, index) in components"
-                    :key="`${component.id}-${component.name}`"
-                    :class="{'selectedComponent': selectedComponent?.id === component.id, [component.props.class]: component.props.class.length>0}"
-                    class="draggable-component"
-                    @drop="onDropComponent(index)"
-                    draggable="true"
-                    @dragstart="onDragStart(index)"
-                    @dragenter="onDragEnter(index)"
-                    @dragleave="onDragLeave()"
-                >
-                  <component
-                      v-model:selectedComponent="selectedComponent"
-                      :is="component.name"
-                      :componentId="component.id"
-                      v-bind="component.props"
-                      :parentComponents="component.slot"
-                      @updateSelectedComponent="handleComponentClick"
-                      @updateNestedComponents="updateNestedComponents"
-                      @click.stop="handleComponentClick(component)"
-                  />
-                  <div class="component-icons">
-                    <i v-if="!component.locked" class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)"/>
-<!--                    <i class="fa-solid fa-pencil edit-icon component-icon" @click.stop="handleComponentClick(component)"/>
-                    <i class="fa-solid fa-arrows-up-down-left-right drag-icon component-icon"
-                       draggable="true"
-                       @dragstart="onDragStart(index)"
-                       @dragenter="onDragEnter(index)"
-                       @dragleave="onDragLeave()"
-                    />-->
-                  </div>
+                <component
+                    v-model:selectedComponent="selectedComponent"
+                    :is="component.name"
+                    :componentId="component.id"
+                    v-bind="component.props"
+                    :parentComponents="component.slot"
+                    @updateSelectedComponent="handleComponentClick"
+                    @updateNestedComponents="updateNestedComponents"
+                    @click.stop="handleComponentClick(component)"
+                    @removeComponent="removeDraggedComponent($event)"
+                />
+                <div class="component-icons">
+                  <i v-if="!component.locked" class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)" />
                 </div>
               </div>
             </div>
+          </div>
         </Panel>
-
-
         <Panel class="overflow-y-auto" header="Codice generato" toggleable>
-          <template #icons>
-          </template>
-<!--          <pre class="generated-code w-full text-sm">{{generatedCode}}</pre>-->
+          <template #icons></template>
           <div class="text-right text-green-400 mb-1">
-            <Button size="small" outlined  icon="fa fa-copy" @click="copyToClipboard" />
+            <Button size="small" outlined icon="fa fa-copy" @click="copyToClipboard" />
           </div>
           <textarea id="textarea-generated-code" v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
         </Panel>
-
-
-<!--        <Accordion :activeIndex="0">
-          <AccordionTab header="Codice generato" style="max-height:30%" class="overflow-y-auto">
-            <pre class="generated-code w-full text-sm">{{generatedCode}}</pre>s
-          </AccordionTab>
-        </Accordion>-->
-<!--
-        <Splitter class="w-full" layout="vertical">
-          <SplitterPanel size="75">
-          </SplitterPanel>
-          <SplitterPanel size="25">
-          </SplitterPanel>
-        </Splitter>
--->
-
-
       </SplitterPanel>
-      <SplitterPanel size="20">
-          <ComponentOptions
-              v-if="selectedComponent"
-              v-model="selectedComponent"
-              @update:model-value="updateComponent"
-          />
+      <SplitterPanel :size="20">
+        <ComponentOptions
+            v-if="selectedComponent"
+            v-model:selectedComponent="selectedComponent"
+            @update:model-value="updateComponent"
+        />
       </SplitterPanel>
     </Splitter>
   </div>
 </template>
 
 <style scoped>
-
 </style>

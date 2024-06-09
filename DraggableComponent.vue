@@ -1,8 +1,11 @@
-<script setup>
-import {availableComponents} from "~/components/AvailableComponent.ts";
+<script setup lang="ts">
+import {availableComponents} from "~/components/AvailableComponent";
+import type {DroppableComponent} from "~/components/models/DroppableComponent";
 
-const groupByCategory = (components) => {
-  return components.reduce((acc, component) => {
+// TODO: da implementare
+const cmpType = defineModel();
+const groupByCategory = (components: DroppableComponent[]) => {
+  return components.reduce((acc: any, component: DroppableComponent) => {
     (acc[component.cat] = acc[component.cat] || []).push(component);
     return acc;
   }, {});
@@ -10,21 +13,25 @@ const groupByCategory = (components) => {
 
 const groupedComponents = computed(() => groupByCategory(availableComponents));
 
-const onDragStart = (component) => {
+const onDragStart = (event: any, component: DroppableComponent) => {
   event.dataTransfer.setData('component', JSON.stringify(component));
 };
+
 </script>
 
 <template>
   <div>
+
     <Accordion :activeIndex="0">
+
       <AccordionTab v-for="(components, category) in groupedComponents" :key="category" :header="category">
         <div
             v-for="component in components"
             :key="component.name"
             class="draggable-component"
+            :componentId="Date.now()"
             draggable="true"
-            @dragstart="onDragStart(component)"
+            @dragstart="onDragStart($event, component)"
         >
           <i v-if="component.icon" :class="component.icon" /> {{ component.label || component.name }}
         </div>
