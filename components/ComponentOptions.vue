@@ -1,7 +1,6 @@
 <script setup lang="ts">
-
 import {defineModel, type Ref} from 'vue';
-import type { DroppableComponent } from './models/DroppableComponent';
+import type { DroppableComponent } from '~/models/DroppableComponent';
 
  const selectedComponent: Ref<DroppableComponent | undefined> = defineModel<DroppableComponent>('selectedComponent');
  
@@ -20,17 +19,18 @@ import type { DroppableComponent } from './models/DroppableComponent';
 
  const addCustomAttr = (): void => {
    if (selectedComponent.value) {
-     selectedComponent.value.props.attrs[newCustomAttrName.value] = newCustomAttrValue.value;
+     if(newCustomAttrName.value?.trim().length > 0){
+       selectedComponent.value.props.attrs[newCustomAttrName.value] = newCustomAttrValue.value;
+     }
      newCustomAttrName.value = '';
      newCustomAttrValue.value = '';
-     //showCustomAttrs.value = false;
    }
  };
 
- const removeAttrs = (key: number) => {
-   if(selectedComponent.value)
-   delete selectedComponent.value.props.attrs[key];
- };
+const removeAttrs = (key: string) => {
+  if(selectedComponent.value)
+    delete selectedComponent.value.props.attrs[key];
+};
  </script>
 
  <template>
@@ -60,7 +60,7 @@ import type { DroppableComponent } from './models/DroppableComponent';
 
                <InputText v-model="selectedComponent.props.attrs[key]" :id="`attrs-${key}`" class="w-full form-control" />
                <InputGroupAddon>
-                 <Button severity="danger" icon="fa fa-times" @click="removeAttrs(parseInt(<string>key))" />
+                 <Button severity="danger" icon="fa fa-times" @click="removeAttrs(key)" />
                </InputGroupAddon>
              </InputGroup>
            </div>
