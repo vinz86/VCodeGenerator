@@ -6,6 +6,7 @@ const defaultAttrs = { }
 export const availableComponents = [
 
     ...layoutComponents, // LAYOUT
+    ...formComponents, // FORM
 
     { label: 'Grid', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells', props: {
             class: 'grid w-full',
@@ -23,18 +24,9 @@ export const availableComponents = [
             },
         },
     },
-    { label: 'Grid: Col 6', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells-large',
-        props: {
-            id: '',
-            class: 'grid w-full',
-            attrs: {
-                ...defaultAttrs
-            },
-        },
-    },
+
     { name: 'VCGInputText', cat:'PrimeVue', tag: 'InputText', props: {
             ...defaultProps,
         },
     },
-    ...formComponents, // FORM
 ];

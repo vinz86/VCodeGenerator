@@ -57,7 +57,7 @@ html, body{
     min-width: 80px;
     max-width: 100%;
     position: relative;
-    /*border: 1px dotted #ccc;*/
+/*    border: 1px dotted #ccc;*/
 }
 
 .draggable-component.drag-over {
@@ -69,7 +69,6 @@ html, body{
     width: 100%;
 }
 .drag-over {
-    border: 2px dashed #000;
 }
 
 .draggable-component:hover > .component-icons {
@@ -85,7 +84,7 @@ html, body{
     padding: 3px 5px;
     display: none;
     margin-top: -25px;
-    margin-left: 0px;
+    margin-left: 0;
 }
 
 .component-icon{
@@ -109,4 +108,15 @@ html, body{
 }
 .edit-icon {
     color: darkcyan;
+}
+
+#panel-editor{
+    .p-toggleable-content{
+        height: calc(100% - 55px);
+        display:flex;
+        overflow-y: auto;
+        .p-panel-content{
+            flex-grow:1;
+        }
+    }
 }

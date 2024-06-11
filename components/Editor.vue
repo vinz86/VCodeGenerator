@@ -1,24 +1,22 @@
 <script setup lang="ts">
-/** TODO: FIX:
- * -se droppo un DroppableComponent con contenuto all'interno dentro all'editor scompare tutto tranne il DroppableComponent parent
- * -se ci sono solo 2 DroppableComponent e ne trascino uno nell'altro, uno dei due scompare
- */
 /** TODO: new:
+ * Gestire diverse tipologie di componenti (tramite menu a tendina)
+ * Componente personalizzato
  * Aggiungere un ulteriore layer per gestire un albero di files
  * Aggiungere History UNDO/REDO
  */
 
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import DraggableComponent from '~/DraggableComponent.vue';
+import DraggableComponent from '~/components/DraggableComponent.vue';
 import ComponentOptions from "~/components/ComponentOptions.vue";
 import { DragDropHelper } from "~/Utils/helpers/DragDropHelper";
 import type { DroppableComponent } from "~/components/models/DroppableComponent";
 import type { Ref } from "vue";
 import type { DroppableProps } from "~/components/models/DroppableProps";
-import { saveState, undoState } from '~/store/History';
+import {redoState, saveState, undoState} from '~/store/History';
 
 const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
-components.value = [{
+/*components.value = [{
   "name":"DroppableComponent",
   "locked": true,
   "cat":"Layout",
@@ -26,7 +24,7 @@ components.value = [{
   "props":{"class":"","id":"","style":"","attrs":{}},
   "id": "1717452042378",
   "slot":[]
-}];
+}];*/
 const selectedComponent: Ref<DroppableComponent> = ref({} as DroppableComponent);
 const keyEditor: Ref<number> = ref(0);
 const keyOptions: Ref<number> = ref(0);
@@ -41,11 +39,21 @@ onMounted(() => {
   // TODO: parziale
   // Aggiungo listener per Ctrl+Z
   const handleKeyDown = (event: KeyboardEvent) => {
+    debugger
     if (event.ctrlKey && event.key === 'z') {
       event.preventDefault();
       const previousState = undoState();
       if (previousState) {
         components.value = previousState;
+        updateGeneratedCode();
+      }
+    }
+    if (event.ctrlKey && event.key === 'y') {
+      debugger
+      event.preventDefault();
+      const nextState = redoState();
+      if (nextState) {
+        components.value = nextState;
         updateGeneratedCode();
       }
     }
@@ -86,7 +94,11 @@ const onDrop = (event: any) => {
     if (componentData.parentComponentId) {
       const pathToComponent = DD.findObjectById(components.value, componentData.parentComponentId);
       if (pathToComponent !== null) {
-        draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent, componentData.index)));
+        if(componentData.component){
+          draggedComponent = componentData.component;
+          DD.removeObjectByPath(components.value, pathToComponent, componentData.index)
+        }
+        //draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent, componentData.index)));
       }
     } else {
       const pathToComponent = DD.findObjectById(components.value, componentData.id);
@@ -95,7 +107,7 @@ const onDrop = (event: any) => {
       }
     }
   } else {
-    draggedComponent = { ...componentData, id: `n-${Date.now()}`, slot: [] };
+    draggedComponent = componentData?.slot ? componentData : { ...componentData, id: Date.now().toString(), slot: [] };
   }
 
   if (draggedComponent) {
@@ -143,8 +155,10 @@ const onDropComponent = (index: number) => {
 
 const addComponent = (component: any, targetComponents: any) => {
   if (Array.isArray(targetComponents)) {
-    const newComponent = { ...component, id: Date.now(), slot: [] };
+    const newComponent = component.slot ? component : { ...component, id: Date.now(), slot: [] };
     targetComponents.push(newComponent);
+
+    saveState(components.value);
   } else {
     console.error('targetComponents non è un array', targetComponents);
   }
@@ -328,8 +342,8 @@ const componentsTypeValues = ref([
   { name: 'Bootstrap', code: 'BOOTSTRAP' },
 ]);
 
-watch(components, () => {
-  saveState(components.value);
+watch(components, (newVal) => {
+  saveState(newVal);
   updateGeneratedCode();
 }, { deep: true });
 
@@ -372,7 +386,7 @@ watch(components, () => {
         </div>
       </SplitterPanel>
       <SplitterPanel :size="60" class="flex flex-column h-full">
-        <Panel class="overflow-y-auto flex-grow-1" header="Editor">
+        <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
           <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent">
             <div
                 class="drop-area"
@@ -388,7 +402,7 @@ watch(components, () => {
                   class="draggable-component"
                   @drop="onDropComponent(index)"
                   draggable="true"
-                  @dragstart="onDragStart($event, index)"
+                  @dragstart="!component.locked && onDragStart($event, index)"
                   @dragenter="onDragEnter(index)"
                   @dragleave="onDragLeave()"
               >

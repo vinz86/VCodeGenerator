@@ -132,8 +132,9 @@ const onDrop = (event: any) => {
         draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent)));
       }
     }
-  } else if (fromEditor) {
-    draggedComponent = {...componentData, id: `n-${Date.now()}`, slot: []};
+  }
+  else if (fromEditor) {
+    draggedComponent = componentData.slot ? componentData : {...componentData, id: Date.now().toString(), slot: []};
   } else {
     draggedComponent = {...componentData, id: Date.now().toString(), slot: []};
   }
@@ -295,9 +296,5 @@ watch(selectedComponent, (val: Record<string, any>) => {
 <style scoped>
 .draggable-component {
   position: relative;
-}
-
-.drag-over {
-  border: 2px dashed #000;
 }
 </style>
