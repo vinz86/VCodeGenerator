@@ -1,4 +1,4 @@
-import type {DroppableAttrs} from "~/components/models/DroppableAttrs";
+import type {DroppableAttrs} from "~/models/DroppableAttrs";
 export interface DroppableProps {
     class: string,
     id: string,

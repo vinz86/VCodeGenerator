@@ -1,4 +1,4 @@
-import type {DroppableProps} from "~/components/models/DroppableProps";
+import type {DroppableProps} from "~/models/DroppableProps";
 
 export interface DroppableComponent {
     id?: string,
@@ -10,5 +10,5 @@ export interface DroppableComponent {
     fromDroppableComponent?: boolean,
     locked: boolean,
     props: DroppableProps,
-    slot: [ DroppableComponent ] | []
+    slot: [DroppableComponent] | []
 }

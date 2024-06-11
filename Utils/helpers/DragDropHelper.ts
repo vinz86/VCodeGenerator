@@ -1,4 +1,4 @@
-import type {DroppableComponent} from "~/components/models/DroppableComponent";
+import type {DroppableComponent} from "~/models/DroppableComponent";
 
 export class DragDropHelper {
 
