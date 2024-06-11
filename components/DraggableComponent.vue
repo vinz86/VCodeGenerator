@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {availableComponents} from "~/components/AvailableComponent";
-import type {DroppableComponent} from "~/components/models/DroppableComponent";
+import type {DroppableComponent} from "~/models/DroppableComponent";
 
 // TODO: da implementare
 const cmpType = defineModel();
