@@ -6,13 +6,13 @@
  * Aggiungere History UNDO/REDO
  */
 
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import {ref, onMounted, onUnmounted, watch, nextTick} from 'vue';
 import DraggableComponent from '~/components/DraggableComponent.vue';
 import ComponentOptions from "~/components/ComponentOptions.vue";
 import { DragDropHelper } from "~/Utils/helpers/DragDropHelper";
-import type { DroppableComponent } from "~/components/models/DroppableComponent";
+import type { DroppableComponent } from "~/models/DroppableComponent";
 import type { Ref } from "vue";
-import type { DroppableProps } from "~/components/models/DroppableProps";
+import type { DroppableProps } from "~/models/DroppableProps";
 import {redoState, saveState, undoState} from '~/store/History';
 
 const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
@@ -35,27 +35,28 @@ const isPreviewVisible: Ref<boolean> = ref(false);
 
 const DD = new DragDropHelper();
 
+const isSavingState: Ref<boolean> = ref(false);
+
+watch(components, (newVal) => {
+  if (!isSavingState.value) {
+    saveState(newVal);
+  }
+  updateGeneratedCode();
+  isSavingState.value = false;
+}, { deep: true });
+
 onMounted(() => {
-  // TODO: parziale
-  // Aggiungo listener per Ctrl+Z
+  // Salva lo stato iniziale
+  saveState(components.value);
+
   const handleKeyDown = (event: KeyboardEvent) => {
-    debugger
-    if (event.ctrlKey && event.key === 'z') {
+    console.log(`Key pressed: ${event.key} with ctrlKey: ${event.ctrlKey} and shiftKey: ${event.shiftKey}`);
+    if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
       event.preventDefault();
-      const previousState = undoState();
-      if (previousState) {
-        components.value = previousState;
-        updateGeneratedCode();
-      }
-    }
-    if (event.ctrlKey && event.key === 'y') {
-      debugger
+      undo()
+    } else if (event.ctrlKey && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
       event.preventDefault();
-      const nextState = redoState();
-      if (nextState) {
-        components.value = nextState;
-        updateGeneratedCode();
-      }
+      redo();
     }
   };
 
@@ -63,8 +64,99 @@ onMounted(() => {
 
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);
-  });
+  })
 });
+
+
+
+
+const contextMenu = ref();
+const itemsContextComponent: Ref<{label: string, icon: string, command: () => void}[]> = ref([
+  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as DroppableComponent)},
+  {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
+  {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
+]);
+const onComponentRightClick = (event: any, component: DroppableComponent) => {
+  contextMenu.value.hide();
+  nextTick(() => {
+    selectedComponent.value = component;
+    contextMenu.value.show(event);
+  });
+};
+
+const duplicateComponent = async (component: any) => {
+  if (component) {
+    const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
+    newComponent.id = Date.now().toString();
+    newComponent.props.class = (component.props.class || '').replace('selectedComponent', '');
+    components.value.push(newComponent);
+    if (component.slot && component.slot.length > 0) {
+      await duplicateComponent(component.slot);
+    }
+  }
+};
+
+
+
+const contextMenuEditor = ref();
+const itemsContextEditor: Ref<{label: string, icon: string, command: () => void}[]> = ref([
+  {label: 'Annulla', icon: 'fa fa-undo', command: () => undo()},
+  {label: 'Ripeti', icon: 'fa fa-redo', command: () => redo()},
+]);
+
+const onComponentRightClickEditor = (event: any) => {
+  contextMenuEditor.value.hide();
+  nextTick(() => {
+    contextMenuEditor.value.show(event);
+  });
+};
+/*
+const removeComponent = (index = -1) => {
+  if (index < 0) {
+    if(selectedComponent.value){
+      index = components.value.findIndex(x => x.id === selectedComponent.value?.id);
+    }
+  }
+  if (index >= 0) {
+    components.value.splice(index, 1);
+  }
+};
+*/
+
+/*
+const handleComponentClick = (component: DroppableComponent) => {
+  selectedComponent.value = component;
+  contextMenu.value.hide();
+  emit('updateSelectedComponent', component);
+};
+*/
+
+
+
+
+
+
+
+
+
+
+const undo = ()=>{
+  const previousState = undoState();
+  if (previousState) {
+    isSavingState.value = true;
+    components.value = previousState;
+    console.log('Undo: components.value', components.value);
+  }
+}
+
+const redo = ()=>{
+  const nextState = redoState();
+  if (nextState) {
+    isSavingState.value = true;
+    components.value = nextState;
+    console.log('Redo: components.value', components.value);
+  }
+}
 
 const removeDraggedComponent = (event: any) => {
   if (!event) return;
@@ -157,8 +249,6 @@ const addComponent = (component: any, targetComponents: any) => {
   if (Array.isArray(targetComponents)) {
     const newComponent = component.slot ? component : { ...component, id: Date.now(), slot: [] };
     targetComponents.push(newComponent);
-
-    saveState(components.value);
   } else {
     console.error('targetComponents non è un array', targetComponents);
   }
@@ -342,104 +432,119 @@ const componentsTypeValues = ref([
   { name: 'Bootstrap', code: 'BOOTSTRAP' },
 ]);
 
-watch(components, (newVal) => {
-  saveState(newVal);
-  updateGeneratedCode();
-}, { deep: true });
-
 </script>
 
 <template>
-  <div class="container">
-    <Sidebar v-model:visible="isPreviewVisible" style="width:90%" header="Preview">
-      <div v-html="generatedCode" />
-    </Sidebar>
-    <Splitter class="w-full m-0" layout="horizontal">
-      <SplitterPanel :size="20">
-        <div class="flex flex-column h-full">
-          <div class="flex-none">
-            <Dropdown v-model="cmpType" :options="componentsTypeValues" optionLabel="name" option-value="code" placeholder="Seleziona il tipo dei componenti" class="w-full" />
+  <div id="wrapper">
+
+    <Toolbar>
+      <template #start>
+        <div class="logo">VCodeGenerator <i class="text-sm">0.0.1-rc</i></div>
+      </template>
+
+      <template #center>
+      </template>
+
+      <template #end>
+        <Button icon="fa fa-undo" @click="undo()" class="mr-2" severity="secondary" />
+        <Button icon="fa fa-redo" @click="redo()" class="mr-2" severity="secondary" />
+        <Button icon="fa fa-times" @click="components=[]" class="mr-2" severity="danger" />
+      </template>
+    </Toolbar>
+
+    <div class="container">
+      <Sidebar v-model:visible="isPreviewVisible" style="width:90%" header="Preview">
+        <div v-html="generatedCode" />
+      </Sidebar>
+      <Splitter class="w-full m-0" layout="horizontal">
+        <SplitterPanel :size="20">
+          <div class="flex flex-column h-full">
+            <div class="flex-none">
+              <Dropdown v-model="cmpType" :options="componentsTypeValues" optionLabel="name" option-value="code" placeholder="Seleziona il tipo dei componenti" class="w-full" />
+            </div>
+            <div class="flex-grow-1">
+              <DraggableComponent v-model="cmpType" />
+            </div>
+            <div class="flex-none">
+              <Panel toggleable>
+                <template #header>
+                  <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
+                </template>
+                <Button outlined class="w-full mb-1" @click="isPreviewVisible = true" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
+                <Button @click="exportHTML" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
+              </Panel>
+            </div>
+            <div class="flex-none">
+              <Panel toggleable collapsed>
+                <template #header>
+                  <i class="fa fa-save" />&nbsp;<small>Salva Progetto</small>
+                </template>
+                <Button text @click="exportProject" severity="secondary"><i class="fa fa-file-export" />&nbsp;Esporta progetto</Button>
+                <FileUpload class="p-button-text" mode="basic" accept="application/json" :maxFileSize="1000000" @select="importProject($event)" :auto="true" chooseLabel="Importa progetto">
+                  <template #uploadicon> <i class="fa fa-file-import" />&nbsp; </template>
+                </FileUpload>
+              </Panel>
+            </div>
           </div>
-          <div class="flex-grow-1">
-            <DraggableComponent v-model="cmpType" />
-          </div>
-          <div class="flex-none">
-            <Panel toggleable>
-              <template #header>
-                <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
-              </template>
-              <Button outlined class="w-full mb-1" @click="isPreviewVisible = true" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
-              <Button @click="exportHTML" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
-            </Panel>
-          </div>
-          <div class="flex-none">
-            <Panel toggleable collapsed>
-              <template #header>
-                <i class="fa fa-save" />&nbsp;<small>Salva Progetto</small>
-              </template>
-              <Button text @click="exportProject" severity="secondary"><i class="fa fa-file-export" />&nbsp;Esporta progetto</Button>
-              <FileUpload class="p-button-text" mode="basic" accept="application/json" :maxFileSize="1000000" @select="importProject($event)" :auto="true" chooseLabel="Importa progetto">
-                <template #uploadicon> <i class="fa fa-file-import" />&nbsp; </template>
-              </FileUpload>
-            </Panel>
-          </div>
-        </div>
-      </SplitterPanel>
-      <SplitterPanel :size="60" class="flex flex-column h-full">
-        <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
-          <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent">
-            <div
-                class="drop-area"
-                @drop="onDrop"
-                @dragover="onDragOver"
-                data-drop-target="editor"
-                data-component-id="editor"
-            >
+        </SplitterPanel>
+        <SplitterPanel :size="60" class="flex flex-column h-full">
+          <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
+            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent"
+                 @contextmenu.stop="onComponentRightClickEditor($event)">
+              <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
+              <ContextMenu ref="contextMenuEditor" :model="itemsContextEditor"/>
               <div
-                  v-for="(component, index) in components"
-                  :key="`${component.id}-${component.name}`"
-                  :class="{'selectedComponent': selectedComponent?.id === component?.id, [component?.props?.class]: component?.props?.class?.length>0}"
-                  class="draggable-component"
-                  @drop="onDropComponent(index)"
-                  draggable="true"
-                  @dragstart="!component.locked && onDragStart($event, index)"
-                  @dragenter="onDragEnter(index)"
-                  @dragleave="onDragLeave()"
+                  class="drop-area"
+                  @drop="onDrop"
+                  @dragover="onDragOver"
+                  data-drop-target="editor"
+                  data-component-id="editor"
               >
-                <component
-                    v-model:selectedComponent="selectedComponent"
-                    :is="component.name"
-                    :componentId="component.id"
-                    v-bind="component.props"
-                    :parentComponents="component.slot"
-                    @updateSelectedComponent="handleComponentClick"
-                    @updateNestedComponents="updateNestedComponents"
-                    @click.stop="handleComponentClick(component)"
-                    @removeComponent="removeDraggedComponent($event)"
-                />
-                <div class="component-icons">
-                  <i v-if="!component.locked" class="fa-solid fa-trash-alt delete-icon component-icon" @click.stop="removeComponent(index)" />
+                <div
+                    v-for="(component, index) in components"
+                    :key="`${component.id}-${component.name}`"
+                    :class="{'selectedComponent': selectedComponent?.id === component?.id, [component?.props?.class]: component?.props?.class?.length>0}"
+                    class="draggable-component"
+                    @drop="onDropComponent(index)"
+                    draggable="true"
+                    @dragstart="!component.locked && onDragStart($event, index)"
+                    @dragenter="onDragEnter(index)"
+                    @dragleave="onDragLeave()"
+                >
+                  <component
+                      v-model:selectedComponent="selectedComponent"
+                      :is="component.name"
+                      :componentId="component.id"
+                      v-bind="component.props"
+                      :parentComponents="component.slot"
+                      @updateSelectedComponent="handleComponentClick"
+                      @updateNestedComponents="updateNestedComponents"
+                      @click.stop="handleComponentClick(component)"
+                      @removeComponent="removeDraggedComponent($event)"
+                      @contextmenu.stop="onComponentRightClick($event, component)"
+                  />
+
                 </div>
               </div>
             </div>
-          </div>
-        </Panel>
-        <Panel class="overflow-y-auto" header="Codice generato" toggleable>
-          <template #icons></template>
-          <div class="text-right text-green-400 mb-1">
-            <Button size="small" outlined icon="fa fa-copy" @click="copyToClipboard" />
-          </div>
-          <textarea id="textarea-generated-code" v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
-        </Panel>
-      </SplitterPanel>
-      <SplitterPanel :size="20">
-        <ComponentOptions
-            v-if="selectedComponent"
-            v-model:selectedComponent="selectedComponent"
-            @update:model-value="updateComponent"
-        />
-      </SplitterPanel>
-    </Splitter>
+          </Panel>
+          <Panel class="overflow-y-auto" header="Codice generato" toggleable>
+            <template #icons></template>
+            <div class="text-right text-green-400 mb-1">
+              <Button size="small" outlined icon="fa fa-copy" @click="copyToClipboard" />
+            </div>
+            <textarea id="textarea-generated-code" v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
+          </Panel>
+        </SplitterPanel>
+        <SplitterPanel :size="20">
+          <ComponentOptions
+              v-if="selectedComponent"
+              v-model:selectedComponent="selectedComponent"
+              @update:model-value="updateComponent"
+          />
+        </SplitterPanel>
+      </Splitter>
+    </div>
   </div>
 </template>
 
