@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
-import type {DroppableComponent} from "~/components/models/DroppableComponent";
+import type {DroppableComponent} from "~/models/DroppableComponent";
 import {DragDropHelper} from "~/Utils/helpers/DragDropHelper";
 
 const props = defineProps({
@@ -64,6 +64,12 @@ const removeComponent = (index = -1) => {
   if (index >= 0) {
     components.value.splice(index, 1);
   }
+};
+
+const handleComponentClick = (component: DroppableComponent) => {
+  selectedComponent.value = component;
+  contextMenu.value.hide();
+  emit('updateSelectedComponent', component);
 };
 
 const onDragOver = (event: any) => {
@@ -184,22 +190,6 @@ const onDropComponent = (event: any) => {
   emit('updateNestedComponents', props.componentId, components.value);
 };
 
-const findParentComponent = (id: string, componentsArray: DroppableComponent[]): DroppableComponent | null => {
-  for (const component of componentsArray) {
-    if (component.id === id) {
-      return component;
-    }
-    if (component.slot && component.slot.length > 0) {
-      const foundComponent = findParentComponent(id, component.slot);
-      if (foundComponent) {
-        return foundComponent;
-      }
-    }
-  }
-  return null;
-};
-
-
 const updateNestedComponents = (id:string, nestedComponents: any) => {
   const updateComponents = (componentsArray: DroppableComponent[]) => {
     for (const component of componentsArray) {
@@ -213,12 +203,6 @@ const updateNestedComponents = (id:string, nestedComponents: any) => {
     }
   };
   updateComponents(components.value);
-};
-
-const handleComponentClick = (component: DroppableComponent) => {
-  selectedComponent.value = component;
-  contextMenu.value.hide();
-  emit('updateSelectedComponent', component);
 };
 
 const setDroppableAreaHeight = (): void => {
@@ -247,6 +231,10 @@ watch(selectedComponent, (val: Record<string, any>) => {
   }
 }, { deep: true });
 
+
+watch(() => props.parentComponents, (newValue) => {
+    components.value = newValue;
+}, { deep: true });
 </script>
 
 <template>
@@ -266,10 +254,10 @@ watch(selectedComponent, (val: Record<string, any>) => {
         :key="`draggable-component-${index}`"
         class="draggable-component"
         :class="{
-        'drag-over': index === dragOverIndex,
-        [component.props?.class]: component.props?.class,
-        'selectedComponent': selectedComponent?.id === component.id
-      }"
+          'drag-over': index === dragOverIndex,
+          [component?.props?.class]: component?.props?.class,
+          'selectedComponent': selectedComponent?.id === component.id
+        }"
         draggable="true"
         @dragstart="onDragStart($event, index, props.componentId?.toString(), component)"
         @dragenter="onDragEnter(index)"
