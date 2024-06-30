@@ -262,6 +262,7 @@ const filterProps = (props: Record<string, any>) => {
         :key="`draggable-component-${index}`"
         class="draggable-component"
         :class="{
+          [component?.props?.class]: component?.props?.class,
           'drag-over': index === dragOverIndex,
           'selectedComponent': selectedComponent?.id === component.id
         }"
@@ -275,7 +276,8 @@ const filterProps = (props: Record<string, any>) => {
       <component
           :is="component.name"
           :componentId="component.id?.toString()"
-          v-bind="component.props"
+          v-bind="component.name==='DroppableComponent' ? '' : component.props"
+          :style="{'width:100%': component.name==='DroppableComponent'}"
           :parentComponents="component.slot"
           v-model:selectedComponent="selectedComponent"
           @click.stop="handleComponentClick(component);"
@@ -284,16 +286,10 @@ const filterProps = (props: Record<string, any>) => {
           @contextmenu.stop="onComponentRightClick($event, component)"
           @removeComponent="onRemoveComponent"
       />
+      {{component.prop}}
     </div>
   </div>
 </template>
 
 <style scoped>
-.draggable-component {
-  grid-area: 1 / 1;
-}
-.droppable-area{
-  display: grid;
-  grid-template-columns: 1fr;
-}
 </style>
