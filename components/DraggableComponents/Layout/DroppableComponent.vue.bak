@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
 import type {DroppableComponent} from "~/models/DroppableComponent";
-import {DragDropHelper} from "~/Utils/helpers/DragDropHelper";
+import {DragDropHelper} from "~/Utils/helper/DragDropHelper";
 
 const props = defineProps({
   parentComponents: {
@@ -43,14 +43,14 @@ const onComponentRightClick = (event: any, component: DroppableComponent) => {
   });
 };
 
-const duplicateComponent = async (component: any) => {
+const duplicateComponent = (component: any) => {
   if (component) {
     const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
     newComponent.id = Date.now().toString();
     newComponent.props.class = (component.props.class || '').replace('selectedComponent', '');
     components.value.push(newComponent);
     if (component.slot && component.slot.length > 0) {
-      await duplicateComponent(component.slot);
+      duplicateComponent(component.slot);
     }
   }
 };
@@ -235,6 +235,11 @@ watch(selectedComponent, (val: Record<string, any>) => {
 watch(() => props.parentComponents, (newValue) => {
     components.value = newValue;
 }, { deep: true });
+
+const filterProps = (props: Record<string, any>) => {
+  const { class: _class, ...rest } = props;
+  return rest;
+};
 </script>
 
 <template>
@@ -248,6 +253,8 @@ watch(() => props.parentComponents, (newValue) => {
       @click="selectedComponent = {} as DroppableComponent"
   >
     <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
+<!--
+          [component?.props?.class]: component?.props?.class,-->
     <div
         v-bind="attrs"
         v-for="(component, index) in components"
@@ -255,7 +262,6 @@ watch(() => props.parentComponents, (newValue) => {
         class="draggable-component"
         :class="{
           'drag-over': index === dragOverIndex,
-          [component?.props?.class]: component?.props?.class,
           'selectedComponent': selectedComponent?.id === component.id
         }"
         draggable="true"

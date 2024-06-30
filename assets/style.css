@@ -34,13 +34,13 @@ html, body{
 }
 
 .drop-area {
-    display: flex;
+    /* display: flex; */
     flex-grow: 1;
-    flex-wrap: wrap;
-    flex-direction: column;
-     border: 2px dashed #ccc;
-    padding: 10px;
-    min-height: 50px;
+    /* flex-wrap: wrap; */
+    /* flex-direction: column; */
+    border: 2px dashed #5fd7ff;
+    /* padding: 10px; */
+    /* min-height: 50px; */
     height: 100%;
 }
 .generated-code {

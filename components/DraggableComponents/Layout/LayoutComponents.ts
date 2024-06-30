@@ -1,7 +1,7 @@
 const defaultProps = { class:'', id:'', style:''}
 const defaultAttrs = { }
 export const layoutComponents = [
-    { name: 'DroppableComponent', cat:'Layout', tag: 'div', icon: 'fa-solid fa-table', props: {
+    { label: 'container', name: 'DroppableComponent', cat:'Layout', tag: 'div', icon: 'fa-solid fa-square', props: {
             ...defaultProps,
             attrs: {
                 ...defaultAttrs
@@ -17,7 +17,7 @@ export const layoutComponents = [
             }
         },
     },
-    { name: 'br', cat:'Layout', tag: 'br', props: {
+    { name: 'hr', cat:'Layout', tag: 'hr', props: {
             ...defaultProps,
             attrs: {
                 ...defaultAttrs

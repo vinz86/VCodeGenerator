@@ -1,5 +1,5 @@
 <template>
-  <label v-bind="props.attrs">{{props.text}}</label>
+  <p v-bind="props.attrs">{{text}}</p>
 </template>
 
 <script setup lang="ts">

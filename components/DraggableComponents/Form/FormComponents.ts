@@ -22,7 +22,7 @@ export const formComponents = [
     },
     { name: 'LabelComponent', cat:'Form', tag: 'span', props: {
             ...defaultProps,
-            text: "text",
+            text: "Label text",
             attrs: {
                 ...defaultAttrs,
             }

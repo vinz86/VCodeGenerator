@@ -12,22 +12,22 @@ import { DragDropHelper } from "~/Utils/helper/DragDropHelper";
 import type { DroppableComponent } from "~/models/DroppableComponent";
 import type { Ref } from "vue";
 import type { DroppableProps } from "~/models/DroppableProps";
+import {redoState, saveState, undoState} from '~/store/History';
 import {FilesHelper} from "~/Utils/helper/FilesHelper";
 import {ProjectHelper} from "~/Utils/helper/ProjectHelper";
 import HistoryManager from "~/Utils/manager/HistoryManager";
 import ImportExport from "~/components/Editor/ImportExport.vue";
-import OutputComponent from "~/components/Editor/OutputComponent.vue";
 
 const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
-// components.value = [{
-//   "name":"DroppableComponent",
-//   "locked": true,
-//   "cat":"Layout",
-//   "tag":"div",
-//   "props":{"class":"","id":"","style":"","attrs":{}},
-//   "id": "main-droppable-component",
-//   "slot":[]
-// }];
+components.value = [{
+  "name":"DroppableComponent",
+  "locked": true,
+  "cat":"Layout",
+  "tag":"div",
+  "props":{"class":"","id":"","style":"","attrs":{}},
+  "id": "main-droppable-component",
+  "slot":[]
+}];
 const selectedComponent: Ref<DroppableComponent> = ref({} as DroppableComponent);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
@@ -70,16 +70,13 @@ onMounted(() => {
   HistoryM.saveState(components.value);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    console.log(`Tasto premuto: ${event.key} con ctrlKey: ${event.ctrlKey} e shiftKey: ${event.shiftKey}`);
+    console.log(`Key pressed: ${event.key} with ctrlKey: ${event.ctrlKey} and shiftKey: ${event.shiftKey}`);
     if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
       event.preventDefault();
       undo()
     } else if (event.ctrlKey && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
       event.preventDefault();
       redo();
-    } else if (event.key === 'Delete' ) {
-      event.preventDefault();
-      removeComponent()
     }
   };
 
@@ -301,11 +298,6 @@ const importProject = async (event: any) => {
   FilesH.importProject(file).then((file) =>{ components.value = file as DroppableComponent[]; });
 };
 
-const getDropAreaClass = (component)=>{
-    if (component?.props?.class?.length>0){
-      return component?.props?.class;
-    }
-}
 
 const cmpType = ref('');
 const componentsTypeValues = ref([
@@ -317,11 +309,7 @@ const componentsTypeValues = ref([
 </script>
 
 <template>
-  <div id="wrapper" @contextmenu.stop="onComponentRightClickEditor($event)">
-
-    <ContextMenu ref="contextMenuEditor" :model="itemsContextEditor"/>
-    <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
-
+  <div id="wrapper">
     <div class="container">
       <!-- PREVIEW -->
       <Sidebar v-model:visible="isPreviewVisible" style="width:90%" header="Preview">
@@ -346,7 +334,10 @@ const componentsTypeValues = ref([
         <!-- CENTER -->
         <SplitterPanel :size="60" class="flex flex-column h-full">
           <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
-            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent">
+            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent"
+                 @contextmenu.stop="onComponentRightClickEditor($event)">
+              <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
+              <ContextMenu ref="contextMenuEditor" :model="itemsContextEditor"/>
               <div
                   class="drop-area"
                   @drop="onDrop"
@@ -354,8 +345,6 @@ const componentsTypeValues = ref([
                   data-drop-target="editor"
                   data-component-id="editor"
               >
-<!--
-                    :class="{'selectedComponent': selectedComponent?.id === component?.id, [getDropAreaClass(component)]: getDropAreaClass(component) }"-->
                 <div
                     v-for="(component, index) in components"
                     :key="`${component.id}-${component.name}`"
@@ -384,10 +373,15 @@ const componentsTypeValues = ref([
               </div>
             </div>
           </Panel>
-          <!-- OUTPUT -->
-          <OutputComponent v-model="generatedCode" />
-        </SplitterPanel>
 
+          <Panel class="overflow-y-auto" header="Codice generato" toggleable>
+            <template #icons></template>
+            <div class="text-right text-green-400 mb-1">
+              <Button size="small" outlined icon="fa fa-copy" @click="ProjectH.copyTextareaToClipboard('textarea-generated-code')" />
+            </div>
+            <textarea id="textarea-generated-code" v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
+          </Panel>
+        </SplitterPanel>
         <!-- RIGHT -->
         <SplitterPanel :size="20">
           <ComponentOptions v-if="selectedComponent" v-model:selectedComponent="selectedComponent" @update:model-value="updateComponent" />

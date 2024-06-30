@@ -1,5 +1,5 @@
-import {formComponents} from '@/components/Form/FormComponents';
-import {layoutComponents} from "~/components/Layout/LayoutComponents";
+import {formComponents} from '~/components/DraggableComponents/Form/FormComponents';
+import {layoutComponents} from "~/components/DraggableComponents/Layout/LayoutComponents";
 
 const defaultProps = { class:'', id:'', style:''}
 const defaultAttrs = { }
@@ -25,7 +25,20 @@ export const availableComponents = [
         },
     },
 
-    { name: 'VCGInputText', cat:'PrimeVue', tag: 'InputText', props: {
+    { name: 'VCGInputText', label:'InputText', cat:'PrimeVue', tag: 'InputText', props: {
+            ...defaultProps,
+        },
+    },
+
+    { name: 'VCGInputNumber', label:'InputNumber', cat:'PrimeVue', tag: 'InputNumber', props: {
+            ...defaultProps,
+            attrs: {
+                placeholder: 'Inserisci un numero...'
+            },
+        },
+    },
+
+    { name: 'VCGSlider', label:'Slider', cat:'PrimeVue', tag: 'Slider', props: {
             ...defaultProps,
         },
     },

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {defineModel, type Ref} from 'vue';
 import type { DroppableComponent } from '~/models/DroppableComponent';
+import VValidate from "~/Utils/VValidate-master";
 
  const selectedComponent: Ref<DroppableComponent | undefined> = defineModel<DroppableComponent>('selectedComponent');
  
@@ -9,15 +10,30 @@ import type { DroppableComponent } from '~/models/DroppableComponent';
 
  onMounted(()=>{
    if (selectedComponent.value) {
-     if(!selectedComponent.value.props)
-       return;
+     if(!selectedComponent.value.props) return;
 
      selectedComponent.value.props.attrs = !selectedComponent.value.props.attrs ? {} : selectedComponent.value.props.attrs;
-
    }
  })
 
- const addCustomAttr = (): void => {
+// validazione
+const VV = new VValidate({ lang: 'it', autoFocus: true });
+const rules = {
+  newCustomAttrName: VV.generateRules({ string: true, required:true }),
+  newCustomAttrValue: VV.generateRules({ string: true }),
+};
+VV.setValidationRules(rules, {});
+
+ const addCustomAttr = async (event): void => {
+   event.preventDefault();
+
+   // Validazione
+   await VV.validateForm({newCustomAttrName:newCustomAttrName.value, newCustomAttrValue:newCustomAttrValue.value});
+   if(!VV.isFormValid()){
+     VV.setFocusToFirstInvalidField(); // Imposta il focus sul primo campo con errore
+     return;
+   }
+
    if (selectedComponent.value) {
      if(newCustomAttrName.value?.trim().length > 0){
        selectedComponent.value.props.attrs[newCustomAttrName.value] = newCustomAttrValue.value;
@@ -26,6 +42,7 @@ import type { DroppableComponent } from '~/models/DroppableComponent';
      newCustomAttrValue.value = '';
    }
  };
+
 
 const removeAttrs = (key: string) => {
   if(selectedComponent.value)
@@ -49,25 +66,26 @@ const removeAttrs = (key: string) => {
            </div>
          </div>
          <!-- Attrs -->
-         <div class="flex align-content-center align-items-center">
+         <div  v-if="selectedComponent.props && selectedComponent.props?.attrs && Object.keys(selectedComponent.props?.attrs)?.length>0" class="flex align-content-center align-items-center">
            <h4>Attributi</h4>
          </div>
 
          <div v-if="selectedComponent.props && selectedComponent.props?.attrs">
            <div v-for="(value, key) in selectedComponent.props.attrs" :key="key" class="w-full form-group">
              <label :for="`attrs-${key}`">{{ key }}</label><br>
-             <InputGroup>
-
-               <InputText v-model="selectedComponent.props.attrs[key]" :id="`attrs-${key}`" class="w-full form-control" />
-               <InputGroupAddon>
-                 <Button severity="danger" icon="fa fa-times" @click="removeAttrs(key)" />
-               </InputGroupAddon>
-             </InputGroup>
+             <div class="flex">
+               <div class="flex-grow-1">
+                 <InputText v-model="selectedComponent.props.attrs[key]" :id="`attrs-${key}`" class="w-full form-control" />
+               </div>
+               <div class="flex-none">
+                 <Button severity="danger" outlined icon="fa fa-times" @click="removeAttrs(key)" class="ml-2" />
+               </div>
+             </div>
            </div>
          </div>
        </Panel>
      </div>
-     <div class="flex-none">
+     <div class="flex-none" v-if="selectedComponent?.id">
        <Panel toggleable collapsed>
          <template #header>
            <i class="fa fa-plus-circle" />&nbsp<small>Attributi personalizzati</small>
@@ -81,8 +99,17 @@ const removeAttrs = (key: string) => {
                <Button outlined severity="success" @click="addCustomAttr" class="ml-3 flex-grow-1 font-bold" size="small" icon="fa fa-save" />
              </div>
            </div>
-           <InputText v-model="newCustomAttrName" placeholder="Nome dell'attributo" class="w-full mb-1" />
-           <Textarea v-model="newCustomAttrValue" placeholder="Valore dell'attributo" class="w-full" />
+           <div class="grid">
+             <div class="col-12">
+               <InputText v-model="newCustomAttrName" @keyup="VV.validateField('newCustomAttrName', newCustomAttrName)" placeholder="Nome dell'attributo" class="w-full mb-1" />
+               <InlineMessage v-if="VV.hasError('newCustomAttrName')" class="error">{{ VV.getError('newCustomAttrName') }}</InlineMessage>
+             </div>
+             <div class="col-12">
+               <Textarea v-model="newCustomAttrValue" @keyup="VV.validateField('newCustomAttrValue', newCustomAttrValue)" placeholder="Valore dell'attributo" class="w-full" />
+               <InlineMessage severity="danger" v-if="VV.hasError('newCustomAttrValue')" class="error">{{ VV.getError('newCustomAttrValue') }}</InlineMessage>
+             </div>
+           </div>
+
          </div>
        </Panel>
      </div>
