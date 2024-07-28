@@ -1,6 +1,8 @@
+import type {Project} from "~/models/interfaces/Project";
+
 export class FilesHelper {
 
-    public importProject(file: File): Promise<object|boolean> {
+    public static importProject(file: File): Promise<boolean|Project> {
         if (!file) return Promise.resolve(false);
 
         return new Promise(resolve => {
@@ -24,7 +26,7 @@ export class FilesHelper {
         });
     }
 
-    public exportProject(project: object): boolean {
+    public static exportProject(project: object): boolean {
         if (!project || !Array.isArray(project) || project?.length === 0) return false;
 
         const jsonData = JSON.stringify(project);
@@ -38,7 +40,7 @@ export class FilesHelper {
         return true;
     }
 
-    public exportHtml(html: string): boolean {
+    public static exportHtml(html: string): boolean {
         if (!html || html?.length === 0) return false;
 
         let _ncode = `<template>\n${html}\n</template>`;

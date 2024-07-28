@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import HistoryManager from "~/Utils/manager/HistoryManager";
+import HistoryManager from "~/manager/HistoryManager";
 
 const history = new HistoryManager();
 

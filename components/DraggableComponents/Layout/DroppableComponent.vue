@@ -1,14 +1,16 @@
 <script setup lang="ts">
+//TODO: Da aggiornare/rivedere
 import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
 import type {DroppableComponent} from "~/models/DroppableComponent";
-import {DragDropHelper} from "~/Utils/helper/DragDropHelper";
+import {DragDropHelper} from "~/helper/DragDropHelper";
+import type {Component} from "~/models/interfaces/Component";
 
 const props = defineProps({
   parentComponents: {
-    type: Array as PropType<DroppableComponent[]>,
+    type: Array as PropType<Component[]>,
     default: () => []
   },
-  attrs: {
+  attributes: {
     type: Object,
     default: () => ({})
   },
@@ -19,8 +21,6 @@ const props = defineProps({
 });
 const emit = defineEmits(['updateNestedComponents', 'updateSelectedComponent', 'removeComponent']);
 
-const DD = new DragDropHelper();
-
 const contextMenu = ref();
 
 const itemsContextComponent: Ref<{label: string, icon: string, command: () => void}[]> = ref([
@@ -29,7 +29,7 @@ const itemsContextComponent: Ref<{label: string, icon: string, command: () => vo
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
 
-const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
+const components: Ref<Component[]> = ref([] as Component[]);
 
 const selectedComponent: Ref<DroppableComponent | undefined>  = defineModel<DroppableComponent>('selectedComponent');
 const draggedComponentIndex: Ref<number> = ref(-1);
@@ -43,7 +43,7 @@ const onComponentRightClick = (event: any, component: DroppableComponent) => {
   });
 };
 
-const duplicateComponent = (component: any) => {
+const duplicateComponent = (component: Component) => {
   if (component) {
     const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
     newComponent.id = Date.now().toString();
@@ -133,9 +133,9 @@ const onDrop = (event: any) => {
       emit('removeComponent', {parentComponentId, draggedIndex});
     } else {
       // Trova e rimuove il componente dall'array principale
-      const pathToComponent = DD.findObjectById(components.value, componentData.id);
+      const pathToComponent = DragDropHelper.findObjectById(components.value, componentData.id);
       if (pathToComponent !== null) {
-        draggedComponent = JSON.parse(JSON.stringify(DD.removeObjectByPath(components.value, pathToComponent)));
+        draggedComponent = JSON.parse(JSON.stringify(DragDropHelper.removeObjectByPath(components.value, pathToComponent)));
       }
     }
   }
@@ -147,10 +147,10 @@ const onDrop = (event: any) => {
 
 
   if (!draggedComponent) {
-    draggedComponent = componentData.component ? componentData.component : DD.findObjectById(components.value, componentData.parentComponentId);
+    draggedComponent = componentData.component ? componentData.component : DragDropHelper.findObjectById(components.value, componentData.parentComponentId);
   }
   if (draggedComponent) {
-    const targetComponent = DD.findParentComponent(dropTargetId, components.value);
+    const targetComponent = DragDropHelper.findParentComponent(dropTargetId, components.value);
     if (targetComponent && targetComponent.slot) {
       targetComponent.slot.push(draggedComponent);
     } else {
@@ -257,7 +257,7 @@ const filterProps = (props: Record<string, any>) => {
 <!-- [component?.props?.class]: component?.props?.class,-->
     <div
         data-vin="draggable"
-        v-bind="attrs"
+        v-bind="attributes"
         v-for="(component, index) in components"
         :key="`draggable-component-${index}`"
         class="draggable-component"

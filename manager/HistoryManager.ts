@@ -1,17 +1,17 @@
 import { ref, type Ref } from 'vue';
-import type { DroppableComponent } from '~/models/DroppableComponent';
+import type {Component} from "~/models/interfaces/Component";
 
 class HistoryManager {
-    private stateHistory: Ref<DroppableComponent[][]>;
-    private redoStack: Ref<DroppableComponent[][]>;
+    private stateHistory: Ref<Component[][]>;
+    private redoStack: Ref<Component[][]>;
 
     constructor() {
-        this.stateHistory = ref<DroppableComponent[][]>([]);
-        this.redoStack = ref<DroppableComponent[][]>([]);
+        this.stateHistory = ref<Component[][]>([]);
+        this.redoStack = ref<Component[][]>([]);
     }
 
     // Memorizza l'ultimo stato
-    public saveState(state: DroppableComponent[]): void {
+    public saveState(state: Component[]): void {
         // Evita di salvare stati vuoti o duplicati consecutivi
         if (state.length === 0 || (this.stateHistory.value.length > 0 && JSON.stringify(state) === JSON.stringify(this.stateHistory.value[this.stateHistory.value.length - 1]))) {
             return;
@@ -23,7 +23,7 @@ class HistoryManager {
     }
 
     // Ripristina lo stato precedente
-    public undoState(): DroppableComponent[] | null {
+    public undoState(): Component[] | null {
         if (this.stateHistory.value.length > 1) { // Mantengo almeno uno stato per evitare di tornare a uno stato vuoto
             const lastState = this.stateHistory.value.pop();
             if (lastState) {
@@ -37,7 +37,7 @@ class HistoryManager {
     }
 
     // Ripristina lo stato successivo
-    public redoState(): DroppableComponent[] | null {
+    public redoState(): Component[] | null {
         if (this.redoStack.value.length > 0) {
             const nextState = this.redoStack.value.pop();
             if (nextState) {

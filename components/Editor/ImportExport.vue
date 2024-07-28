@@ -6,7 +6,7 @@ const emit = defineEmits(['preview', 'exportHtml', 'exportProject', 'importProje
 
   <div class="flex flex-column">
     <div class="flex">
-      <Panel toggleable>
+      <Panel class="w-full" toggleable>
         <template #header>
           <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
         </template>
@@ -15,7 +15,7 @@ const emit = defineEmits(['preview', 'exportHtml', 'exportProject', 'importProje
       </Panel>
     </div>
     <div class="flex">
-      <Panel toggleable collapsed>
+      <Panel class="w-full" toggleable collapsed>
         <template #header>
           <i class="fa fa-save" />&nbsp;<small>Salva Progetto</small>
         </template>

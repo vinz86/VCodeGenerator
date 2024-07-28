@@ -1,20 +1,28 @@
 <script setup lang="ts">
 import {availableComponents} from "~/components/DraggableComponents/AvailableComponent";
 import type {DroppableComponent} from "~/models/DroppableComponent";
+import {ComponentFactoryProvider} from "~/factories/ComponentFactory";
+import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {ServiceKeys} from "~/models/enum/ServiceKeys";
 
-// TODO: da implementare
-const cmpType = defineModel();
+const cmpType = defineModel();// TODO: da implementare
+
+const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(ServiceKeys.ComponentFactory)
+const factory = factoryProvider.getFactory('primevue') // TODO: cambia 'primevue' in base alla scelta dell'utente
+console.log('factory', factory)
+
+
 const groupByCategory = (components: DroppableComponent[]) => {
-  return components.reduce((acc: any, component: DroppableComponent) => {
-    (acc[component.cat] = acc[component.cat] || []).push(component);
+  return components.reduce((acc: any, component: DroppableComponent, currentIndex) => {
+    (acc[component.cat||currentIndex] = acc[component.cat||currentIndex] || []).push(component);
     return acc;
   }, {});
 };
 
 const groupedComponents = computed(() => groupByCategory(availableComponents));
 
-const onDragStart = (event: any, component: DroppableComponent) => {
-  event.dataTransfer.setData('component', JSON.stringify(component));
+const onDragStart = (event: any, component: DroppableComponent): void => {
+    event.dataTransfer.setData('component', JSON.stringify(component));
 };
 
 </script>
@@ -24,12 +32,12 @@ const onDragStart = (event: any, component: DroppableComponent) => {
 
     <Accordion :activeIndex="0">
 
-      <AccordionTab v-for="(components, category) in groupedComponents" :key="category" :header="category">
+      <AccordionTab v-for="(components, category) in groupedComponents" :key="category" :header="category.toString()">
         <div
             v-for="component in components"
             :key="component.name"
             class="draggable-component"
-            :componentId="Date.now()"
+            :componentId="Date.now().toString()"
             draggable="true"
             @dragstart="onDragStart($event, component)"
         >

@@ -1,45 +1,45 @@
 import {formComponents} from '~/components/DraggableComponents/Form/FormComponents';
 import {layoutComponents} from "~/components/DraggableComponents/Layout/LayoutComponents";
 
-const defaultProps = { class:'', id:'', style:''}
-const defaultAttrs = { }
+const defaultAttributes = { class:'', id:'', style:''}
+
 export const availableComponents = [
 
     ...layoutComponents, // LAYOUT
     ...formComponents, // FORM
+/*
+    { label: 'Grid', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells',
+        class: 'grid w-full',
+        attributes: {
+            ...defaultAttributes
+        }
 
-    { label: 'Grid', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-table-cells', props: {
-            class: 'grid w-full',
-            attrs: {
-                ...defaultAttrs
-            }
-        },
     },
     { label: 'Col 6', name: 'DroppableComponent', cat:'PrimeVue', tag: 'div', icon: 'fa-solid fa-grip-lines-vertical',
         props: {
             id: '',
             class: 'col-6',
-            attrs: {
-                ...defaultAttrs
+            attributes: {
+                ...defaultAttributes
             },
         },
     },
 
     { name: 'VCGInputText', label:'InputText', cat:'PrimeVue', tag: 'InputText', props: {
-            ...defaultProps,
+            ...defaultAttributes,
         },
     },
 
     { name: 'VCGInputNumber', label:'InputNumber', cat:'PrimeVue', tag: 'InputNumber', props: {
-            ...defaultProps,
-            attrs: {
+            ...defaultAttributes,
+            attributes: {
                 placeholder: 'Inserisci un numero...'
             },
         },
     },
 
     { name: 'VCGSlider', label:'Slider', cat:'PrimeVue', tag: 'Slider', props: {
-            ...defaultProps,
+            ...defaultAttributes,
         },
-    },
+    },*/
 ];

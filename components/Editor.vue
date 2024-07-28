@@ -1,34 +1,51 @@
 <script setup lang="ts">
-/** TODO: new:
- * Gestire diverse tipologie di componenti (tramite menu a tendina)
- * Componente personalizzato
- * Aggiungere un ulteriore layer per gestire un albero di files
- */
 
 import {ref, onMounted, onUnmounted, watch, nextTick} from 'vue';
-import DraggableComponent from '~/components/Editor/DraggableComponent.vue';
 import ComponentOptions from "~/components/Editor/ComponentOptions.vue";
-import { DragDropHelper } from "~/Utils/helper/DragDropHelper";
+import { DragDropHelper } from "~/helper/DragDropHelper";
 import type { DroppableComponent } from "~/models/DroppableComponent";
 import type { Ref } from "vue";
 import type { DroppableProps } from "~/models/DroppableProps";
-import {FilesHelper} from "~/Utils/helper/FilesHelper";
-import {ProjectHelper} from "~/Utils/helper/ProjectHelper";
-import HistoryManager from "~/Utils/manager/HistoryManager";
+import {FilesHelper} from "~/helper/FilesHelper";
+import {ProjectHelper} from "~/helper/ProjectHelper";
+import HistoryManager from "~/manager/HistoryManager";
 import ImportExport from "~/components/Editor/ImportExport.vue";
 import OutputComponent from "~/components/Editor/OutputComponent.vue";
+import {ComponentFactoryProvider} from "~/factories/ComponentFactory";
+import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import type {Component} from "~/models/interfaces/Component";
+import type {ItemContextMenu} from "~/models/types/itemContextMenu";
+import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
+import {ServiceKeys} from "~/models/enum/ServiceKeys";
+import {ComponentTypes} from "~/models/enum/ComponentTypes";
+import Project from "~/components/Editor/Project.vue";
+import  {type Project as IProject } from '~/models/interfaces/Project';
+import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
+import type {LocalStorageService} from "~/services/LocalStorageService";
+import type {FileModel} from "~/models/interfaces/FileModel";
+import {StateManager} from "~/store/StateManager";
 
-const components: Ref<DroppableComponent[]> = ref([] as DroppableComponent[]);
-// components.value = [{
-//   "name":"DroppableComponent",
-//   "locked": true,
-//   "cat":"Layout",
-//   "tag":"div",
-//   "props":{"class":"","id":"","style":"","attrs":{}},
-//   "id": "main-droppable-component",
-//   "slot":[]
-// }];
-const selectedComponent: Ref<DroppableComponent> = ref({} as DroppableComponent);
+const components: Ref<Component[]> = ref([] as Component[]);
+
+const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(ServiceKeys.ComponentFactory);
+const localStorageService = DIContainer.getService<LocalStorageService>(ServiceKeys.LocalStorageService);
+const htmlElementsFactory = factoryProvider.getFactory(ComponentTypes.HtmlElements);
+
+let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory);
+
+const HistoryM = new HistoryManager();
+
+// Refs
+const contextMenu = ref();
+const contextMenuEditor = ref();
+
+const selectedComponent: Ref<Component> = ref({} as Component);
+const selectedProject: Ref<IProject> = ref({} as IProject);
+const selectedComponentsType: Ref<ComponentTypes> = ref({} as ComponentTypes);
+const selectedFile = ref<FileModel | null>(null);
+
+
+const componentsType: Ref<Component> = ref({} as Component);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
 const keyOptions: Ref<number> = ref(0);
@@ -36,26 +53,22 @@ const draggedComponentIndex: Ref<number|null> = ref(null);
 const draggedFrom: Ref<any> = ref(null);
 const dragOverIndex: Ref<any> = ref(null);
 const isPreviewVisible: Ref<boolean> = ref(false);
-
-const DragDropH = new DragDropHelper();
-const FilesH = new FilesHelper();
-const ProjectH = new ProjectHelper();
-const HistoryM = new HistoryManager();
-
 const isSavingState: Ref<boolean> = ref(false);
 
-const contextMenu = ref();
-const itemsContextComponent: Ref<{label: string, icon: string, command: () => void}[]> = ref([
-  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as DroppableComponent)},
+const itemsContextComponent: Ref<ItemContextMenu[]> = ref([
+  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as Component)},
   {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
-
-const contextMenuEditor = ref();
-const itemsContextEditor: Ref<{label: string, icon: string, command: () => void}[]> = ref([
+const itemsContextEditor: Ref<ItemContextMenu[]> = ref([
   {label: 'Annulla', icon: 'fa fa-undo', command: () => undo()},
   {label: 'Ripeti', icon: 'fa fa-redo', command: () => redo()},
 ]);
+
+const showDraggableComponent = computed(()=>{
+  return Object.keys(selectedProject.value)?.length && componentFactory.value
+})
+
 
 watch(components, (newVal) => {
   if (!isSavingState.value) {
@@ -63,23 +76,95 @@ watch(components, (newVal) => {
   }
   updateGeneratedCode();
   isSavingState.value = false;
+
+  if (selectedFile.value) {
+    selectedFile.value.content = newVal;
+    saveFileContent();
+  }
 }, { deep: true });
 
+
+const onSelectFile = (file: FileModel) => {
+  selectedFile.value = file;
+  components.value = file.content || [];
+  saveFileContent();
+  saveProjects();
+};
+
+watch(selectedProject, (newProject) => {
+  if (newProject && newProject.files.length > 0) {
+    selectedFile.value = newProject.files[0];
+    components.value = selectedFile.value?.content || [];
+    saveFileContent();
+  }
+});
+
+const saveFileContent = () => {
+  if (selectedFile.value) {
+    selectedFile.value.content = components.value;
+    localStorageService.save('selectedFile', selectedFile.value);
+    saveProjects();
+  }
+};
+
+const saveProjects = () => {
+  if (selectedProject.value) {
+
+    // Trova l'indice del progetto corrente nella lista dei progetti salvati
+    let projects = localStorageService.load('projects');
+
+    if (typeof projects === 'string') {
+      projects = JSON.parse(projects);
+    }
+
+    // Trova l'indice del progetto corrente nella lista dei progetti salvati
+    const projectIndex = projects?.findIndex((p: IProject) => p.id === selectedProject.value.id);
+
+    if (projectIndex >= 0) {
+      // Aggiorna il progetto esistente
+      projects[projectIndex] = selectedProject.value;
+    } else {
+      // Aggiungi un nuovo progetto se non esiste già
+      projects.push(selectedProject.value);
+    }
+
+    localStorageService.save('projects', JSON.stringify(projects));
+  }
+};
+
+
+const onProjectChange = (project: IProject) => {
+  selectedProject.value = project;
+  if (project.files.length > 0) {
+    const file = project.files[0] as FileModel;
+    selectedFile.value = file;
+    components.value = file.content || [];
+    saveFileContent();
+  }
+};
+
 onMounted(() => {
-  // Salva lo stato iniziale
-  HistoryM.saveState(components.value);
+  selectedComponentsType.value = localStorageService.load('componentsType');
+  onChangeComponentsType();
+
+
+  const file = localStorageService.load('selectedFile');
+  if (file) {
+    onSelectFile(file);
+  }
+
+   HistoryM.saveState(components.value);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    console.log(`Tasto premuto: ${event.key} con ctrlKey: ${event.ctrlKey} e shiftKey: ${event.shiftKey}`);
     if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
       event.preventDefault();
-      undo()
+      undo();
     } else if (event.ctrlKey && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
       event.preventDefault();
       redo();
-    } else if (event.key === 'Delete' ) {
+    } else if (event.key === 'Delete') {
       event.preventDefault();
-      removeComponent()
+      removeComponent();
     }
   };
 
@@ -87,16 +172,21 @@ onMounted(() => {
 
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);
-  })
+  });
 });
 
 
-const handleComponentClick = (component: DroppableComponent) => {
+const onChangeComponentsType = (): void => {
+  componentFactory.value = factoryProvider.getFactory(selectedComponentsType.value);
+  localStorageService.save('componentsType', selectedComponentsType.value)
+}
+
+const handleComponentClick = (component: Component) => {
   selectedComponent.value = component;
   keyOptions.value = keyOptions.value + 1;
 };
 
-const onComponentRightClick = (event: any, component: DroppableComponent) => {
+const onComponentRightClick = (event: any, component: Component) => {
   contextMenu.value.hide();
   nextTick(() => {
     selectedComponent.value = component;
@@ -111,27 +201,37 @@ const onComponentRightClickEditor = (event: any) => {
   });
 };
 
-const duplicateComponent = async (component: any) => {
+
+const duplicateComponent = async (component: Component) => {
   if (component) {
-    const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
-    newComponent.id = Date.now().toString();
-    newComponent.props.class = (component.props.class || '').replace('selectedComponent', '');
-    components.value.push(newComponent);
-    if (component.slot && component.slot.length > 0) {
-      await duplicateComponent(component.slot);
+    let newComponentOptions: DroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
+    newComponentOptions= {...newComponentOptions, id: Date.now().toString()}
+    newComponentOptions.class = (component?.options?.class || '').replace('selectedComponent', '');
+    const newComponent: Component = componentFactory.value.createElement(newComponentOptions);
+
+    if(Object.keys(newComponent).length>0){
+      components.value = [...components.value, newComponent];
+      if (newComponent?.options?.slot?.options) {
+        await duplicateComponent(newComponent.options.slot);
+      }
+
     }
   }
 };
 
-const removeComponent = (index = -1) => {
+const removeComponent = (index: number = -1): boolean => {
   if (index < 0) {
-    index = components.value.findIndex(x => x.id === selectedComponent.value.id);
+    index = components.value.findIndex(x => x.options.id === selectedComponent.value?.options?.id);
   }
   if (index >= 0) {
     components.value.splice(index, 1);
+    return true;
   }
+  return false;
 };
-const undo = ()=>{
+
+
+const undo = (): void => {
   const previousState = HistoryM.undoState();
   if (previousState) {
     isSavingState.value = true;
@@ -155,40 +255,40 @@ const removeDraggedComponent = (event: any) => {
 
   const cmpId = event.parentComponentId ? event.parentComponentId : event.id;
   const index = event.draggedIndex;
-  const pathToComponent = DragDropH.findObjectById(components.value, cmpId.toString());
+  const pathToComponent = DragDropHelper.findObjectById(components.value, cmpId.toString());
   if (pathToComponent !== null) {
     if (event.parentComponentId && index >= 0) {
-      DragDropH.removeObjectByPath(components.value, pathToComponent, index);
+      DragDropHelper.removeObjectByPath(components.value, pathToComponent, index);
     } else {
-      DragDropH.removeObjectByPath(components.value, pathToComponent)
+      DragDropHelper.removeObjectByPath(components.value, pathToComponent)
     }
   }
 };
 
 const onDrop = (event: any) => {
+  if(!selectedProject) return;
   event.preventDefault();
 
   const dropTarget = event.target.closest('[data-drop-target]');
   let componentData = event.dataTransfer.getData('component');
-  componentData = componentData && componentData?.trim()!=='' && JSON.parse(componentData);
+  componentData = componentData && componentData?.trim() !== '' && JSON.parse(componentData);
 
   if (componentData.fromEditor) return;
 
   let draggedComponent;
   if (componentData.fromDroppableComponent) {
     if (componentData.parentComponentId) {
-      const pathToComponent = DragDropH.findObjectById(components.value, componentData.parentComponentId);
+      const pathToComponent = DragDropHelper.findObjectById(components.value, componentData.parentComponentId);
       if (pathToComponent !== null) {
-        if(componentData.component){
+        if (componentData.component) {
           draggedComponent = componentData.component;
-          DragDropH.removeObjectByPath(components.value, pathToComponent, componentData.index)
+          DragDropHelper.removeObjectByPath(components.value, pathToComponent, componentData.index);
         }
-        //draggedComponent = JSON.parse(JSON.stringify(DragDropH.removeObjectByPath(components.value, pathToComponent, componentData.index)));
       }
     } else {
-      const pathToComponent = DragDropH.findObjectById(components.value, componentData.id);
+      const pathToComponent = DragDropHelper.findObjectById(components.value, componentData.id);
       if (pathToComponent !== null) {
-        draggedComponent = JSON.parse(JSON.stringify(DragDropH.removeObjectByPath(components.value, pathToComponent)));
+        draggedComponent = JSON.parse(JSON.stringify(DragDropHelper.removeObjectByPath(components.value, pathToComponent)));
       }
     }
   } else {
@@ -198,7 +298,18 @@ const onDrop = (event: any) => {
   if (draggedComponent) {
     if (dropTarget && dropTarget.dataset.dropTarget === 'editor') {
       addComponent(draggedComponent, components.value);
+      saveFileContent();
     }
+  }
+};
+
+const addComponent = (component: any, targetComponents: any) => {
+  if (Array.isArray(targetComponents)) {
+    const newComponent = component.slot ? component : { ...component, id: Date.now(), slot: [] };
+    targetComponents.push(componentFactory.value.createElement(newComponent));
+    saveFileContent();
+  } else {
+    console.error('targetComponents non è un array', targetComponents);
   }
 };
 
@@ -238,22 +349,12 @@ const onDropComponent = (index: number) => {
   }
 };
 
-const addComponent = (component: any, targetComponents: any) => {
-  if (Array.isArray(targetComponents)) {
-    const newComponent = component.slot ? component : { ...component, id: Date.now(), slot: [] };
-    targetComponents.push(newComponent);
-  } else {
-    console.error('targetComponents non è un array', targetComponents);
-  }
-};
-
 const updateComponent = (updatedProps: DroppableProps) => {
-  if (!selectedComponent.value.id) return;
+  if (!selectedComponent.value?.options?.id) return;
 
-  const index = components.value.findIndex(c => c.id === selectedComponent.value.id);
+  const index = components.value.findIndex(c => c?.options.id === selectedComponent.value?.options?.id);
   if (index !== -1) {
-    components.value[index].props = updatedProps;
-    selectedComponent.value.props = updatedProps;
+    components.value[index].options.attributes = selectedComponent.value.options.attributes = updatedProps;
     keyEditor.value++;
   }
 };
@@ -261,66 +362,62 @@ const updateComponent = (updatedProps: DroppableProps) => {
 const updateGeneratedCode = () => {
   if (!components.value.length) return;
 
-  let generatedCodeValue = '';
-
-  for (const component of components.value) {
-    generatedCodeValue += ProjectH.generateCodeRecursive(component);
-  }
-
-  generatedCode.value = generatedCodeValue;
+  generatedCode.value = ProjectHelper.generateCodeFromComponents(components.value);
 };
 
-const updateNestedComponents = (id: string, nestedComponents: any) => {
-  const updateComponents = (componentsArray: DroppableComponent[]) => {
+const updateNestedComponents = (id: string, nestedComponents: Component[]) => {
+  const updateComponents = (componentsArray: Component[]) => {
     for (const component of componentsArray) {
-      if (component.id?.toString() === id) {
-        component.slot = nestedComponents;
+      if (component?.options?.id?.toString() === id) {
+        component.options.slot = nestedComponents;
+        saveFileContent();
         return componentsArray;
       }
-      if (component.slot && component.slot.length > 0) {
-        updateComponents(component.slot);
+      if (component?.options?.slot?.options) {
+        updateComponents(component.options.slot.options);
       }
     }
   };
-  updateComponents(components.value)
+  updateComponents(components.value);
 };
 
 // IMPORT / EXPORT
 const exportHTML = () => {
-  FilesH.exportHtml(generatedCode.value)
+  FilesHelper.exportHtml(generatedCode.value);
 };
 
 const exportProject = () => {
-  components.value && FilesH.exportProject(components.value)
+  if (selectedProject.value) {
+    FilesHelper.exportProject(selectedProject.value.files);
+  }
 };
 
 const importProject = async (event: any) => {
   const file = event.files[0];
   if (!file) return;
 
-  FilesH.importProject(file).then((file) =>{ components.value = file as DroppableComponent[]; });
+  const importedProject: IProject|boolean = await FilesHelper.importProject(file);
+  if (typeof importedProject === 'object') {
+    selectedProject.value = importedProject;
+    components.value = selectedProject.value.files[0].content || [];
+    saveProjects();
+  }
 };
 
-const getDropAreaClass = (component)=>{
-    if (component?.props?.class?.length>0){
-      return component?.props?.class;
-    }
+
+const getBindAttributes = (attribute: DroppableProps)=>{
+  if (!attribute) return;
+  delete attribute?.selectedComponent;
+  delete attribute?.parentComponents;
+  return attribute;
+
 }
-
-const cmpType = ref('');
-const componentsTypeValues = ref([
-  { name: 'Basic HTML', code: 'HTML' },
-  { name: 'PrimeVue / PrimeFlex', code: 'PRIMEVUE' },
-  { name: 'Bootstrap', code: 'BOOTSTRAP' },
-]);
-
 </script>
-
 <template>
   <div id="wrapper" @contextmenu.stop="onComponentRightClickEditor($event)">
 
-    <ContextMenu ref="contextMenuEditor" :model="itemsContextEditor"/>
-    <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
+    <ContextMenu ref="contextMenuEditor" :model="itemsContextEditor" />
+    <ContextMenu ref="contextMenu" :model="itemsContextComponent" />
 
     <div class="container">
       <!-- PREVIEW -->
@@ -332,21 +429,25 @@ const componentsTypeValues = ref([
         <!-- LEFT -->
         <SplitterPanel :size="20">
           <div class="flex flex-column h-full">
-            <div class="flex-none">
-              <Dropdown v-model="cmpType" :options="componentsTypeValues" optionLabel="name" option-value="code" placeholder="Seleziona il tipo dei componenti" class="w-full" />
-            </div>
             <div class="flex-grow-1">
-              <DraggableComponent v-model="cmpType" />
+              <Project v-model="selectedProject" v-model:components-type="selectedComponentsType" @change-components-type="onChangeComponentsType" @select-file="onSelectFile" />
             </div>
-            <div class="flex-none">
+            <div class="flex-none w-full">
               <ImportExport @preview="isPreviewVisible = true" @exportHtml="exportHTML" @exportProject="exportProject" @importProject="importProject($event)" />
             </div>
           </div>
         </SplitterPanel>
+        <SplitterPanel :size="20">
+          <div class="flex flex-column h-full">
+            <div class="flex-grow-1">
+              <DraggableComponent v-model="componentsType" />
+            </div>
+          </div>
+        </SplitterPanel>
         <!-- CENTER -->
-        <SplitterPanel :size="60" class="flex flex-column h-full">
+        <SplitterPanel :size="40" class="flex flex-column h-full">
           <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
-            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as DroppableComponent">
+            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as Component">
               <div
                   class="drop-area"
                   @drop="onDrop"
@@ -354,31 +455,32 @@ const componentsTypeValues = ref([
                   data-drop-target="editor"
                   data-component-id="editor"
               >
-<!--
-                    :class="{'selectedComponent': selectedComponent?.id === component?.id, [getDropAreaClass(component)]: getDropAreaClass(component) }"-->
                 <div
                     v-for="(component, index) in components"
-                    :key="`${component.id}-${component.name}`"
-                    :class="{'selectedComponent': selectedComponent?.id === component?.id, [component?.props?.class]: component?.props?.class?.length>0}"
+                    :key="`${component.options?.id}-${component.options?.name}`"
+                    :class="{'selectedComponent': selectedComponent?.options?.id === component?.options?.id, [component.options.class]: component?.options?.class?.length}"
                     class="draggable-component"
                     @drop="onDropComponent(index)"
                     draggable="true"
-                    @dragstart="!component.locked ? onDragStart($event, index) : ''"
+                    @dragstart="!component?.options?.locked ? onDragStart($event, index) : ''"
                     @dragenter="onDragEnter(index)"
                     @dragleave="onDragLeave()"
                 >
+
                   <component
                       v-model:selectedComponent="selectedComponent"
-                      :is="component.name"
-                      :componentId="component.id"
-                      v-bind="component.props"
-                      :parentComponents="component.slot"
+                      :is="component.options?.tag || 'div'"
+                      :class="component?.options?.class"
+                      :style="component?.options?.style"
+                      :componentId="component?.options?.id"
+                      v-bind="getBindAttributes(component.options?.attributes as DroppableProps)"
+                      :parentComponents="component?.options?.slot"
                       @updateSelectedComponent="handleComponentClick"
                       @updateNestedComponents="updateNestedComponents"
                       @click.stop="handleComponentClick(component)"
                       @removeComponent="removeDraggedComponent($event)"
-                      @contextmenu.stop="!component.locked ? onComponentRightClick($event, component): ''"
-                  />
+                      @contextmenu.stop="!component?.options?.locked ? onComponentRightClick($event, component): ''"
+                  >{{ component?.options?.inner }}</component>
 
                 </div>
               </div>
@@ -390,7 +492,7 @@ const componentsTypeValues = ref([
 
         <!-- RIGHT -->
         <SplitterPanel :size="20">
-          <ComponentOptions v-if="selectedComponent" v-model:selectedComponent="selectedComponent" @update:model-value="updateComponent" />
+          <ComponentOptions v-if="selectedComponent" v-model:components="components" v-model:selectedComponent="selectedComponent" @update:model-value="updateComponent" />
         </SplitterPanel>
       </Splitter>
     </div>

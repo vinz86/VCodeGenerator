@@ -57,7 +57,8 @@ html, body{
     min-width: 80px;
     max-width: 100%;
     position: relative;
-/*    border: 1px dotted #ccc;*/
+    border: 1px dotted #ccc;
+    min-height: 20px;
 }
 
 .draggable-component.drag-over {

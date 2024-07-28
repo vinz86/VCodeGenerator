@@ -9,7 +9,7 @@ import type {
     VValidateConfig
 } from "./VValidateModels";
 
-class VValidate {
+class VValidate implements VValidateConfig {
     private errors = reactive<{ [key: string]: string | null }>({});
     private readonly messages: { [key: string]: any };
     private readonly validators: { [key: string]: any };
