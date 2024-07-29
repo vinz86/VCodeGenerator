@@ -1,16 +1,6 @@
 <script setup lang="ts">
 import {availableComponents} from "~/components/DraggableComponents/AvailableComponent";
 import type {DroppableComponent} from "~/models/DroppableComponent";
-import {ComponentFactoryProvider} from "~/factories/ComponentFactory";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
-import {ServiceKeys} from "~/models/enum/ServiceKeys";
-
-const cmpType = defineModel();// TODO: da implementare
-
-const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(ServiceKeys.ComponentFactory)
-const factory = factoryProvider.getFactory('primevue') // TODO: cambia 'primevue' in base alla scelta dell'utente
-console.log('factory', factory)
-
 
 const groupByCategory = (components: DroppableComponent[]) => {
   return components.reduce((acc: any, component: DroppableComponent, currentIndex) => {

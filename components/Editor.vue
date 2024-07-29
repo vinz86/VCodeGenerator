@@ -427,7 +427,7 @@ const getBindAttributes = (attribute: DroppableProps)=>{
 
       <Splitter class="w-full m-0" layout="horizontal">
         <!-- LEFT -->
-        <SplitterPanel :size="20">
+        <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
               <Project v-model="selectedProject" v-model:components-type="selectedComponentsType" @change-components-type="onChangeComponentsType" @select-file="onSelectFile" />
@@ -437,7 +437,7 @@ const getBindAttributes = (attribute: DroppableProps)=>{
             </div>
           </div>
         </SplitterPanel>
-        <SplitterPanel :size="20">
+        <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
               <DraggableComponent v-model="componentsType" />
@@ -445,7 +445,7 @@ const getBindAttributes = (attribute: DroppableProps)=>{
           </div>
         </SplitterPanel>
         <!-- CENTER -->
-        <SplitterPanel :size="40" class="flex flex-column h-full">
+        <SplitterPanel :size="45" class="flex flex-column h-full">
           <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
             <div class="editor" :key="keyEditor" @click="selectedComponent = {} as Component">
               <div

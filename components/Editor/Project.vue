@@ -125,7 +125,7 @@ onMounted(loadProjects);
         <Button @click="createProject" class="mb-2" rounded><i class="fa fa-plus" /></Button>
       </div>
     </div>
-    <div class="flex">
+    <div class="flex flex-column">
       <div>
         <Dropdown
             v-if="projects.length"
