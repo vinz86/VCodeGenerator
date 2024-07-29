@@ -1,17 +1,17 @@
 import { ref, type Ref } from 'vue';
-import type {Component} from "~/models/interfaces/Component";
+import type {IComponent} from "~/models/interfaces/IComponent";
 
 class HistoryManager {
-    private stateHistory: Ref<Component[][]>;
-    private redoStack: Ref<Component[][]>;
+    private stateHistory: Ref<IComponent[][]>;
+    private redoStack: Ref<IComponent[][]>;
 
     constructor() {
-        this.stateHistory = ref<Component[][]>([]);
-        this.redoStack = ref<Component[][]>([]);
+        this.stateHistory = ref<IComponent[][]>([]);
+        this.redoStack = ref<IComponent[][]>([]);
     }
 
     // Memorizza l'ultimo stato
-    public saveState(state: Component[]): void {
+    public saveState(state: IComponent[]): void {
         // Evita di salvare stati vuoti o duplicati consecutivi
         if (state.length === 0 || (this.stateHistory.value.length > 0 && JSON.stringify(state) === JSON.stringify(this.stateHistory.value[this.stateHistory.value.length - 1]))) {
             return;
@@ -23,7 +23,7 @@ class HistoryManager {
     }
 
     // Ripristina lo stato precedente
-    public undoState(): Component[] | null {
+    public undoState(): IComponent[] | null {
         if (this.stateHistory.value.length > 1) { // Mantengo almeno uno stato per evitare di tornare a uno stato vuoto
             const lastState = this.stateHistory.value.pop();
             if (lastState) {
@@ -37,7 +37,7 @@ class HistoryManager {
     }
 
     // Ripristina lo stato successivo
-    public redoState(): Component[] | null {
+    public redoState(): IComponent[] | null {
         if (this.redoStack.value.length > 0) {
             const nextState = this.redoStack.value.pop();
             if (nextState) {

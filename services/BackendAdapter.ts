@@ -1,6 +1,6 @@
-import type { BackendService } from '~/models/interfaces/BackendService';
+import type { IBackendService } from '~/models/interfaces/IBackendService';
 
-export class MockBackendService implements BackendService {
+export class MockBackendService implements IBackendService {
   async fetchProjects(): Promise<any[]> {
     // Simula il recupero dei progetti
     return [];

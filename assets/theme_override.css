@@ -1,0 +1,7 @@
+html {
+    font-size: 14px;
+}
+
+.p-tree .p-tree-container .p-treenode .p-treenode-content {
+    padding: 0;
+}

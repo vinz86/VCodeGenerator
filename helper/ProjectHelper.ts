@@ -1,4 +1,4 @@
-import type {Component} from "~/models/interfaces/Component";
+import type {IComponent} from "~/models/interfaces/IComponent";
 import type {DroppableComponent} from "~/models/DroppableComponent";
 
 export class ProjectHelper {
@@ -13,7 +13,7 @@ export class ProjectHelper {
         }
     }
 
-    private static processSlotContent = (slotContent: Component[]) => {
+    private static processSlotContent = (slotContent: IComponent[]) => {
         let slotCode = '';
 
         if (Array.isArray(slotContent)) {
@@ -27,7 +27,7 @@ export class ProjectHelper {
         return slotCode;
     }
 
-    public static generateMainStyle (components: Component[]){
+    public static generateMainStyle (components: IComponent[]){
 /*        if (components.style) {
             let generatedCodeValue = components.styleType ? `<style lang="${components.styleType}">` : '<style lang="css">';
             generatedCodeValue += components.style;
@@ -38,7 +38,7 @@ export class ProjectHelper {
         console.log('generateMainStyle non implementata')
     }
 
-    public static generateCodeFromComponents(components: Component[]): string{
+    public static generateCodeFromComponents(components: IComponent[]): string{
         let generatedCodeValue:string = '';
 
         for (const component of components) {
@@ -50,7 +50,7 @@ export class ProjectHelper {
         return generatedCodeValue;
     }
 
-    private static generateCodeRecursive(component: Component):string {
+    private static generateCodeRecursive(component: IComponent):string {
         let code = '';
 
         if (!component?.options || !component?.options.tag) {
@@ -99,10 +99,10 @@ export class ProjectHelper {
     };
 
 /*
-    public static droppableComponentToComponent(droppableComponent: DroppableComponent, componentFactory: ComponentFactory) : Component {
-        if (!droppableComponent?.name) return {} as Component;
+    public static droppableComponentToComponent(droppableComponent: DroppableComponent, componentFactory: ComponentFactory) : IComponent {
+        if (!droppableComponent?.name) return {} as IComponent;
 
-        let element: Component;
+        let element: IComponent;
         switch(droppableComponent?.name){
             case 'div' || 'DroppableComponent':
                 element = componentFactory.createElement();

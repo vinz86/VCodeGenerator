@@ -1,22 +1,22 @@
 <script lang="ts" setup>
 import { defineProps, ref, type PropType, computed, nextTick } from 'vue';
-import type { FileModel } from '~/models/interfaces/FileModel';
+import type { TFile } from '~/models/types/TFile';
 import type { Project } from '~/models/interfaces/Project';
 import { DIContainer } from '~/services/DipendencyInjection/DIContainer';
-import { ServiceKeys } from '~/models/enum/ServiceKeys';
+import { EServiceKeys } from '~/models/enum/EServiceKeys';
 import type { LocalStorageService } from '~/services/LocalStorageService';
-import type { FileServiceInterface } from '~/models/interfaces/FileServiceInterface';
-import { FilesTypes } from '~/models/enum/FilesTypes';
+import type { IFileService } from '~/models/interfaces/IFileService';
+import { EFileTypes } from '~/models/enum/EFileTypes';
 import type ContextMenu from "primevue/contextmenu";
 
 const emit = defineEmits(['selectFile']);
 
-const fileService = DIContainer.getService<FileServiceInterface>(ServiceKeys.FileService);
-const localStorageService = DIContainer.getService<LocalStorageService>(ServiceKeys.LocalStorageService);
+const fileService = DIContainer.getService<IFileService>(EServiceKeys.FileService);
+const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
 const newFileName = ref('');
-const newFileType = ref<FilesTypes>(FilesTypes.File);
-const selectedNode = ref<FileModel | null>(null);
+const newFileType = ref<EFileTypes>(EFileTypes.File);
+const selectedNode = ref<TFile | null>(null);
 const renameDialog = ref(false);
 const contextMenu = ref<ContextMenu | null>(null);
 const addFileDialog = ref(false);
@@ -29,13 +29,13 @@ const props = defineProps({
   },
 });
 
-const formatTreeData = (files: FileModel[]) => {
+const formatTreeData = (files: TFile[]) => {
   return files.map(file => ({
     key: file.id,
     label: file.name,
     data: file,
-    icon: file.type === FilesTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
-    children: file.type === FilesTypes.Folder && file.children ? formatTreeData(file.children) : null,
+    icon: file.type === EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
+    children: file.type === EFileTypes.Folder && file.children ? formatTreeData(file.children) : null,
   }));
 };
 
@@ -58,7 +58,7 @@ const onComponentRightClick = (event) => {
   }
 };
 
-const selectFile = (node: FileModel) => {
+const selectFile = (node: TFile) => {
   selectedNode.value = node;
   console.log('Selected node:', node);
   emit('selectFile', node);
@@ -66,7 +66,7 @@ const selectFile = (node: FileModel) => {
 
 const addFileToRoot = () => {
   if (props.selectedProject && newFileName.value.trim()) {
-    const newFile = fileService.createFile(newFileName.value, FilesTypes.File);
+    const newFile = fileService.createFile(newFileName.value, EFileTypes.File);
     props.selectedProject.files.push(newFile);
     newFileName.value = '';
   } else {
@@ -74,20 +74,20 @@ const addFileToRoot = () => {
   }
 };
 
-const addFile = (parent: FileModel, name: string, type: 'file' | 'folder') => {
+const addFile = (parent: TFile, name: string, type: 'file' | 'folder') => {
   const newFile = fileService.createFile(name, type);
-  if (parent.type === FilesTypes.Folder) {
+  if (parent.type === EFileTypes.Folder) {
     parent.children?.push(newFile);
   }
 };
 
-const deleteFile = (file: FileModel) => {
+const deleteFile = (file: TFile) => {
   if (props.selectedProject) {
     props.selectedProject.files = fileService.removeFile(props.selectedProject.files, file.id);
   }
 };
 
-const renameFile = (file: FileModel, newName: string) => {
+const renameFile = (file: TFile, newName: string) => {
   if (newName.trim()) {
     file.name = newName;
   }
@@ -106,7 +106,7 @@ const contextMenuItems = computed(() => {
     {
       label: 'Aggiungi',
       icon: 'pi pi-plus',
-      visible: selectedNode.value?.type === FilesTypes.Folder,
+      visible: selectedNode.value?.type === EFileTypes.Folder,
       command: () => {
         if (selectedNode.value) {
           newFileName.value = '';
@@ -164,8 +164,8 @@ const openCreateFolderDialog = () => {
 
 // Opzioni per il tipo di file nel Dropdown
 const newFileTypeValues = [
-  { name: 'File', code: FilesTypes.File },
-  { name: 'Cartella', code: FilesTypes.Folder },
+  { name: 'File', code: EFileTypes.File },
+  { name: 'Cartella', code: EFileTypes.Folder },
 ];
 </script>
 

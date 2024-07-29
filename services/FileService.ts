@@ -1,8 +1,8 @@
-import type {FileModel} from '~/models/interfaces/FileModel';
-import type {FileServiceInterface} from "~/models/interfaces/FileServiceInterface";
-import {FilesTypes} from "~/models/enum/FilesTypes";
+import type {TFile} from '~/models/types/TFile';
+import type {IFileService} from "~/models/interfaces/IFileService";
+import {EFileTypes} from "~/models/enum/EFileTypes";
 
-export class FileService implements FileServiceInterface {
+export class FileService implements IFileService {
     private static instance: FileService;
 
     public static getInstance(): FileService {
@@ -18,22 +18,22 @@ export class FileService implements FileServiceInterface {
     }
 
     // Crea un nuovo file o cartella
-    public createFile(name: string, type: FilesTypes): FileModel {
+    public createFile(name: string, type: EFileTypes): TFile {
         return {
             id: this.generateId(),
             name,
             type,
-            children: type === FilesTypes.Folder ? [] : undefined,
+            children: type === EFileTypes.Folder ? [] : undefined,
         };
     }
 
     // Rimuove un file o cartella dal progetto
-    public removeFile(files: FileModel[], fileId: string): FileModel[] {
+    public removeFile(files: TFile[], fileId: string): TFile[] {
         return files.filter(file => {
             if (file.id === fileId) {
                 return false;
             }
-            if (file.type === FilesTypes.Folder && file.children) {
+            if (file.type === EFileTypes.Folder && file.children) {
                 file.children = this.removeFile(file.children, fileId);
             }
             return true;
@@ -41,7 +41,7 @@ export class FileService implements FileServiceInterface {
     }
 
     // Rinomina un file o cartella
-    public renameFile(files: FileModel[], fileId: string, newName: string): FileModel[] {
+    public renameFile(files: TFile[], fileId: string, newName: string): TFile[] {
         files.forEach(file => {
             if (file.id === fileId) {
                 file.name = newName;
@@ -53,8 +53,8 @@ export class FileService implements FileServiceInterface {
     }
 
     // Sposta un file o cartella in un'altra cartella
-    public moveFile(files: FileModel[], fileId: string, targetFolderId: string): FileModel[] {
-        let fileToMove: FileModel | null = null;
+    public moveFile(files: TFile[], fileId: string, targetFolderId: string): TFile[] {
+        let fileToMove: TFile | null = null;
         const updatedFiles = files.filter(file => {
             if (file.id === fileId) {
                 fileToMove = file;
@@ -74,7 +74,7 @@ export class FileService implements FileServiceInterface {
     }
 
     // Trova la cartella target e aggiunge il file/cartella spostato
-    private findAndAddToTarget(files: FileModel[], targetFolderId: string, fileToAdd: FileModel): void {
+    private findAndAddToTarget(files: TFile[], targetFolderId: string, fileToAdd: TFile): void {
         files.forEach(file => {
             if (file.id === targetFolderId && file.type === 'folder' && file.children) {
                 file.children.push(fileToAdd);

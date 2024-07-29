@@ -1,7 +1,7 @@
-import type {FileModel} from "~/models/interfaces/FileModel";
+import type {TFile} from "~/models/types/TFile";
 
 export interface Project {
   id: string;
   name: string;
-  files: FileModel[];
+  files: TFile[];
 }

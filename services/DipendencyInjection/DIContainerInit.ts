@@ -1,12 +1,15 @@
-import {ServiceKeys} from "~/models/enum/ServiceKeys";
-import {ComponentFactoryProvider} from "~/factories/ComponentFactory";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
-import {FlyweightFactory} from "~/factories/flyweight/FlyweightFactory";
-import type {FileServiceInterface} from "~/models/interfaces/FileServiceInterface";
+import {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
+import type {IFileService} from "~/models/interfaces/IFileService";
 import {FileService} from "~/services/FileService";
 import {MockBackendService} from "~/services/BackendAdapter";
+import type {INotifyManager} from "~/models/interfaces/INotifyManager";
+import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
+import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
 
 export class DIContainerInit {
     private static initialized: boolean = false;
@@ -41,12 +44,13 @@ export class DIContainerInit {
     // ComponentFactoryProvider
     private static initialize(): void {
         try {
-            DIContainer.registerService<ComponentFactoryProvider>(ServiceKeys.ComponentFactory, new ComponentFactoryProvider());
-            DIContainer.registerService<FlyweightFactory<any>>(ServiceKeys.FlyweightFactory, new FlyweightFactory());
-            DIContainer.registerService<StateManager>(ServiceKeys.StateManager, StateManager.getInstance());
-            DIContainer.registerService<LocalStorageService>(ServiceKeys.LocalStorageService, new LocalStorageService());
-            DIContainer.registerService(ServiceKeys.BackendAdapter, new MockBackendService());
-            DIContainer.registerService<FileServiceInterface>(ServiceKeys.FileService, FileService.getInstance());
+            DIContainer.registerService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory, new ComponentFactoryProvider());
+            DIContainer.registerService<Flyweight<any>>(EServiceKeys.FlyweightFactory, new Flyweight());
+            DIContainer.registerService<StateManager>(EServiceKeys.StateManager, StateManager.getInstance());
+            DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, new LocalStorageService());
+            DIContainer.registerService(EServiceKeys.BackendAdapter, new MockBackendService());
+            DIContainer.registerService<IFileService>(EServiceKeys.FileService, FileService.getInstance());
+            DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
         }
         catch (e){
             throw e;

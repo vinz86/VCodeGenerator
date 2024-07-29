@@ -13,11 +13,12 @@ export default defineNuxtConfig({
     }
   },
   css: [
-    '@/assets/style.css',
     'primevue/resources/themes/aura-light-blue/theme.css',
+    '@/assets/theme_override.css',
     'primeflex/primeflex.min.css',
     'primeicons/primeicons.css',
     '@/assets/vendor/fontawesome/css/all.css',
+    '@/assets/style.css',
   ],
 })
 

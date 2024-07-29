@@ -3,11 +3,11 @@
 import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
 import type {DroppableComponent} from "~/models/DroppableComponent";
 import {DragDropHelper} from "~/helper/DragDropHelper";
-import type {Component} from "~/models/interfaces/Component";
+import type {IComponent} from "~/models/interfaces/IComponent";
 
 const props = defineProps({
   parentComponents: {
-    type: Array as PropType<Component[]>,
+    type: Array as PropType<IComponent[]>,
     default: () => []
   },
   attributes: {
@@ -29,7 +29,7 @@ const itemsContextComponent: Ref<{label: string, icon: string, command: () => vo
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
 
-const components: Ref<Component[]> = ref([] as Component[]);
+const components: Ref<IComponent[]> = ref([] as IComponent[]);
 
 const selectedComponent: Ref<DroppableComponent | undefined>  = defineModel<DroppableComponent>('selectedComponent');
 const draggedComponentIndex: Ref<number> = ref(-1);
@@ -43,7 +43,7 @@ const onComponentRightClick = (event: any, component: DroppableComponent) => {
   });
 };
 
-const duplicateComponent = (component: Component) => {
+const duplicateComponent = (component: IComponent) => {
   if (component) {
     const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
     newComponent.id = Date.now().toString();

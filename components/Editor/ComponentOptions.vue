@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {defineModel, type Ref} from 'vue';
 import VValidate from "~/Utils/VValidate-master";
-import type {Component} from "~/models/interfaces/Component";
+import type {IComponent} from "~/models/interfaces/IComponent";
 import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
-import {ComponentFactoryProvider} from "~/factories/ComponentFactory";
-import {ServiceKeys} from "~/models/enum/ServiceKeys";
-import {ComponentTypes} from "~/models/enum/ComponentTypes";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import type {ComponentAttribute} from "~/models/types/ComponentAttribute";
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type {VValidateConfig} from "~/Utils/VValidate-master/src/VValidateModels";
@@ -13,11 +13,11 @@ import type {VValidateConfig} from "~/Utils/VValidate-master/src/VValidateModels
 const optionsToShow: Readonly<string[]> = ['class', 'inner', 'style', 'id'];
 
 const validationService = new VValidate({ lang: 'it', autoFocus: true });
-const factoryProvider: ComponentFactoryProvider = DIContainer.getService<ComponentFactoryProvider>(ServiceKeys.ComponentFactory);
-const componentFactory: ComponentFactory = factoryProvider.getFactory(ComponentTypes.PrimeVue);
+const factoryProvider: ComponentFactoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
+const componentFactory: ComponentFactory = factoryProvider.getFactory(EComponentTypes.PrimeVue);
 
-const selectedComponent: Ref<Component | undefined> = defineModel<Component>('selectedComponent');
-const components: Ref<Component[] | undefined> = defineModel<Component[]>('components');
+const selectedComponent: Ref<IComponent | undefined> = defineModel<IComponent>('selectedComponent');
+const components: Ref<IComponent[] | undefined> = defineModel<IComponent[]>('components');
 let newCustomAttr: Ref<ComponentAttribute<string>> = ref({} as ComponentAttribute<string>);
 
 // validazione

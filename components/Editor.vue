@@ -11,25 +11,27 @@ import {ProjectHelper} from "~/helper/ProjectHelper";
 import HistoryManager from "~/manager/HistoryManager";
 import ImportExport from "~/components/Editor/ImportExport.vue";
 import OutputComponent from "~/components/Editor/OutputComponent.vue";
-import {ComponentFactoryProvider} from "~/factories/ComponentFactory";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
-import type {Component} from "~/models/interfaces/Component";
+import type {IComponent} from "~/models/interfaces/IComponent";
 import type {ItemContextMenu} from "~/models/types/itemContextMenu";
 import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
-import {ServiceKeys} from "~/models/enum/ServiceKeys";
-import {ComponentTypes} from "~/models/enum/ComponentTypes";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import Project from "~/components/Editor/Project.vue";
 import  {type Project as IProject } from '~/models/interfaces/Project';
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type {LocalStorageService} from "~/services/LocalStorageService";
-import type {FileModel} from "~/models/interfaces/FileModel";
+import type {TFile} from "~/models/types/TFile";
 import {StateManager} from "~/store/StateManager";
+import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 
-const components: Ref<Component[]> = ref([] as Component[]);
+const components: Ref<IComponent[]> = ref([] as IComponent[]);
 
-const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(ServiceKeys.ComponentFactory);
-const localStorageService = DIContainer.getService<LocalStorageService>(ServiceKeys.LocalStorageService);
-const htmlElementsFactory = factoryProvider.getFactory(ComponentTypes.HtmlElements);
+const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
+const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
+const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+const htmlElementsFactory = factoryProvider.getFactory(EComponentTypes.HtmlElements);
 
 let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory);
 
@@ -39,13 +41,13 @@ const HistoryM = new HistoryManager();
 const contextMenu = ref();
 const contextMenuEditor = ref();
 
-const selectedComponent: Ref<Component> = ref({} as Component);
+const selectedComponent: Ref<IComponent> = ref({} as IComponent);
 const selectedProject: Ref<IProject> = ref({} as IProject);
-const selectedComponentsType: Ref<ComponentTypes> = ref({} as ComponentTypes);
-const selectedFile = ref<FileModel | null>(null);
+const selectedComponentsType: Ref<EComponentTypes> = ref({} as EComponentTypes);
+const selectedFile = ref<TFile | null>(null);
 
 
-const componentsType: Ref<Component> = ref({} as Component);
+const componentsType: Ref<IComponent> = ref({} as IComponent);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
 const keyOptions: Ref<number> = ref(0);
@@ -56,7 +58,7 @@ const isPreviewVisible: Ref<boolean> = ref(false);
 const isSavingState: Ref<boolean> = ref(false);
 
 const itemsContextComponent: Ref<ItemContextMenu[]> = ref([
-  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as Component)},
+  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as IComponent)},
   {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
@@ -84,7 +86,7 @@ watch(components, (newVal) => {
 }, { deep: true });
 
 
-const onSelectFile = (file: FileModel) => {
+const onSelectFile = (file: TFile) => {
   selectedFile.value = file;
   components.value = file.content || [];
   saveFileContent();
@@ -136,7 +138,7 @@ const saveProjects = () => {
 const onProjectChange = (project: IProject) => {
   selectedProject.value = project;
   if (project.files.length > 0) {
-    const file = project.files[0] as FileModel;
+    const file = project.files[0] as TFile;
     selectedFile.value = file;
     components.value = file.content || [];
     saveFileContent();
@@ -181,12 +183,12 @@ const onChangeComponentsType = (): void => {
   localStorageService.save('componentsType', selectedComponentsType.value)
 }
 
-const handleComponentClick = (component: Component) => {
+const handleComponentClick = (component: IComponent) => {
   selectedComponent.value = component;
   keyOptions.value = keyOptions.value + 1;
 };
 
-const onComponentRightClick = (event: any, component: Component) => {
+const onComponentRightClick = (event: any, component: IComponent) => {
   contextMenu.value.hide();
   nextTick(() => {
     selectedComponent.value = component;
@@ -202,12 +204,12 @@ const onComponentRightClickEditor = (event: any) => {
 };
 
 
-const duplicateComponent = async (component: Component) => {
+const duplicateComponent = async (component: IComponent) => {
   if (component) {
     let newComponentOptions: DroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
     newComponentOptions= {...newComponentOptions, id: Date.now().toString()}
     newComponentOptions.class = (component?.options?.class || '').replace('selectedComponent', '');
-    const newComponent: Component = componentFactory.value.createElement(newComponentOptions);
+    const newComponent: IComponent = componentFactory.value.createElement(newComponentOptions);
 
     if(Object.keys(newComponent).length>0){
       components.value = [...components.value, newComponent];
@@ -365,8 +367,8 @@ const updateGeneratedCode = () => {
   generatedCode.value = ProjectHelper.generateCodeFromComponents(components.value);
 };
 
-const updateNestedComponents = (id: string, nestedComponents: Component[]) => {
-  const updateComponents = (componentsArray: Component[]) => {
+const updateNestedComponents = (id: string, nestedComponents: IComponent[]) => {
+  const updateComponents = (componentsArray: IComponent[]) => {
     for (const component of componentsArray) {
       if (component?.options?.id?.toString() === id) {
         component.options.slot = nestedComponents;
@@ -447,7 +449,7 @@ const getBindAttributes = (attribute: DroppableProps)=>{
         <!-- CENTER -->
         <SplitterPanel :size="45" class="flex flex-column h-full">
           <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
-            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as Component">
+            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as IComponent">
               <div
                   class="drop-area"
                   @drop="onDrop"

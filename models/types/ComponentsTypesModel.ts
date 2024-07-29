@@ -1,8 +1,8 @@
-import type {ComponentTypes} from "~/models/enum/ComponentTypes";
+import type {EComponentTypes} from "~/models/enum/EComponentTypes";
 
 export type ComponentTypeModel = {
     name: string,
-    code: ComponentTypes
+    code: EComponentTypes
 }
 
 export type ComponentsTypesModel = ComponentTypeModel[]

@@ -5,22 +5,22 @@ import { DIContainer } from '~/services/DipendencyInjection/DIContainer';
 import { LocalStorageService } from '~/services/LocalStorageService';
 import type { Project } from '~/models/interfaces/Project';
 import type { ComponentsTypesModel } from '~/models/types/ComponentsTypesModel';
-import { ComponentTypes } from '~/models/enum/ComponentTypes';
-import { ServiceKeys } from '~/models/enum/ServiceKeys';
+import { EComponentTypes } from '~/models/enum/EComponentTypes';
+import { EServiceKeys } from '~/models/enum/EServiceKeys';
 import FileManager from "~/components/Editor/FileManager.vue";
-import type {FileModel} from "~/models/interfaces/FileModel";
+import type {TFile} from "~/models/types/TFile";
 
 const emit = defineEmits(['changeComponentsType', 'changeSelectedProject', 'selectFile']);
 
 
 const stateManager = StateManager.getInstance();
-const localStorageService = DIContainer.getService<LocalStorageService>(ServiceKeys.LocalStorageService);
+const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
 const projects: Ref<Project[]> = ref([]);
 const newProjectName = ref('');
 
 const selectedProjectId = ref<string | null>(null);
-const componentsType = defineModel<ComponentTypes>('componentsType');
+const componentsType = defineModel<EComponentTypes>('componentsType');
 
 const selectedProject = computed(() => {
   return projects.value.find(project => project.id === selectedProjectId.value) || null;
@@ -96,9 +96,9 @@ const deleteProject = (projectId: string) => {
 };
 
 const componentsTypeValues: Ref<ComponentsTypesModel> = ref([
-  { name: 'Basic HTML', code: ComponentTypes.HtmlElements },
-  { name: 'PrimeVue / PrimeFlex', code: ComponentTypes.PrimeVue },
-  { name: 'Bootstrap', code: ComponentTypes.Bootstrap },
+  { name: 'Basic HTML', code: EComponentTypes.HtmlElements },
+  { name: 'PrimeVue / PrimeFlex', code: EComponentTypes.PrimeVue },
+  { name: 'Bootstrap', code: EComponentTypes.Bootstrap },
 ]);
 
 const onchangeType = (): void => {
@@ -107,7 +107,7 @@ const onchangeType = (): void => {
 };
 
 
-const onSelectFile = (file: FileModel) => {
+const onSelectFile = (file: TFile) => {
   emit('selectFile', file);
 };
 
