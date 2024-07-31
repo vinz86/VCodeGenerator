@@ -1,11 +1,11 @@
 <script setup lang="ts">
 
-import {ref, onMounted, onUnmounted, watch, nextTick} from 'vue';
+import type {Ref} from "vue";
+import {nextTick, onMounted, onUnmounted, ref, watch} from 'vue';
 import ComponentOptions from "~/components/Editor/ComponentOptions.vue";
-import { DragDropHelper } from "~/helper/DragDropHelper";
-import type { DroppableComponent } from "~/models/DroppableComponent";
-import type { Ref } from "vue";
-import type { DroppableProps } from "~/models/DroppableProps";
+import {DragDropHelper} from "~/helper/DragDropHelper";
+import type {DroppableComponent} from "~/models/DroppableComponent";
+import type {DroppableProps} from "~/models/DroppableProps";
 import {FilesHelper} from "~/helper/FilesHelper";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import HistoryManager from "~/manager/HistoryManager";
@@ -19,21 +19,32 @@ import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import Project from "~/components/Editor/Project.vue";
-import  {type Project as IProject } from '~/models/interfaces/Project';
+import {type Project as IProject} from '~/models/interfaces/Project';
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {TFile} from "~/models/types/TFile";
-import {StateManager} from "~/store/StateManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
+import {LoggerDecorator} from "~/decorator/LoggerDecorator";
+import {ELoggerLevel} from "~/models/enum/ELoggerLevel";
+import {ELoggerOutput} from "~/models/enum/ELoggerOutput";
+import type {ILoggerConfig} from "~/models/interfaces/ILoggerConfig";
+import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
+import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
+import {ENotifyMessageTypes} from "~/models/enum/ENotifyMessageTypes";
 
 const components: Ref<IComponent[]> = ref([] as IComponent[]);
 
 const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
+const htmlElementsFactory = factoryProvider.getFactory(EComponentTypes.HtmlElements);
+let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory); // verrà assegnata in modo dinamico
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-const htmlElementsFactory = factoryProvider.getFactory(EComponentTypes.HtmlElements);
+// Logger: notifyManager
+const loggerConfig: ILoggerConfig = {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50};
+const notifyManagerLogger = new LoggerDecorator(notifyManager, loggerConfig);
+const loggedNotify: INotifyManager = notifyManagerLogger.logMethodCalls();
 
-let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory);
+loggedNotify.error('tt')
 
 const HistoryM = new HistoryManager();
 
@@ -432,6 +443,7 @@ const getBindAttributes = (attribute: DroppableProps)=>{
         <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
+              <Button @click="testLoggerNotify()">Test Logger Notify</Button>
               <Project v-model="selectedProject" v-model:components-type="selectedComponentsType" @change-components-type="onChangeComponentsType" @select-file="onSelectFile" />
             </div>
             <div class="flex-none w-full">
