@@ -1,4 +1,7 @@
 export type TAppConfiguration = {
+    appName: string;
+    appVersion: string;
+    appVersionDate: string;
     featureX: boolean;
     featureY: boolean;
     apiBase: string;

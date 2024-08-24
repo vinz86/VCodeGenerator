@@ -8,4 +8,5 @@ export enum EServiceKeys {
     NotifyManager = 'notifyManager',
     ValidationManager = 'validationManager',
     SaveManager = 'saveManager',
+    ConfigurationManager = 'configurationManager',
 }

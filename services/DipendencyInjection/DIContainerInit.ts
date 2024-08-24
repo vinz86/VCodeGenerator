@@ -12,9 +12,8 @@ import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManager
 import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
 import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
 import type {IValidationManager} from "~/manager/ValidationManager/VValidateModels";
-import type {ISaveManager} from "~/models/interfaces/ISaveManager";
-import type {IComponent} from "~/models/interfaces/IComponent";
-import {SaveManager} from "~/manager/SaveManager";
+import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
+import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
 
 export class DIContainerInit {
     private static initialized: boolean = false;
@@ -57,6 +56,7 @@ export class DIContainerInit {
             DIContainer.registerService<IFileService>(EServiceKeys.FileService, FileService.getInstance());
             DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
             DIContainer.registerService<IValidationManager>(EServiceKeys.ValidationManager, new ValidationManager({ autoFocus: true }));
+            DIContainer.registerService<IConfigurationManager>(EServiceKeys.ConfigurationManager, ConfigurationManager.getInstance());
         }
         catch (e){
             throw e;

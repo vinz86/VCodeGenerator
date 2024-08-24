@@ -1,6 +1,6 @@
-import type { TAppConfiguration } from '~/models/types/TAppConfiguration';
-import type { EClientConfiguration } from '~/models/enum/EClientConfiguration';
-import type { IConfigurationManager } from '~/models/interfaces/IConfigurationManager';
+import type {TAppConfiguration} from '~/models/types/TAppConfiguration';
+import {EClientConfiguration} from '~/models/enum/EClientConfiguration';
+import type {IConfigurationManager} from '~/models/interfaces/IConfigurationManager';
 
 export class ConfigurationManager implements IConfigurationManager {
     private static instance: ConfigurationManager;
@@ -38,12 +38,14 @@ export class ConfigurationManager implements IConfigurationManager {
 
         let clientConfig: Partial<TAppConfiguration> = {};
 
-        try {
-            // configurazione cliente
-            const clientConfigModule = await import(`@/manager/ConfigurationManager/configs/${clientId}.ts`);
-            clientConfig = clientConfigModule.default;
-        } catch (error) {
-            console.warn(`Configurazione per "${clientId}" non trovata, utilizzo configurazione di default.`);
+        if( clientId!==EClientConfiguration.Default){
+            try {
+                // configurazione cliente
+                const clientConfigModule = await import(`@/manager/ConfigurationManager/configs/${clientId}.ts`);
+                clientConfig = clientConfigModule.default;
+            } catch (error) {
+                console.warn(`Configurazione per "${clientId}" non trovata, utilizzo configurazione di default.`);
+            }
         }
 
         return { ...defaultConfig, ...clientConfig } as TAppConfiguration;
@@ -67,5 +69,17 @@ export class ConfigurationManager implements IConfigurationManager {
 
     public getTheme(): string {
         return this.clientConfig.theme;
+    }
+
+    public getName(): string {
+        return this.clientConfig.appName;
+    }
+
+    public getVersion(): string {
+        return this.clientConfig.appVersion;
+    }
+
+    public getVersionDate(): string {
+        return this.clientConfig.appVersionDate;
     }
 }
