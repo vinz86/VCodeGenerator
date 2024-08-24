@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import HistoryManager from "~/manager/HistoryManager";
-
-const history = new HistoryManager();
-
 </script>
 <template>
   <div>

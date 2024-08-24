@@ -97,7 +97,7 @@ const deleteProject = (projectId: string) => {
 
 const componentsTypeValues: Ref<ComponentsTypesModel> = ref([
   { name: 'Basic HTML', code: EComponentTypes.HtmlElements },
-  { name: 'PrimeVue / PrimeFlex', code: EComponentTypes.PrimeVue },
+  { name: 'PrimeVue', code: EComponentTypes.PrimeVue },
   { name: 'Bootstrap', code: EComponentTypes.Bootstrap },
 ]);
 
@@ -117,15 +117,14 @@ onMounted(loadProjects);
 
 <template>
   <div class="project-manager w-full">
-    <div class="flex">
-      <div class="flex-grow-1">
-        <InputText v-model="newProjectName" placeholder="Nome Nuovo Progetto" class="w-full" />
-      </div>
-      <div class="flex-none">
-        <Button @click="createProject" class="mb-2" rounded><i class="fa fa-plus" /></Button>
-      </div>
+    <div class="flex m-1">
+      <InputGroup>
+        <InputText v-model="newProjectName" class="m-0"  placeholder="Nome progetto" />
+        <Button class="m-0"  @click="createProject" icon="fa fa-plus" />
+      </InputGroup>
     </div>
-    <div class="flex flex-column">
+    <Divider />
+    <div class="flex flex-column m-1">
       <div>
         <Dropdown
             v-if="projects.length"
@@ -135,8 +134,9 @@ onMounted(loadProjects);
             optionLabel="name"
             optionValue="id"
             placeholder="Seleziona un progetto"
-            class="w-full"
+            class="w-full mb-1"
         >
+          <Divider />
           <template #option="slotProps">
             <div class="flex w-full">
               <div class="flex-grow-1">

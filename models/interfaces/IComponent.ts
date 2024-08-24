@@ -1,8 +1,8 @@
-import type {DroppableComponent} from "~/models/DroppableComponent";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
 
 export interface IComponent {
   render: () => string;
-  configure(options: DroppableComponent): void;
-  options: DroppableComponent;
+  configure(options: IDroppableComponent): void;
+  options: IDroppableComponent;
   style?: {};
 }

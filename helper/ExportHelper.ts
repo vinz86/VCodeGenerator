@@ -3,7 +3,7 @@ import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
-export class FilesHelper {
+export class ExportHelper {
 
     public static importProject(file: File): Promise<boolean|Project> {
         if (!file) return Promise.resolve(false);

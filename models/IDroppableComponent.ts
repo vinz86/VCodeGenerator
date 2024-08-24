@@ -1,7 +1,7 @@
 import type {DroppableProps} from "~/models/DroppableProps";
 import type {IComponent} from "~/models/interfaces/IComponent";
 
-export interface DroppableComponent {
+export interface IDroppableComponent {
     id?: string,
     name?: string,
     label?: string,
@@ -10,7 +10,7 @@ export interface DroppableComponent {
     fromEditor?: boolean,
     fromDroppableComponent?: boolean,
     locked?: boolean,
-    slot?: IComponent,
+    slot?: IComponent[],
     style?: string
     class?: string;
     inner?: string;

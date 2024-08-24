@@ -1,9 +1,16 @@
 <script setup lang="ts">
 //TODO: Da aggiornare/rivedere
 import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
-import type {DroppableComponent} from "~/models/DroppableComponent";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import {DragDropHelper} from "~/helper/DragDropHelper";
 import type {IComponent} from "~/models/interfaces/IComponent";
+import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
+import type { EComponentTypes } from '~/models/enum/EComponentTypes';
+
+const componentFactory = defineModel<ComponentFactory>('componentFactory')
 
 const props = defineProps({
   parentComponents: {
@@ -24,18 +31,18 @@ const emit = defineEmits(['updateNestedComponents', 'updateSelectedComponent', '
 const contextMenu = ref();
 
 const itemsContextComponent: Ref<{label: string, icon: string, command: () => void}[]> = ref([
-  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as DroppableComponent)},
+  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as IDroppableComponent)},
   {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
 
 const components: Ref<IComponent[]> = ref([] as IComponent[]);
 
-const selectedComponent: Ref<DroppableComponent | undefined>  = defineModel<DroppableComponent>('selectedComponent');
+const selectedComponent: Ref<IDroppableComponent | undefined>  = defineModel<IDroppableComponent>('selectedComponent');
 const draggedComponentIndex: Ref<number> = ref(-1);
 const dragOverIndex: Ref<number> = ref(-1);
 
-const onComponentRightClick = (event: any, component: DroppableComponent) => {
+const onComponentRightClick = (event: any, component: IDroppableComponent) => {
   contextMenu.value.hide();
   nextTick(() => {
     selectedComponent.value = component;
@@ -45,12 +52,16 @@ const onComponentRightClick = (event: any, component: DroppableComponent) => {
 
 const duplicateComponent = (component: IComponent) => {
   if (component) {
-    const newComponent: DroppableComponent = JSON.parse(JSON.stringify(component));
+    const newComponent = JSON.parse(JSON.stringify(component));
     newComponent.id = Date.now().toString();
-    newComponent.props.class = (component.props.class || '').replace('selectedComponent', '');
-    components.value.push(newComponent);
-    if (component.slot && component.slot.length > 0) {
-      duplicateComponent(component.slot);
+    newComponent.options['class'] = (component.options?.class || '').replace('selectedComponent', '');
+
+    // Usa la factory per creare un nuovo elemento
+    const newElement = componentFactory.value && componentFactory.value.createElement(newComponent);
+    newElement &&components.value.push(newElement);
+
+    if (component.options.slot && component.options.slot.length > 0) {
+      component.options.slot.forEach(duplicateComponent);
     }
   }
 };
@@ -66,7 +77,7 @@ const removeComponent = (index = -1) => {
   }
 };
 
-const handleComponentClick = (component: DroppableComponent) => {
+const handleComponentClick = (component: IDroppableComponent) => {
   selectedComponent.value = component;
   contextMenu.value.hide();
   emit('updateSelectedComponent', component);
@@ -85,7 +96,7 @@ const onDragLeave = () => {
   dragOverIndex.value = -1;
 };
 
-const onDragStart = (event: any, index: number, parentComponentId:string|null = null, component: DroppableComponent) => {
+const onDragStart = (event: any, index: number, parentComponentId:string|null = null, component: IDroppableComponent) => {
   event.stopPropagation();
 
   event.dataTransfer.setData('component', JSON.stringify({fromDroppableComponent: true, index, parentComponentId, component}));
@@ -93,6 +104,7 @@ const onDragStart = (event: any, index: number, parentComponentId:string|null = 
 };
 
 const onDrop = (event: any) => {
+  debugger
   event.preventDefault();
   event.stopPropagation();
 
@@ -191,7 +203,7 @@ const onDropComponent = (event: any) => {
 };
 
 const updateNestedComponents = (id:string, nestedComponents: any) => {
-  const updateComponents = (componentsArray: DroppableComponent[]) => {
+  const updateComponents = (componentsArray: IDroppableComponent[]) => {
     for (const component of componentsArray) {
       if (component.id === id) {
         component.slot = nestedComponents;
@@ -251,10 +263,9 @@ const filterProps = (props: Record<string, any>) => {
       data-drop-target="droppable"
       :data-component-id="`droppable-${Date.now()}`"
       data-vin="droppable"
-      @click="selectedComponent = {} as DroppableComponent"
+      @click="selectedComponent = {} as IDroppableComponent"
   >
     <ContextMenu ref="contextMenu" :model="itemsContextComponent"/>
-<!-- [component?.props?.class]: component?.props?.class,-->
     <div
         data-vin="draggable"
         v-bind="attributes"
@@ -262,31 +273,30 @@ const filterProps = (props: Record<string, any>) => {
         :key="`draggable-component-${index}`"
         class="draggable-component"
         :class="{
-          [component?.props?.class]: component?.props?.class,
-          'drag-over': index === dragOverIndex,
-          'selectedComponent': selectedComponent?.id === component.id
-        }"
+        [component?.options?.class as string]: component?.options?.class,
+        'drag-over': index === dragOverIndex,
+        'selectedComponent': selectedComponent?.id && selectedComponent.id === component.options.id
+      }"
         draggable="true"
-        @dragstart="onDragStart($event, index, props.componentId?.toString(), component)"
+        @dragstart="onDragStart($event, index, props.componentId?.toString(), component.options)"
         @dragenter="onDragEnter(index)"
         @dragleave="onDragLeave()"
         @drop="onDropComponent($event)"
-        :data-component-id="component.id"
+        :data-component-id="component.options?.id || Date.now()"
     >
       <component
-          :is="component.name"
-          :componentId="component.id?.toString()"
-          v-bind="component.name==='DroppableComponent' ? '' : component.props"
-          :style="{'width:100%': component.name==='DroppableComponent'}"
-          :parentComponents="component.slot"
+          :is="component.options?.tag"
+          :componentId="component.options?.id?.toString()"
+          v-bind="component.options?.name==='DroppableComponent' ? '' : component.options?.attributes"
+          :style="{'width:100%': component.options?.name==='DroppableComponent'}"
+          :parentComponents="component.options?.slot"
           v-model:selectedComponent="selectedComponent"
-          @click.stop="handleComponentClick(component);"
+          @click.stop="handleComponentClick(component?.options);"
           @updateNestedComponents="updateNestedComponents"
           @updateSelectedComponent="handleComponentClick"
-          @contextmenu.stop="onComponentRightClick($event, component)"
+          @contextmenu.stop="onComponentRightClick($event, component.options)"
           @removeComponent="onRemoveComponent"
-      />
-      {{component.prop}}
+      >{{ component?.options?.inner }}</component>
     </div>
   </div>
 </template>

@@ -38,7 +38,7 @@ export class DragDropHelper {
         return null; // Non trovato
     }
 
-/*    public static findComponentByPath(components: DroppableComponent, path: number[]): DroppableComponent|null {
+/*    public static findComponentByPath(components: IDroppableComponent, path: number[]): IDroppableComponent|null {
         let currentComponent = components;
         for (const index of path) {
             if (Array.isArray(currentComponent)) {
@@ -50,7 +50,7 @@ export class DragDropHelper {
         return currentComponent;
     }*/
 
-/*    public  static removeComponentById(components: DroppableComponent[], id:string) {
+/*    public  static removeComponentById(components: IDroppableComponent[], id:string) {
         for (let i = 0; i < components.length; i++) {
             const component = components[i];
             if (component.id === id) {
@@ -86,4 +86,28 @@ export class DragDropHelper {
         if(nestedData)
             return DragDropHelper.removeObjectByPath(nestedData, path.slice(1), index);
     }
+    static getComponentData(event: DragEvent) {
+        const data = event.dataTransfer?.getData('component');
+        return data ? JSON.parse(data) : null;
+    }
+
+    static setComponentData(event: DragEvent, index: number, component: any) {
+        event.dataTransfer?.setData('component', JSON.stringify({ index, component }));
+    }
+
+    static getDropTarget(event: DragEvent): HTMLElement | null {
+        return event.target as HTMLElement;
+    }
+
+    static isComponentDroppable(target: HTMLElement): boolean {
+        return target.dataset.vin === 'droppable';
+    }
+
+    static findDropTargetIndex(target: HTMLElement, components: any[]): number {
+        // Determine the drop index based on the target element
+        const index = components.findIndex(component => component.id === target.dataset.componentId);
+        return index;
+    }
 }
+
+

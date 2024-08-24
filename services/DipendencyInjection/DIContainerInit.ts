@@ -10,6 +10,11 @@ import {MockBackendService} from "~/services/BackendAdapter";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
 import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
+import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
+import type {IValidationManager} from "~/manager/ValidationManager/VValidateModels";
+import type {ISaveManager} from "~/models/interfaces/ISaveManager";
+import type {IComponent} from "~/models/interfaces/IComponent";
+import {SaveManager} from "~/manager/SaveManager";
 
 export class DIContainerInit {
     private static initialized: boolean = false;
@@ -51,6 +56,7 @@ export class DIContainerInit {
             DIContainer.registerService(EServiceKeys.BackendAdapter, new MockBackendService());
             DIContainer.registerService<IFileService>(EServiceKeys.FileService, FileService.getInstance());
             DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
+            DIContainer.registerService<IValidationManager>(EServiceKeys.ValidationManager, new ValidationManager({ autoFocus: true }));
         }
         catch (e){
             throw e;

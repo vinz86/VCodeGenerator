@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {availableComponents} from "~/components/DraggableComponents/AvailableComponent";
-import type {DroppableComponent} from "~/models/DroppableComponent";
+import {availableComponents} from "~/components/DraggableComponents/ListDraggableComponents";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import {ProjectHelper} from "~/helper/ProjectHelper";
 
-const groupByCategory = (components: DroppableComponent[]) => {
-  return components.reduce((acc: any, component: DroppableComponent, currentIndex) => {
+const groupByCategory = (components: IDroppableComponent[]) => {
+  return components.reduce((acc: any, component: IDroppableComponent, currentIndex) => {
     (acc[component.cat||currentIndex] = acc[component.cat||currentIndex] || []).push(component);
     return acc;
   }, {});
@@ -11,10 +12,9 @@ const groupByCategory = (components: DroppableComponent[]) => {
 
 const groupedComponents = computed(() => groupByCategory(availableComponents));
 
-const onDragStart = (event: any, component: DroppableComponent): void => {
+const onDragStart = (event: any, component: IDroppableComponent): void => {
     event.dataTransfer.setData('component', JSON.stringify(component));
 };
-
 </script>
 
 <template>
@@ -24,14 +24,25 @@ const onDragStart = (event: any, component: DroppableComponent): void => {
 
       <AccordionTab v-for="(components, category) in groupedComponents" :key="category" :header="category.toString()">
         <div
-            v-for="component in components"
-            :key="component.name"
-            class="draggable-component"
-            :componentId="Date.now().toString()"
-            draggable="true"
-            @dragstart="onDragStart($event, component)"
-        >
-          <i v-if="component.icon" :class="component.icon" /> {{ component.label || component.name }}
+          v-for="component in components"
+          :key="component.name">
+          <small> {{ component.label || component.name }}</small>
+          <div
+              class="draggable-component"
+              :id="ProjectHelper.getUniqueID().toString()+'container'"
+              draggable="true"
+              @dragstart="onDragStart($event, component)"
+          >
+            <component
+                :is="component.tag"
+                class="w-full"
+                :id="ProjectHelper.getUniqueID().toString()"
+                v-bind="component.options"
+            >
+              {{component?.inner || ''}}
+            </component>
+          </div>
+          <i v-if="component.icon" :class="component.icon" />
         </div>
       </AccordionTab>
     </Accordion>
@@ -48,9 +59,5 @@ const onDragStart = (event: any, component: DroppableComponent): void => {
   font-size: .8rem;
   border-radius: 2px;
   background-color: #eee;
-}
-
-.draggable-component:before {
-  content:"⇒ ";
 }
 </style>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {defineModel, type Ref} from 'vue';
-import VValidate from "~/Utils/VValidate-master";
 import type {IComponent} from "~/models/interfaces/IComponent";
 import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
@@ -8,11 +7,13 @@ import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import type {ComponentAttribute} from "~/models/types/ComponentAttribute";
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
-import type {VValidateConfig} from "~/Utils/VValidate-master/src/VValidateModels";
+import type {IValidationManager} from "~/models/interfaces/IValidationManager";
+import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
 
+//TODO: spostare nelle config
 const optionsToShow: Readonly<string[]> = ['class', 'inner', 'style', 'id'];
 
-const validationService = new VValidate({ lang: 'it', autoFocus: true });
+const validationService = new ValidationManager({}) //DIContainer.getService<IValidationManager>(EServiceKeys.ValidationManager);
 const factoryProvider: ComponentFactoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
 const componentFactory: ComponentFactory = factoryProvider.getFactory(EComponentTypes.PrimeVue);
 
@@ -133,11 +134,11 @@ const removeAttrs = (key: string) => {
            <div class="grid">
              <div class="col-12">
                <InputText v-model="newCustomAttr.name" @keyup="validationService.validateField('newCustomAttrName', newCustomAttr.name)" placeholder="Nome dell'attributo" class="w-full mb-1" />
-               <InlineMessage v-if="validationService.hasError('newCustomAttrName')" class="error">{{ validationService.getError('newCustomAttrName') }}</InlineMessage>
+               <InlineMessage v-if="validationService.isValid('newCustomAttrName')" class="error">{{ validationService.getError('newCustomAttrName') }}</InlineMessage>
              </div>
              <div class="col-12">
                <Textarea v-model="newCustomAttr.value" @keyup="validationService.validateField('newCustomAttr.value', newCustomAttr.value)" placeholder="Valore dell'attributo" class="w-full" />
-               <InlineMessage severity="danger" v-if="validationService.hasError('newCustomAttrValue')" class="error">{{ validationService.getError('newCustomAttrValue') }}</InlineMessage>
+               <InlineMessage severity="danger" v-if="validationService.isValid('newCustomAttrValue')" class="error">{{ validationService.getError('newCustomAttrValue') }}</InlineMessage>
              </div>
            </div>
 

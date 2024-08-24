@@ -3,8 +3,9 @@ export enum EServiceKeys {
     StateManager = 'stateManager',
     LocalStorageService = 'localStorageService',
     FlyweightFactory = 'flyweightFactory',
-    ValidationService = 'validationService',
     FileService = 'fileservice',
     BackendAdapter = 'backendadapter',
     NotifyManager = 'notifyManager',
+    ValidationManager = 'validationManager',
+    SaveManager = 'saveManager',
 }

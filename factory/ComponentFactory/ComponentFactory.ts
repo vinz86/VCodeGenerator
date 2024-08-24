@@ -10,7 +10,7 @@ export class ComponentFactoryProvider {
   }
 
   getFactory(type: string): ComponentFactory {
-    switch (type.toLowerCase()) {
+    switch (type) {
       case EComponentTypes.PrimeVue:
         return new PrimeVueFactory();
       case EComponentTypes.Bootstrap:
@@ -18,6 +18,7 @@ export class ComponentFactoryProvider {
       case EComponentTypes.HtmlElements:
         return new HtmlElementsFactory();
       default:
+        debugger
         throw new Error('Component Factory non valido');
     }
   }

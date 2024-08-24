@@ -1,7 +1,7 @@
 import { ref, type Ref } from 'vue';
 import type {IComponent} from "~/models/interfaces/IComponent";
 
-class HistoryManager {
+export default class HistoryManager {
     private stateHistory: Ref<IComponent[][]>;
     private redoStack: Ref<IComponent[][]>;
 
@@ -51,4 +51,3 @@ class HistoryManager {
     }
 }
 
-export default HistoryManager;

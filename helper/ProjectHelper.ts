@@ -1,5 +1,6 @@
 import type {IComponent} from "~/models/interfaces/IComponent";
-import type {DroppableComponent} from "~/models/DroppableComponent";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import type {DroppableProps} from "~/models/DroppableProps";
 
 export class ProjectHelper {
 
@@ -27,25 +28,12 @@ export class ProjectHelper {
         return slotCode;
     }
 
-    public static generateMainStyle (components: IComponent[]){
-/*        if (components.style) {
-            let generatedCodeValue = components.styleType ? `<style lang="${components.styleType}">` : '<style lang="css">';
-            generatedCodeValue += components.style;
-            generatedCodeValue += '</style>';
-            return generatedCodeValue;
-
-        }*/
-        console.log('generateMainStyle non implementata')
-    }
-
     public static generateCodeFromComponents(components: IComponent[]): string{
         let generatedCodeValue:string = '';
 
         for (const component of components) {
             generatedCodeValue += generatedCodeValue += ProjectHelper.generateCodeRecursive(component);
         }
-        // Aggiungo stile
-        ProjectHelper.generateMainStyle(components);
 
         return generatedCodeValue;
     }
@@ -56,7 +44,7 @@ export class ProjectHelper {
         if (!component?.options || !component?.options.tag) {
             return code;
         }
-        const options: DroppableComponent = component?.options;
+        const options: IDroppableComponent = component?.options;
 
         if (options) {
             code += `<${options?.tag} `;
@@ -87,7 +75,7 @@ export class ProjectHelper {
             }
 
             if (options?.slot) {
-                code += ProjectHelper.processSlotContent(component.options?.slot);
+                code += ProjectHelper.processSlotContent(component.options?.slot as IComponent[]);
             }
 
             code += `\n</${component.options?.tag}>\n`;
@@ -97,32 +85,16 @@ export class ProjectHelper {
 
         return code;
     };
+    public static getBindAttributes (attribute: DroppableProps){
+        if (!attribute) return;
+        delete attribute?.selectedComponent;
+        delete attribute?.parentComponents;
+        console.log(attribute)
+        return attribute;
+    }
 
-/*
-    public static droppableComponentToComponent(droppableComponent: DroppableComponent, componentFactory: ComponentFactory) : IComponent {
-        if (!droppableComponent?.name) return {} as IComponent;
-
-        let element: IComponent;
-        switch(droppableComponent?.name){
-            case 'div' || 'DroppableComponent':
-                element = componentFactory.createElement();
-                element.configure(droppableComponent);
-                break;
-            case 'button':
-                element = componentFactory.createButton();
-                element.configure(droppableComponent);
-                break;
-            case 'input':
-                element = componentFactory.createInput();
-                element.configure(droppableComponent);
-                break;
-            default:
-                element = componentFactory.createElement();
-                element.configure(droppableComponent);
-
-        }
-        return element
-    }*/
-
-
+    public static getUniqueID(){
+        const array = new Uint32Array(10);
+        return self.crypto.getRandomValues(array).toString().replaceAll(',', '');
+    }
 }

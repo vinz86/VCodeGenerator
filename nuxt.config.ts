@@ -20,5 +20,13 @@ export default defineNuxtConfig({
     '@/assets/vendor/fontawesome/css/all.css',
     '@/assets/style.css',
   ],
+  runtimeConfig: {
+    public: {
+      clientConfig: 'VCodeGenerator' || process.env.CLIENT_ID || 'default',
+    }
+  },
+  router: {
+    middleware: ['configuration'],
+  }
 })
 

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-
 import type {Ref} from "vue";
 import {nextTick, onMounted, onUnmounted, ref, watch} from 'vue';
 import ComponentOptions from "~/components/Editor/ComponentOptions.vue";
 import {DragDropHelper} from "~/helper/DragDropHelper";
-import type {DroppableComponent} from "~/models/DroppableComponent";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import type {DroppableProps} from "~/models/DroppableProps";
-import {FilesHelper} from "~/helper/FilesHelper";
+import {ExportHelper} from "~/helper/ExportHelper";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import HistoryManager from "~/manager/HistoryManager";
 import ImportExport from "~/components/Editor/ImportExport.vue";
@@ -14,7 +13,7 @@ import OutputComponent from "~/components/Editor/OutputComponent.vue";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
 import type {IComponent} from "~/models/interfaces/IComponent";
-import type {ItemContextMenu} from "~/models/types/itemContextMenu";
+import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
 import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
@@ -27,37 +26,14 @@ import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {LoggerDecorator} from "~/decorator/LoggerDecorator";
 import {ELoggerLevel} from "~/models/enum/ELoggerLevel";
 import {ELoggerOutput} from "~/models/enum/ELoggerOutput";
-import type {ILoggerConfig} from "~/models/interfaces/ILoggerConfig";
-import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
-import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
-import {ENotifyMessageTypes} from "~/models/enum/ENotifyMessageTypes";
+import {SaveManager} from "~/manager/SaveManager";
+import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 
 const components: Ref<IComponent[]> = ref([] as IComponent[]);
-
-const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
-const htmlElementsFactory = factoryProvider.getFactory(EComponentTypes.HtmlElements);
-let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory); // verrà assegnata in modo dinamico
-const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
-const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-// Logger: notifyManager
-const loggerConfig: ILoggerConfig = {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50};
-const notifyManagerLogger = new LoggerDecorator(notifyManager, loggerConfig);
-const loggedNotify: INotifyManager = notifyManagerLogger.logMethodCalls();
-
-loggedNotify.error('tt')
-
-const HistoryM = new HistoryManager();
-
-// Refs
-const contextMenu = ref();
-const contextMenuEditor = ref();
-
 const selectedComponent: Ref<IComponent> = ref({} as IComponent);
 const selectedProject: Ref<IProject> = ref({} as IProject);
 const selectedComponentsType: Ref<EComponentTypes> = ref({} as EComponentTypes);
 const selectedFile = ref<TFile | null>(null);
-
-
 const componentsType: Ref<IComponent> = ref({} as IComponent);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
@@ -65,23 +41,33 @@ const keyOptions: Ref<number> = ref(0);
 const draggedComponentIndex: Ref<number|null> = ref(null);
 const draggedFrom: Ref<any> = ref(null);
 const dragOverIndex: Ref<any> = ref(null);
-const isPreviewVisible: Ref<boolean> = ref(false);
 const isSavingState: Ref<boolean> = ref(false);
 
-const itemsContextComponent: Ref<ItemContextMenu[]> = ref([
+const isEditorEnabled: Ref<boolean> = computed(()=>!!selectedFile.value && selectedFile.value.type==='file');
+
+const contextMenu = ref();
+const contextMenuEditor = ref();
+
+const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
+let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory); // verrà assegnata in modo dinamico
+//const htmlElementsFactory = factoryProvider.getFactory(EComponentTypes.HtmlElements);
+const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
+const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50});
+const logNotify: INotifyManager = notifyManagerAndLogger.logMethodCalls();
+const saveManager = new SaveManager<IComponent>( () => saveFileContent(), 1000);
+
+const HistoryM = new HistoryManager();
+
+const itemsContextComponent: Ref<TItemContextMenu[]> = ref([
   {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as IComponent)},
   {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
-const itemsContextEditor: Ref<ItemContextMenu[]> = ref([
+const itemsContextEditor: Ref<TItemContextMenu[]> = ref([
   {label: 'Annulla', icon: 'fa fa-undo', command: () => undo()},
   {label: 'Ripeti', icon: 'fa fa-redo', command: () => redo()},
 ]);
-
-const showDraggableComponent = computed(()=>{
-  return Object.keys(selectedProject.value)?.length && componentFactory.value
-})
-
 
 watch(components, (newVal) => {
   if (!isSavingState.value) {
@@ -96,14 +82,6 @@ watch(components, (newVal) => {
   }
 }, { deep: true });
 
-
-const onSelectFile = (file: TFile) => {
-  selectedFile.value = file;
-  components.value = file.content || [];
-  saveFileContent();
-  saveProjects();
-};
-
 watch(selectedProject, (newProject) => {
   if (newProject && newProject.files.length > 0) {
     selectedFile.value = newProject.files[0];
@@ -112,8 +90,17 @@ watch(selectedProject, (newProject) => {
   }
 });
 
+
+const onSelectFile = (file: TFile) => {
+  selectedFile.value = file;
+  components.value = file.content || [];
+  saveFileContent();
+  saveProjects();
+};
+
+
 const saveFileContent = () => {
-  if (selectedFile.value) {
+  if (selectedFile.value && selectedProject) {
     selectedFile.value.content = components.value;
     localStorageService.save('selectedFile', selectedFile.value);
     saveProjects();
@@ -124,7 +111,7 @@ const saveProjects = () => {
   if (selectedProject.value) {
 
     // Trova l'indice del progetto corrente nella lista dei progetti salvati
-    let projects = localStorageService.load('projects');
+    let projects = localStorageService.load('projects') || [];
 
     if (typeof projects === 'string') {
       projects = JSON.parse(projects);
@@ -156,9 +143,12 @@ const onProjectChange = (project: IProject) => {
   }
 };
 
-onMounted(() => {
-  selectedComponentsType.value = localStorageService.load('componentsType');
-  onChangeComponentsType();
+onMounted(async () => {
+
+  selectedComponentsType.value = localStorageService.load('componentsType') || EComponentTypes.PrimeVue;
+  await nextTick(()=>{
+    onChangeComponentsType();
+  })
 
 
   const file = localStorageService.load('selectedFile');
@@ -166,7 +156,7 @@ onMounted(() => {
     onSelectFile(file);
   }
 
-   HistoryM.saveState(components.value);
+  HistoryM.saveState(components.value);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
@@ -183,8 +173,11 @@ onMounted(() => {
 
   window.addEventListener('keydown', handleKeyDown);
 
+  saveManager.startAutoSave(components, 5000);
+
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);
+    saveManager.stopAutoSave();
   });
 });
 
@@ -217,7 +210,7 @@ const onComponentRightClickEditor = (event: any) => {
 
 const duplicateComponent = async (component: IComponent) => {
   if (component) {
-    let newComponentOptions: DroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
+    let newComponentOptions: IDroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
     newComponentOptions= {...newComponentOptions, id: Date.now().toString()}
     newComponentOptions.class = (component?.options?.class || '').replace('selectedComponent', '');
     const newComponent: IComponent = componentFactory.value.createElement(newComponentOptions);
@@ -266,11 +259,11 @@ const redo = ()=>{
 const removeDraggedComponent = (event: any) => {
   if (!event) return;
 
-  const cmpId = event.parentComponentId ? event.parentComponentId : event.id;
+  const cmpId = event?.options?.parentComponentId ? event?.options?.parentComponentId : event?.options?.id;
   const index = event.draggedIndex;
-  const pathToComponent = DragDropHelper.findObjectById(components.value, cmpId.toString());
+  const pathToComponent = DragDropHelper.findObjectById(components.value, cmpId?.toString() || Date.now());
   if (pathToComponent !== null) {
-    if (event.parentComponentId && index >= 0) {
+    if (event?.options?.parentComponentId && index >= 0) {
       DragDropHelper.removeObjectByPath(components.value, pathToComponent, index);
     } else {
       DragDropHelper.removeObjectByPath(components.value, pathToComponent)
@@ -279,6 +272,7 @@ const removeDraggedComponent = (event: any) => {
 };
 
 const onDrop = (event: any) => {
+  debugger
   if(!selectedProject) return;
   event.preventDefault();
 
@@ -305,7 +299,7 @@ const onDrop = (event: any) => {
       }
     }
   } else {
-    draggedComponent = componentData?.slot ? componentData : { ...componentData, id: Date.now().toString(), slot: [] };
+    draggedComponent = componentData?.slot ? componentData : { id: Date.now().toString(), slot: [], ...componentData };
   }
 
   if (draggedComponent) {
@@ -318,7 +312,8 @@ const onDrop = (event: any) => {
 
 const addComponent = (component: any, targetComponents: any) => {
   if (Array.isArray(targetComponents)) {
-    const newComponent = component.slot ? component : { ...component, id: Date.now(), slot: [] };
+    const newComponent = component.slot ? component : { id: Date.now(), slot: [], ...component };
+
     targetComponents.push(componentFactory.value.createElement(newComponent));
     saveFileContent();
   } else {
@@ -326,11 +321,9 @@ const addComponent = (component: any, targetComponents: any) => {
   }
 };
 
-const onDragOver = (event: any) => {
-  event.preventDefault();
-};
 
 const onDragStart = (event: any, index: number) => {
+  debugger
   let componentData = event.dataTransfer.getData('component');
   componentData = componentData && JSON.parse(componentData);
   if (!componentData.fromDroppableComponent) {
@@ -340,13 +333,11 @@ const onDragStart = (event: any, index: number) => {
   }
 };
 
-const onDragEnter = (index: number) => {
-  dragOverIndex.value = index;
-};
+const onDragEnter = (index: number) => dragOverIndex.value = index;
 
-const onDragLeave = () => {
-  dragOverIndex.value = null;
-};
+const onDragLeave = () => dragOverIndex.value = null;
+
+const onDragOver = (event: any) => event.preventDefault();
 
 const onDropComponent = (index: number) => {
   if (draggedComponentIndex.value !== null) {
@@ -364,6 +355,10 @@ const onDropComponent = (index: number) => {
 
 const updateComponent = (updatedProps: DroppableProps) => {
   if (!selectedComponent.value?.options?.id) return;
+
+
+
+  componentFactory.updateElement(selectedComponent.value, options);
 
   const index = components.value.findIndex(c => c?.options.id === selectedComponent.value?.options?.id);
   if (index !== -1) {
@@ -386,30 +381,24 @@ const updateNestedComponents = (id: string, nestedComponents: IComponent[]) => {
         saveFileContent();
         return componentsArray;
       }
-      if (component?.options?.slot?.options) {
-        updateComponents(component.options.slot.options);
+      if (component?.options?.slot !== undefined) {
+        updateComponents(component.options.slot);
       }
     }
   };
   updateComponents(components.value);
 };
 
-// IMPORT / EXPORT
-const exportHTML = () => {
-  FilesHelper.exportHtml(generatedCode.value);
-};
+const getComponent = (component: IComponent)=> component?.render || 'div';
 
-const exportProject = () => {
-  if (selectedProject.value) {
-    FilesHelper.exportProject(selectedProject.value.files);
-  }
-};
+// IMPORT / EXPORT
+const exportProject = () => selectedProject.value && ExportHelper.exportProject(selectedProject.value.files);
 
 const importProject = async (event: any) => {
   const file = event.files[0];
   if (!file) return;
 
-  const importedProject: IProject|boolean = await FilesHelper.importProject(file);
+  const importedProject: IProject|boolean = await ExportHelper.importProject(file);
   if (typeof importedProject === 'object') {
     selectedProject.value = importedProject;
     components.value = selectedProject.value.files[0].content || [];
@@ -418,13 +407,8 @@ const importProject = async (event: any) => {
 };
 
 
-const getBindAttributes = (attribute: DroppableProps)=>{
-  if (!attribute) return;
-  delete attribute?.selectedComponent;
-  delete attribute?.parentComponents;
-  return attribute;
 
-}
+
 </script>
 <template>
   <div id="wrapper" @contextmenu.stop="onComponentRightClickEditor($event)">
@@ -433,75 +417,101 @@ const getBindAttributes = (attribute: DroppableProps)=>{
     <ContextMenu ref="contextMenu" :model="itemsContextComponent" />
 
     <div class="container">
-      <!-- PREVIEW -->
-      <Sidebar v-model:visible="isPreviewVisible" style="width:90%" header="Preview">
-        <div v-html="generatedCode" />
-      </Sidebar>
 
       <Splitter class="w-full m-0" layout="horizontal">
         <!-- LEFT -->
         <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
-              <Button @click="testLoggerNotify()">Test Logger Notify</Button>
-              <Project v-model="selectedProject" v-model:components-type="selectedComponentsType" @change-components-type="onChangeComponentsType" @select-file="onSelectFile" />
+              <Project
+                  v-model="selectedProject"
+                  v-model:components-type="selectedComponentsType"
+                  @change-selected-project="onProjectChange"
+                  @change-components-type="onChangeComponentsType"
+                  @select-file="onSelectFile" />
             </div>
             <div class="flex-none w-full">
-              <ImportExport @preview="isPreviewVisible = true" @exportHtml="exportHTML" @exportProject="exportProject" @importProject="importProject($event)" />
+              <ImportExport
+                  @exportProject="exportProject"
+                  @importProject="importProject($event)" />
             </div>
           </div>
         </SplitterPanel>
         <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
-              <DraggableComponent v-model="componentsType" />
+              <p class="ml-2" v-if="!isEditorEnabled">Seleziona file</p>
+              <DraggableComponent v-else v-model="componentsType" :factory="componentFactory" />
             </div>
           </div>
         </SplitterPanel>
         <!-- CENTER -->
         <SplitterPanel :size="45" class="flex flex-column h-full">
-          <Panel class="overflow-y-auto flex-grow-1 h-full" header="Editor" id="panel-editor">
-            <div class="editor" :key="keyEditor" @click="selectedComponent = {} as IComponent">
-              <div
-                  class="drop-area"
-                  @drop="onDrop"
-                  @dragover="onDragOver"
-                  data-drop-target="editor"
-                  data-component-id="editor"
-              >
-                <div
-                    v-for="(component, index) in components"
-                    :key="`${component.options?.id}-${component.options?.name}`"
-                    :class="{'selectedComponent': selectedComponent?.options?.id === component?.options?.id, [component.options.class]: component?.options?.class?.length}"
-                    class="draggable-component"
-                    @drop="onDropComponent(index)"
-                    draggable="true"
-                    @dragstart="!component?.options?.locked ? onDragStart($event, index) : ''"
-                    @dragenter="onDragEnter(index)"
-                    @dragleave="onDragLeave()"
-                >
+            <div class="editor" v-if="!isEditorEnabled">Seleziona prima un file per spostare gli elementi nell'editor</div>
+            <TabView v-if="isEditorEnabled">
+              <TabPanel header="Visual Editor" class="overflow-y-auto flex-grow-1 h-full" id="panel-editor" style="height: calc(100vh - 100px);">
 
-                  <component
-                      v-model:selectedComponent="selectedComponent"
-                      :is="component.options?.tag || 'div'"
-                      :class="component?.options?.class"
-                      :style="component?.options?.style"
-                      :componentId="component?.options?.id"
-                      v-bind="getBindAttributes(component.options?.attributes as DroppableProps)"
-                      :parentComponents="component?.options?.slot"
-                      @updateSelectedComponent="handleComponentClick"
-                      @updateNestedComponents="updateNestedComponents"
-                      @click.stop="handleComponentClick(component)"
-                      @removeComponent="removeDraggedComponent($event)"
-                      @contextmenu.stop="!component?.options?.locked ? onComponentRightClick($event, component): ''"
-                  >{{ component?.options?.inner }}</component>
+                <div class="editor" :key="keyEditor" @click="selectedComponent = {} as IComponent">
+                  <div
+                      class="drop-area"
+                      @drop="onDrop"
+                      @dragover="onDragOver"
+                      data-drop-target="editor"
+                      data-component-id="editor"
+                  >
+                    <div
+                        v-for="(component, index) in components"
+                        :key="`${component?.options?.id}-${component?.options?.name}`"
+                        :class="{'selectedComponent': selectedComponent?.options?.id === component?.options?.id, [component?.options?.class]: component?.options?.class?.length}"
+                        class="draggable-component"
+                        @drop="onDropComponent(index)"
+                        draggable="true"
+                        @dragstart="!component?.options?.locked ? onDragStart($event, index) : ''"
+                        @dragenter="onDragEnter(index)"
+                        @dragleave="onDragLeave()"
+                    >
 
+                      <template v-if="component.options?.name==='DroppableComponent'">
+                        <DroppableComponent
+                            :attributes="component?.options?.attributes"
+                            :component-id="component?.options?.id as string"
+                            :parent-components="component.options.slot"
+                            v-model:selectedComponent="selectedComponent.options"
+                            v-model:component-factory="componentFactory"
+                            @updateSelectedComponent="handleComponentClick"
+                            @updateNestedComponents="updateNestedComponents"
+                            @click.stop="handleComponentClick(component)"
+                            @removeComponent="removeDraggedComponent($event)"
+                            @contextmenu.stop="!component?.options?.locked ? onComponentRightClick($event, component): ''"
+                        />
+                      </template>
+                      <component
+                          v-else
+                          v-model:selectedComponent="selectedComponent"
+                          :is="getComponent(component)"
+                          :class="component?.options?.class"
+                          :style="component?.options?.style"
+                          :componentId="component?.options?.id"
+                          v-bind="ProjectHelper.getBindAttributes(component.options?.attributes as DroppableProps)"
+                          :parentComponents="component?.options?.slot"
+                          @updateSelectedComponent="handleComponentClick"
+                          @updateNestedComponents="updateNestedComponents"
+                          @click.stop="handleComponentClick(component)"
+                          @removeComponent="removeDraggedComponent($event)"
+                          @contextmenu.stop="!component?.options?.locked ? onComponentRightClick($event, component): ''"
+                      >{{ component?.options?.inner }}</component>
+
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </Panel>
+              </TabPanel>
+              <TabPanel header="Code Editor">
+
+                <Textarea :value="generatedCode" class="w-full min-h-full" />
+              </TabPanel>
+            </TabView>
           <!-- OUTPUT -->
-          <OutputComponent v-model="generatedCode" />
+<!--          <OutputComponent v-model="generatedCode" />-->
         </SplitterPanel>
 
         <!-- RIGHT -->

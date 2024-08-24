@@ -1,19 +1,10 @@
 <script setup lang="ts">
-const emit = defineEmits(['preview', 'exportHtml', 'exportProject', 'importProject'])
+const emit = defineEmits([ 'exportProject', 'importProject'])
 </script>
 
 <template>
 
   <div class="flex flex-column">
-    <div class="flex">
-      <Panel class="w-full" toggleable>
-        <template #header>
-          <i class="fa fa-file-export" />&nbsp;<small>Esportazione</small>
-        </template>
-        <Button outlined class="w-full mb-1" @click="emit('preview')" severity="success"><i class="fa fa-search" />&nbsp;Preview</Button>
-        <Button @click="emit('exportHtml')" severity="dark" class="w-full"><i class="fa fa-download" />&nbsp;Download HTML</Button>
-      </Panel>
-    </div>
     <div class="flex">
       <Panel class="w-full" toggleable collapsed>
         <template #header>

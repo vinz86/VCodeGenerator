@@ -1,6 +1,6 @@
 import type { IComponent } from '~/models/interfaces/IComponent';
 import type { ComponentFactory } from '~/models/interfaces/ComponentFactory';
-import type { DroppableComponent } from '~/models/DroppableComponent';
+import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
 import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
@@ -12,7 +12,7 @@ import {BootstrapButton, BootstrapInput} from "~/factory/ComponentFactory/UI/Boo
 import {BootstrapElement} from "~/factory/ComponentFactory/UI/Bootstrap/components/BootstrapElement";
 
 export class BootstrapFactory implements ComponentFactory {
-  private flyweight: IFlyweightComponent<DroppableComponent>[] = [];
+  private flyweight: IFlyweightComponent<IDroppableComponent>[] = [];
 
   private readonly creators: Map<string, () => IComponent> = new Map([
     ['button', () => this.createButton()],
@@ -37,7 +37,7 @@ export class BootstrapFactory implements ComponentFactory {
     return new BootstrapElement();
   }
 
-  createElement(options: DroppableComponent): IComponent {
+  createElement(options: IDroppableComponent): IComponent {
     if (!options?.tag) {
       console.warn('Nessun tag specificato, viene creato un elemento predefinito');
       return this.createGenericElement();
@@ -58,7 +58,7 @@ export class BootstrapFactory implements ComponentFactory {
     return element;
   }
 
-  updateElement(component: IComponent, options: Partial<DroppableComponent>): IComponent {
+  updateElement(component: IComponent, options: Partial<IDroppableComponent>): IComponent {
     if (!component) throw new Error('Componente non valido.')
     component.configure(options);
 
@@ -66,7 +66,7 @@ export class BootstrapFactory implements ComponentFactory {
   }
 
   setFlyweights(): void {
-    const flyweightFactory = DIContainer.getService<Flyweight<Partial<DroppableComponent>>>(EServiceKeys.FlyweightFactory);
+    const flyweightFactory = DIContainer.getService<Flyweight<Partial<IDroppableComponent>>>(EServiceKeys.FlyweightFactory);
     const commonOptions = {
       cat: 'Bootstrap',
       style: '',

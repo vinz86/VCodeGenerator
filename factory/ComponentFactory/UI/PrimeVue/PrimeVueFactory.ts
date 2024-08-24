@@ -1,26 +1,28 @@
 import type { IComponent } from '~/models/interfaces/IComponent';
 import type { ComponentFactory } from '~/models/interfaces/ComponentFactory';
-import type { DroppableComponent } from '~/models/DroppableComponent';
+import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
 import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
-import type {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
-import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import type {IFlyweightComponent} from "~/models/interfaces/IFlyweightComponent";
+import { PrimeVueContainer } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueContainer';
+import { DIContainer } from '~/services/DipendencyInjection/DIContainer';
+import type { Flyweight } from '~/factory/FlyweightFactory/Flyweight';
+import { EServiceKeys } from '~/models/enum/EServiceKeys';
+import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
 
 export class PrimeVueFactory implements ComponentFactory {
-  private flyweight: IFlyweightComponent<DroppableComponent>[] = [];
+  private flyweight: Map<string, IFlyweightComponent<IDroppableComponent>> = new Map();
 
   private readonly creators: Map<string, () => IComponent> = new Map([
     ['button', () => this.createButton()],
     ['input', () => this.createInput()],
     ['div', () => this.createGenericElement()],
+    ['container', () => this.createContainer()],
   ]);
 
   constructor() {
     this.setFlyweights();
-    console.log('PrimeVue flyweigths: ', this.flyweight)
+    console.log('PrimeVue flyweights: ', Array.from(this.flyweight.keys()));
   }
 
   createButton(): IComponent {
@@ -35,7 +37,11 @@ export class PrimeVueFactory implements ComponentFactory {
     return new PrimeVueElement();
   }
 
-  createElement(options: DroppableComponent): IComponent {
+  createContainer(): IComponent {
+    return new PrimeVueContainer();
+  }
+
+  createElement(options: IDroppableComponent): IComponent {
     if (!options?.tag) {
       console.warn('Nessun tag specificato, viene creato un elemento predefinito');
       return this.createGenericElement();
@@ -49,48 +55,60 @@ export class PrimeVueFactory implements ComponentFactory {
     }
 
     const element = creator();
+    const flyweightFactory = DIContainer.getService<Flyweight<IDroppableComponent>>(EServiceKeys.FlyweightFactory);
+    const flyweight = flyweightFactory.getFlyweight(options.tag, options);
 
-    element.configure({...options});
-    //this.Flyweight.configure(this.options);
-
+    element.configure(flyweight.options as IDroppableComponent);
     return element;
   }
 
-  updateElement(component: IComponent, options: Partial<DroppableComponent>): IComponent {
-    if (!component) throw new Error('Componente non valido.')
-    component.configure(options);
+  updateElement(component: IComponent, options: Partial<IDroppableComponent>): IComponent {
+    if (!component) throw new Error('Componente non valido.');
 
+    // Recupera e aggiorna le opzioni tramite il flyweight
+    const flyweightFactory = DIContainer.getService<Flyweight<IDroppableComponent>>(EServiceKeys.FlyweightFactory);
+    const flyweight = flyweightFactory.getFlyweight(component.options.tag || '', options);
+
+    component.configure(flyweight.options as IDroppableComponent);
     return component;
   }
 
   setFlyweights(): void {
-    const flyweightFactory = DIContainer.getService<Flyweight<Partial<DroppableComponent>>>(EServiceKeys.FlyweightFactory);
+    const flyweightFactory = DIContainer.getService<Flyweight<IDroppableComponent>>(EServiceKeys.FlyweightFactory);
     const commonOptions = {
       cat: 'PrimeVue',
       style: '',
       class: '',
       inner: '',
       attributes: {},
-    }
-    this.flyweight.push(flyweightFactory.getFlyweight('button_PrimeVue', {
+    };
+
+    this.flyweight.set('button_PrimeVue', flyweightFactory.getFlyweight('button_PrimeVue', {
       ...commonOptions,
-      class: 'p-button p-component',
       inner: 'Button',
-      attributes: { type: 'button'},
-    }))
+      name: 'ButtonComponent',
+      tag: 'Button',
+    }));
 
-    this.flyweight.push(flyweightFactory.getFlyweight('input_PrimeVue', {
+    this.flyweight.set('inputtext_PrimeVue', flyweightFactory.getFlyweight('inputtext_PrimeVue', {
       ...commonOptions,
-        class: 'p-inputtext p-component',
-        attributes: {
-          type: 'text',
-          placeholder: 'inserisci il testo...',
-        },
-      })
-    )
+      name: 'InputComponent',
+      tag: 'InputText',
+      attributes: {
+        placeholder: 'Inserisci il testo...',
+      },
+    }));
 
-    this.flyweight.push(flyweightFactory.getFlyweight('element_PrimeVue', {
+    this.flyweight.set('element_PrimeVue', flyweightFactory.getFlyweight('element_PrimeVue', {
       ...commonOptions,
-    }))
+      slot: [],
+    }));
+
+    this.flyweight.set('container_PrimeVue', flyweightFactory.getFlyweight('container_PrimeVue', {
+      ...commonOptions,
+      name: 'ContainerComponent',
+      tag: 'Container',
+      inner: 'Container',
+    }));
   }
 }

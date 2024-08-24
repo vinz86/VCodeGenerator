@@ -1,10 +1,10 @@
 import type {IComponent} from "~/models/interfaces/IComponent";
-import type {DroppableComponent} from "~/models/DroppableComponent";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
 
 export interface ComponentFactory {
   createButton(): IComponent;
   createInput(): IComponent;
-  createElement(options: DroppableComponent): IComponent;
-  updateElement(component: IComponent, options: Partial<DroppableComponent>): IComponent
+  createElement(options: IDroppableComponent): IComponent;
+  updateElement(component: IComponent, options: Partial<IDroppableComponent>): IComponent
   setFlyweights(): void
 }

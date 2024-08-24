@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineProps, ref, type PropType, computed, nextTick } from 'vue';
+import {defineProps, ref, type PropType, computed, nextTick, type Ref} from 'vue';
 import type { TFile } from '~/models/types/TFile';
 import type { Project } from '~/models/interfaces/Project';
 import { DIContainer } from '~/services/DipendencyInjection/DIContainer';
@@ -21,6 +21,7 @@ const renameDialog = ref(false);
 const contextMenu = ref<ContextMenu | null>(null);
 const addFileDialog = ref(false);
 const addFolderDialog = ref(false);
+const treeSelectedKey = ref();
 
 const props = defineProps({
   selectedProject: {
@@ -29,7 +30,7 @@ const props = defineProps({
   },
 });
 
-const formatTreeData = (files: TFile[]) => {
+const formatTreeData: any = (files: TFile[]) => {
   return files.map(file => ({
     key: file.id,
     label: file.name,
@@ -41,9 +42,10 @@ const formatTreeData = (files: TFile[]) => {
 
 const treeData = computed(() => formatTreeData(props.selectedProject.files));
 
-const onComponentRightClick = (event) => {
+const onComponentRightClick = () => {
+  debugger
   event.preventDefault();
-
+  selectFile(event.data)
   if (selectedNode.value) {
     nextTick(() => {
       if (contextMenu.value) {
@@ -117,25 +119,29 @@ const contextMenuItems = computed(() => {
     {
       label: 'Rinomina',
       icon: 'pi pi-pencil',
-      command: () => {
-        if (selectedNode.value) {
-          newFileName.value = selectedNode.value.name;
-          renameDialog.value = true;
-        }
-      },
+      command: () => onRename(),
     },
     {
       label: 'Elimina',
       icon: 'pi pi-trash',
-      command: () => {
-        if (selectedNode.value) {
-          deleteFile(selectedNode.value);
-          selectedNode.value = null;
-        }
-      },
+      command: () => onDelete(),
     },
   ];
 });
+
+const onRename = () =>{
+  if (selectedNode.value) {
+    newFileName.value = selectedNode.value.name;
+    renameDialog.value = true;
+  }
+}
+
+const onDelete = () =>{
+  if (selectedNode.value) {
+    deleteFile(selectedNode.value);
+    selectedNode.value = null;
+  }
+}
 
 const handleAddFile = (type: 'file' | 'folder') => {
   if (newFileName.value.trim()) {
@@ -173,53 +179,64 @@ const newFileTypeValues = [
 <template>
   <div class="file-manager">
     <div class="flex">
-      <div class="flex-grow-1">
-        <Button @click="openCreateFileDialog" text class="mb-2">
+        <Button @click="openCreateFileDialog" text  severity="success">
           <i class="fa fa-file-circle-plus" />
         </Button>
-        <Button @click="openCreateFolderDialog" text class="mb-2">
+        <Button @click="openCreateFolderDialog" text severity="warning">
           <i class="fa fa-folder-plus" />
         </Button>
-      </div>
+        <Button @click="onRename" text severity="info">
+          <i class="fa fa-file-edit" />
+        </Button>
+        <Button @click="onDelete" text severity="danger">
+          <i class="fa fa-trash" />
+        </Button>
     </div>
 
-    <h4>/root</h4>
-    <Tree
+    <Tree class="p-1" v-if="treeData?.length"
+        v-model:selectionKeys="treeSelectedKey"
         :value="treeData"
         :selection-mode="'single'"
+        :filter="true"
+          filterMode="strict"
+        :metaKeySelection="false"
         @node-select="(event) => {
           console.log('Node selected:', event.data);
           selectFile(event.data);
         }"
-        @contextmenu="onComponentRightClick"
+        @contextmenu="(event) => {
+          console.log('contextmenu:', event.data);
+          onComponentRightClick()
+        }"
     />
+    <p class="ml-3" v-else>Nessun file</p>
 
     <Dialog header="Rinomina File/Cartella" v-model:visible="renameDialog">
       <div class="p-fluid">
-        <InputText v-model="newFileName" placeholder="Nuovo Nome" />
+        <InputText @keyup.enter="confirmRename" class="mb-2" v-model="newFileName" placeholder="Nuovo Nome" />
         <div class="dialog-footer">
           <Button @click="confirmRename" icon="pi pi-check" severity="success" label="Conferma" />
-          <Button @click="() => renameDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
+          <Button class="ml-2" @click="() => renameDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
         </div>
       </div>
     </Dialog>
 
     <Dialog header="Aggiungi File" v-model:visible="addFileDialog">
       <div class="p-fluid">
-        <InputText v-model="newFileName" placeholder="Nome File" />
+        <InputText class="mb-2" v-model="newFileName" placeholder="Nome File" @keyup.enter="handleAddFile('file')" />
         <div class="dialog-footer">
           <Button @click="handleAddFile('file')" icon="pi pi-check" severity="success" label="Aggiungi" />
-          <Button @click="() => addFileDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
+          <Button class="ml-2" @click="() => addFileDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
         </div>
       </div>
     </Dialog>
 
     <Dialog header="Aggiungi Cartella" v-model:visible="addFolderDialog">
       <div class="p-fluid">
-        <InputText v-model="newFileName" placeholder="Nome Cartella" />
+        <InputText class="mb-2" v-model="newFileName" placeholder="Nome Cartella" @keyup.enter="handleAddFile('folder')" />
         <div class="dialog-footer">
           <Button @click="handleAddFile('folder')" icon="pi pi-check" severity="success" label="Aggiungi" />
-          <Button @click="() => addFolderDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
+          <Button class="ml-2" @click="() => addFolderDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
         </div>
       </div>
     </Dialog>

@@ -1,7 +1,6 @@
-import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';  // Importa l'interfaccia
-import { ComponentFlyweight } from "~/factory/FlyweightFactory/ComponentFlyweight";  // Importa la classe flyweight
-import type { TFlyweight } from "~/models/types/TFlyweight";  // Importa il tipo
-import type { DroppableComponent } from "~/models/DroppableComponent";  // Importa il tipo di componente
+import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
+import { ComponentFlyweight } from "~/factory/FlyweightFactory/ComponentFlyweight";
+import type { TFlyweight } from "~/models/types/TFlyweight";
 
 export class Flyweight<T> {
   private flyweights: TFlyweight<T> = new Map();  // Mappa di flyweight inizializzata vuota

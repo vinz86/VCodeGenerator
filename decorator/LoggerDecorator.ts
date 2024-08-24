@@ -83,7 +83,7 @@ export class LoggerDecorator<T> implements ILoggerDecorator<T>{
     }
 
     private shouldLog(level: ELoggerLevel): boolean {
-        const levels = {
+        const levels: { [key in ELoggerLevel]: number }  = {
             [ELoggerLevel.Debug]: 1,
             [ELoggerLevel.Info]: 2,
             [ELoggerLevel.Warn]: 3,
