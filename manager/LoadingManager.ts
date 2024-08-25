@@ -41,6 +41,7 @@ export class LoadingManager implements ILoadingManager {
             console.log('Loading start...');
         } else {
             this.isLoadingRef.value = false;
+            this.loadingCount = 0;
             console.log('Loading stop.');
         }
     }

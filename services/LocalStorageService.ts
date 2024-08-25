@@ -8,16 +8,15 @@ export class LocalStorageService {
   }
 
   load(key: string): any {
-    const data = localStorage.getItem(key);
-    if (data) {
-      try {
-        return JSON.parse(data);
-      } catch (error) {
-        console.error('Errore nel parsing dei dati da localStorage:', error);
-        return null;
+    try {
+      const data = localStorage.getItem(key);
+      if (data) {
+          return JSON.parse(data);
       }
+    } catch (error) {
+      console.error('Errore nel recupero dei dati da localStorage:', error);
+      return null;
     }
-    return null;
   }
 
   remove(key: string): void {

@@ -6,5 +6,5 @@ export type TAppConfiguration = {
     featureY: boolean;
     apiBase: string;
     theme: string;
-    [key: string]: any; // Per proprietà dinamiche
+    [key: string]: any;
 }

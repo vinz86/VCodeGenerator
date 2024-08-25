@@ -110,25 +110,17 @@ const saveFileContent = () => {
 const saveProjects = () => {
   if (selectedProject.value) {
 
-    // Trova l'indice del progetto corrente nella lista dei progetti salvati
     let projects = localStorageService.load('projects') || [];
-
-    if (typeof projects === 'string') {
-      projects = JSON.parse(projects);
-    }
-
-    // Trova l'indice del progetto corrente nella lista dei progetti salvati
     const projectIndex = projects?.findIndex((p: IProject) => p.id === selectedProject.value.id);
 
     if (projectIndex >= 0) {
-      // Aggiorna il progetto esistente
       projects[projectIndex] = selectedProject.value;
-    } else {
-      // Aggiungi un nuovo progetto se non esiste già
-      projects.push(selectedProject.value);
     }
+   /* else {
+      projects.push(selectedProject.value);
+    }*/
 
-    localStorageService.save('projects', JSON.stringify(projects));
+    localStorageService.save('projects', projects);
   }
 };
 

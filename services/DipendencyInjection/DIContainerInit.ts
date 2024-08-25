@@ -19,10 +19,6 @@ export class DIContainerInit {
     private static initialized: boolean = false;
     public static verbose: boolean = false;
 
-    constructor(verbose: boolean = false) {
-        DIContainerInit.verbose = verbose;
-    }
-
     /**
      * Inizializza i servizi del contenitore DI. Questo metodo deve essere chiamato una sola volta all'avvio dell'applicazione
      * Plugin esempio:
@@ -33,7 +29,9 @@ export class DIContainerInit {
      *     DIContainerInit.init();
      * });
      */
-    public static init(): void {
+    public static init(verbose: boolean = false): void {
+        DIContainerInit.verbose = verbose;
+
         if (DIContainerInit.initialized) {
             DIContainerInit.verbose && console.warn('I servizi sono già stati inizializzati.');
             return;
@@ -45,17 +43,33 @@ export class DIContainerInit {
         DIContainerInit.verbose && console.log('Servizi DI inizializzati con successo.');
     }
 
-    // ComponentFactoryProvider
     private static initialize(): void {
         try {
+            DIContainerInit.verbose && console.log('Inizializzazione ComponentFactory.');
             DIContainer.registerService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory, new ComponentFactoryProvider());
+
+            DIContainerInit.verbose && console.log('Inizializzazione FlyweightFactory.');
             DIContainer.registerService<Flyweight<any>>(EServiceKeys.FlyweightFactory, new Flyweight());
+
+            DIContainerInit.verbose && console.log('Inizializzazione StateManager.');
             DIContainer.registerService<StateManager>(EServiceKeys.StateManager, StateManager.getInstance());
+
+            DIContainerInit.verbose && console.log('Inizializzazione LocalStorageService.');
             DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, new LocalStorageService());
+
+            DIContainerInit.verbose && console.log('Inizializzazione MockBackendService.');
             DIContainer.registerService(EServiceKeys.BackendAdapter, new MockBackendService());
+
+            DIContainerInit.verbose && console.log('Inizializzazione FileService.');
             DIContainer.registerService<IFileService>(EServiceKeys.FileService, FileService.getInstance());
+
+            DIContainerInit.verbose && console.log('Inizializzazione NotifyManager.');
             DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
+
+            DIContainerInit.verbose && console.log('Inizializzazione ValidationManager.');
             DIContainer.registerService<IValidationManager>(EServiceKeys.ValidationManager, new ValidationManager({ autoFocus: true }));
+
+            DIContainerInit.verbose && console.log('Inizializzazione ConfigurationManager.');
             DIContainer.registerService<IConfigurationManager>(EServiceKeys.ConfigurationManager, ConfigurationManager.getInstance());
         }
         catch (e){

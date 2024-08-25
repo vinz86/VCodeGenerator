@@ -9,6 +9,7 @@ import { EComponentTypes } from '~/models/enum/EComponentTypes';
 import { EServiceKeys } from '~/models/enum/EServiceKeys';
 import FileManager from "~/components/Editor/FileManager.vue";
 import type {TFile} from "~/models/types/TFile";
+import {ProjectHelper} from "~/helper/ProjectHelper";
 
 const emit = defineEmits(['changeComponentsType', 'changeSelectedProject', 'selectFile']);
 
@@ -23,7 +24,7 @@ const selectedProjectId = ref<string | null>(null);
 const componentsType = defineModel<EComponentTypes>('componentsType');
 
 const selectedProject = computed(() => {
-  return projects.value.find(project => project.id === selectedProjectId.value) || null;
+  return projects.value.length>0 ? projects.value.find(project => project.id === selectedProjectId.value) : null;
 });
 
 watch(projects, () => {
@@ -35,25 +36,26 @@ watch(selectedProjectId, () => {
 });
 
 const loadProjects = () => {
-  const storedProjects = localStorageService.load('projects');
-  const storedSelectedProjectId = localStorageService.load('selectedProjectId');
-  const storedComponentsType = localStorageService.load('componentsType');
+  let storedSelectedProjectId: string;
+  const storedProjects: Project[] = localStorageService.load('projects');
+  const storedComponentsType: string = localStorageService.load('componentsType');
 
-  if (storedProjects) {
-    projects.value = JSON.parse(storedProjects);
+  if (storedProjects?.length>0) {
+    projects.value = storedProjects;
+
+    storedSelectedProjectId = localStorageService.load('selectedProjectId')
+    if (storedSelectedProjectId) {
+      selectedProjectId.value = storedSelectedProjectId;
+    }
+
   }
-
-  if (storedSelectedProjectId) {
-    selectedProjectId.value = storedSelectedProjectId;
-  }
-
   if (storedComponentsType) {
     componentsType.value = storedComponentsType;
   }
 };
 
 const saveProjects = () => {
-  localStorageService.save('projects', JSON.stringify(projects.value));
+  localStorageService.save('projects', projects.value);
   localStorageService.save('selectedProjectId', selectedProjectId.value);
   localStorageService.save('componentsType', componentsType.value);
 };
@@ -127,7 +129,7 @@ onMounted(loadProjects);
     <div class="flex flex-column m-1">
       <div>
         <Dropdown
-            v-if="projects.length"
+            v-if="projects.length>0"
             @change="selectedProjectId && selectProject(selectedProjectId)"
             v-model="selectedProjectId"
             :options="projects"
@@ -136,6 +138,7 @@ onMounted(loadProjects);
             placeholder="Seleziona un progetto"
             class="w-full mb-1"
         >
+          {{projects.length}}
           <Divider />
           <template #option="slotProps">
             <div class="flex w-full">
@@ -167,6 +170,7 @@ onMounted(loadProjects);
       </div>
     </div>
 
+    <Divider />
     <FileManager
         v-if="selectedProject"
         :selectedProject="selectedProject"
