@@ -2,7 +2,7 @@ import type { TAppConfiguration } from '~/models/types/TAppConfiguration';
 
 const VCodeGeneratorConfig: TAppConfiguration = {
     appName: 'VCodeGenerator',
-    apiBase: 'https://api.VCodeGenerator.com',
+    apiBase: 'http://localhost:8080/api/',
     theme: 'light',
 };
 

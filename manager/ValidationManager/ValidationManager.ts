@@ -40,7 +40,6 @@ export class ValidationManager implements IValidationManager {
             email: () => (value: any) => isEmpty(value) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
             url: () => (value: any) => isEmpty(value) || /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(value),
             phone: () => (value: any) => isEmpty(value) || /^\+?(\d.*){3,}$/.test(value),
-            required: () => (value: any) => !isEmpty(value),
             image: () => (value: any) => isEmpty(value) || (value instanceof File && value.type.startsWith('image/')),
             regex: (pattern: RegExp) => (value: any) => isEmpty(value) || pattern.test(value),
             size: (maxSize: number) => (value: any) => isEmpty(value) || (value instanceof File && value.size <= maxSize * 1024),
@@ -56,6 +55,7 @@ export class ValidationManager implements IValidationManager {
             min_value: (min: number) => (value: any) => isEmpty(value) || value >= min,
             between_values: (values: number[]) => (value: any) => isEmpty(value) || (value.length >= values[0] && value.length <= values[1]),
             mimes: (types: string[]) => (value: any) => isEmpty(value) || (value instanceof File && types.includes(value.type)),
+            required: () => (value: any) => !isEmpty(value),
             ...customValidators
         };
     }
