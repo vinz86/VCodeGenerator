@@ -20,8 +20,15 @@ export class StateManager<T extends Record<string, any>> {
   getState<K extends keyof T>(key: K): T[K] | undefined {
     return this.state[key];
   }
-}
 
+  clearState(): void {
+    this.state = {} as T;
+  }
+
+  clearStateByKey<K extends keyof T>(key: K): void {
+    delete this.state[key];
+  }
+}
 
 // Esempio di utilizzo
 // interface AppState {
@@ -31,9 +38,8 @@ export class StateManager<T extends Record<string, any>> {
 //
 // const stateManager = StateManager.getInstance<AppState>();
 // stateManager.setState('currentProject', { name: 'My Project' });
-// const project = stateManager.getState('currentProject');
-// console.log(project); // Output: { name: 'My Project' }
-
-// Esempio di utilizzo
-// const stateManager = StateManager.getInstance();
-// stateManager.setState('currentProject', { name: 'My Project' });
+// console.log(stateManager.getState('currentProject')); // Output: { name: 'My Project' }
+//
+// // Clear state by key
+// stateManager.clearStateByKey('currentProject');
+// console.log(stateManager.getState('currentProject'));
