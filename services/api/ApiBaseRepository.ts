@@ -1,6 +1,7 @@
 import { ApiClient} from "~/services/api/ApiClient";
+import type {IBaseRepository} from "~/services/api/interfaces/IBaseRepository";
 
-export class BaseRepository {
+export class ApiBaseRepository implements IBaseRepository{
     protected apiClient: ApiClient;
 
     constructor() {

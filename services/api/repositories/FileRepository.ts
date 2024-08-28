@@ -1,19 +1,8 @@
-import { BaseRepository } from "~/services/api/repositories/BaseRepository";
+import { ApiBaseRepository } from "~/services/api/ApiBaseRepository";
 import type {TFile} from "~/models/types/TFile";
+import type {IFileRepository} from "~/services/api/interfaces/IFileRepository";
 
-export class FileRepository extends BaseRepository {
-    private static instance: FileRepository;
-
-    private constructor() {
-        super();
-    }
-
-    public static getInstance(): FileRepository {
-        if (!FileRepository.instance) {
-            FileRepository.instance = new FileRepository();
-        }
-        return FileRepository.instance;
-    }
+export class FileRepository extends ApiBaseRepository implements IFileRepository{
 
     public getFiles(): Promise<TFile[]> {
         return this.get<TFile[]>('/api/files');

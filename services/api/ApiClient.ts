@@ -3,7 +3,7 @@ import type {IApiResponse} from "~/models/interfaces/IApiResponse";
 import type {IApiRequest} from "~/models/interfaces/IApiRequest";
 import {EApiHttpClientType} from "~/models/enum/EApiHttpClientType";
 import type {IHttpClient} from "~/models/interfaces/IHttpClient";
-import {HttpClientFactory} from "~/services/api/clients/HttpClientFactory";
+import {ApiClientFactory} from "~/services/api/ApiClientFactory";
 
 export class ApiClient {
     private static instance: ApiClient;
@@ -12,7 +12,7 @@ export class ApiClient {
 
     private constructor(clientType: EApiHttpClientType) {
         this.cacheManager = CacheManager.getInstance();
-        this.httpClient = HttpClientFactory.createClient(clientType);
+        this.httpClient = ApiClientFactory.createClient(clientType);
     }
 
     public static getInstance(clientType: EApiHttpClientType): ApiClient {

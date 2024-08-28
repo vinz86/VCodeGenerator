@@ -11,8 +11,9 @@ import {ConfigurationManager} from "~/manager/ConfigurationManager/Configuration
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
+import type {IApiRepositories} from "~/models/interfaces/IApiRepositories";
 
-const { $api } = useNuxtApp();
+const { $api }: IApiRepositories = useNuxtApp();
 const notifyManager: INotifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const configurationManager: ConfigurationManager = ConfigurationManager.getInstance()
 const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50});
@@ -21,7 +22,7 @@ const localStorageService = new LocalStorageService();
 
 
 
-const formData: IAuthorize = ref({} as IAuthData);
+const formData: IAuthorize = ref({} as IAuthorize);
 const login = async () => {
     const result = await $api.auth.login(formData.value);
 

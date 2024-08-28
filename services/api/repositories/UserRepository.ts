@@ -1,34 +1,27 @@
-import { BaseRepository} from "~/services/api/repositories/BaseRepository";
+import { ApiBaseRepository} from "~/services/api/ApiBaseRepository";
 import type {IAccount} from "~/models/interfaces/DTO/IAccount";
+import type {IUser} from "~/models/interfaces/DTO/IUser";
+import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
 
-export class UserRepository extends BaseRepository {
-    private static instance: UserRepository;
-
-    private constructor() {
-        super();
-    }
-
-    public static getInstance(): UserRepository {
-        if (!UserRepository.instance) {
-            UserRepository.instance = new UserRepository();
-        }
-        return UserRepository.instance;
-    }
+export class UserRepository extends ApiBaseRepository implements IUserRepository{
 
     public getAccount(): Promise<IAccount[]> {
         return this.get<IAccount[]>('account');
     }
 
-    public getUserById(id: string): Promise<User> {
-        return this.get<User>(`users/${id}`);
+    public getUsers(): Promise<IUser[]> {
+        return this.get<IUser>(`users`);
+    }
+    public getUserById(id: string): Promise<IUser> {
+        return this.get<IUser>(`users/${id}`);
     }
 
-    public createUser(user: User): Promise<User> {
-        return this.post<User>('users', user);
+    public createUser(user: IUser): Promise<IUser> {
+        return this.post<IUser>('users', user);
     }
 
-    public updateUser(id: string, user: Partial<User>): Promise<User> {
-        return this.put<User>(`users/${id}`, user);
+    public updateUser(id: string, user: Partial<IUser>): Promise<IUser> {
+        return this.put<IUser>(`users/${id}`, user);
     }
 
     public deleteUser(id: string): Promise<void> {

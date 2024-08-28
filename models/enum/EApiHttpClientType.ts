@@ -1,4 +1,5 @@
 export enum EApiHttpClientType {
     Fetch = 'fetch',
-    Axios = 'axios'
+    Axios = 'axios',
+    AsyncData = 'async-data'
 }

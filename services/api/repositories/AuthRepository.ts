@@ -1,21 +1,10 @@
-import { BaseRepository } from './BaseRepository';
-import type {IAuthData} from "~/pages/login.vue";
+import { ApiBaseRepository } from '../ApiBaseRepository';
+import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
+import type {IAuthRepository} from "~/services/api/interfaces/IAuthRepository";
 
-export class AuthRepository extends BaseRepository {
-    private static instance: AuthRepository;
+export class AuthRepository extends ApiBaseRepository implements IAuthRepository{
 
-    private constructor() {
-        super();
-    }
-
-    public static getInstance(): AuthRepository {
-        if (!AuthRepository.instance) {
-            AuthRepository.instance = new AuthRepository();
-        }
-        return AuthRepository.instance;
-    }
-
-    public login(formData: IAuthData): Promise<any> {
+    public login(formData: IAuthorize): Promise<any> {
         return this.post<any>('authenticate', formData);
     }
 
