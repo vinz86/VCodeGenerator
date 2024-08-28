@@ -6,7 +6,6 @@ import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
 import {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import type {IFileService} from "~/models/interfaces/IFileService";
 import {FileService} from "~/services/FileService";
-import {MockBackendService} from "~/services/BackendAdapter";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
 import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
@@ -14,6 +13,10 @@ import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
 import type {IValidationManager} from "~/manager/ValidationManager/VValidateModels";
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
 import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
+import {UserRepository} from "~/services/api/repositories/UserRepository";
+import {AuthRepository} from "~/services/api/repositories/AuthRepository";
+import {ProjectRepository} from "~/services/api/repositories/ProjectRepository";
+import type {FileRepository} from "~/services/api/repositories/FileRepository";
 
 export class DIContainerInit {
     private static initialized: boolean = false;
@@ -45,6 +48,7 @@ export class DIContainerInit {
 
     private static initialize(): void {
         try {
+
             DIContainerInit.verbose && console.log('Inizializzazione ComponentFactory.');
             DIContainer.registerService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory, new ComponentFactoryProvider());
 
@@ -56,9 +60,6 @@ export class DIContainerInit {
 
             DIContainerInit.verbose && console.log('Inizializzazione LocalStorageService.');
             DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, new LocalStorageService());
-
-            DIContainerInit.verbose && console.log('Inizializzazione MockBackendService.');
-            DIContainer.registerService(EServiceKeys.BackendAdapter, new MockBackendService());
 
             DIContainerInit.verbose && console.log('Inizializzazione FileService.');
             DIContainer.registerService<IFileService>(EServiceKeys.FileService, FileService.getInstance());
