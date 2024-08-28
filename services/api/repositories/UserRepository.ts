@@ -20,18 +20,18 @@ export class UserRepository extends BaseRepository {
     }
 
     public getUserById(id: string): Promise<User> {
-        return this.get<User>(`/api/users/${id}`);
+        return this.get<User>(`users/${id}`);
     }
 
     public createUser(user: User): Promise<User> {
-        return this.post<User>('/api/users', user);
+        return this.post<User>('users', user);
     }
 
     public updateUser(id: string, user: Partial<User>): Promise<User> {
-        return this.put<User>(`/api/users/${id}`, user);
+        return this.put<User>(`users/${id}`, user);
     }
 
     public deleteUser(id: string): Promise<void> {
-        return this.delete<void>(`/api/users/${id}`);
+        return this.delete<void>(`users/${id}`);
     }
 }

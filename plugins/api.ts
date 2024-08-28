@@ -1,14 +1,16 @@
 import {defineNuxtPlugin} from '#app';
-import {ApiClient} from "~/services/api/ApiClient";
-import {UserRepository} from "~/services/api/repositories/UserRepository";
-import {EApiHttpClientType} from "~/models/enum/EApiHttpClientType";
-import {AuthRepository} from "~/services/api/repositories/AuthRepository";
+import {ApiContainer, initApiContainer} from "~/services/api/ApiContainer";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 export default defineNuxtPlugin(nuxtApp => {
+    initApiContainer();
+
     const repositories = {
-        http: ApiClient.getInstance(EApiHttpClientType.Axios),
-        auth: AuthRepository.getInstance(EApiHttpClientType.Fetch),
-        user: UserRepository.getInstance(EApiHttpClientType.Axios),
+        http: ApiContainer.getService(EServiceKeys.ApiClient),
+        auth: ApiContainer.getService(EServiceKeys.AuthRepository),
+        user: ApiContainer.getService(EServiceKeys.UserRepository),
+        project: ApiContainer.getService(EServiceKeys.ProjectRepository),
+        files: ApiContainer.getService(EServiceKeys.FileRepository),
     }
 
     nuxtApp.provide('api', repositories);
