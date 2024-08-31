@@ -5,6 +5,8 @@ import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
 
 export class UserRepository extends ApiBaseRepository implements IUserRepository{
 
+    //constructor() { super(); }
+
     public getAccount(): Promise<IAccount[]> {
         return this.get<IAccount[]>('account');
     }

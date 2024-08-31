@@ -10,12 +10,22 @@ import { EServiceKeys } from '~/models/enum/EServiceKeys';
 import FileManager from "~/components/Editor/FileManager.vue";
 import type {TFile} from "~/models/types/TFile";
 import {ProjectHelper} from "~/helper/ProjectHelper";
+import type {IApiRepositories} from "~/models/interfaces/IApiRepositories";
+import {LoadingManager} from "~/manager/LoadingManager";
+import type {INotifyManager} from "~/models/interfaces/INotifyManager";
+import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
+import {ApiContainer} from "~/services/api/ApiContainer";
+import type {IAuthRepository} from "~/services/api/interfaces/IAuthRepository";
+import {EApiKeys} from "~/models/enum/EApiKeys";
+import type {IProjectRepository} from "~/services/api/interfaces/IProjectRepository";
 
 const emit = defineEmits(['changeComponentsType', 'changeSelectedProject', 'selectFile']);
 
+const projectService: IProjectRepository = ApiContainer.getService<IProjectRepository>(EApiKeys.ProjectRepository);
 
-const stateManager = StateManager.getInstance();
+const stateManager = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
+const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 
 const projects: Ref<Project[]> = ref([]);
 const newProjectName = ref('');
@@ -27,15 +37,15 @@ const selectedProject = computed(() => {
   return projects.value.length>0 ? projects.value.find(project => project.id === selectedProjectId.value) : null;
 });
 
-watch(projects, () => {
+/*watch(projects, () => {
   saveProjects();
 }, { deep: true });
 
 watch(selectedProjectId, () => {
   saveProjects();
-});
+});*/
 
-const loadProjects = () => {
+/*const loadProjects = () => {
   let storedSelectedProjectId: string;
   const storedProjects: Project[] = localStorageService.load('projects');
   const storedComponentsType: string = localStorageService.load('componentsType');
@@ -52,6 +62,22 @@ const loadProjects = () => {
   if (storedComponentsType) {
     componentsType.value = storedComponentsType;
   }
+};*/
+const loadProjects = async () => {
+  let storedSelectedProjectId: string;
+  projects.value = await projectService.getProjects();
+
+  storedSelectedProjectId = localStorageService.load('selectedProjectId')
+  if (storedSelectedProjectId) {
+    selectedProjectId.value = storedSelectedProjectId;
+  }
+};
+
+const loadComponentType = async () => {
+  const storedComponentsType: string = localStorageService.load('componentsType');
+  if (storedComponentsType) {
+    componentsType.value = storedComponentsType;
+  }
 };
 
 const saveProjects = () => {
@@ -65,7 +91,7 @@ const createProject = () => {
     const newProject: Project = {
       id: Date.now().toString(),
       name: newProjectName.value,
-      files: [],
+      //files: [],
     };
 
     projects.value.push(newProject);
@@ -114,7 +140,15 @@ const onSelectFile = (file: TFile) => {
 };
 
 
-onMounted(loadProjects);
+onMounted(async ()=> {
+  try{
+    await loadProjects();
+    await loadComponentType();
+  }
+  catch (e) { notifyManager.error(e); }
+  finally { LoadingManager.getInstance().stop(); }
+});
+
 </script>
 
 <template>
@@ -173,7 +207,7 @@ onMounted(loadProjects);
     <Divider />
     <FileManager
         v-if="selectedProject"
-        :selectedProject="selectedProject"
+        :projectId="selectedProject.id"
         @selectFile="onSelectFile"
     />
   </div>

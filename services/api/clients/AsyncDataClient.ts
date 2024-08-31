@@ -1,9 +1,10 @@
-import { useAsyncData } from '#app';
-import { IHttpClient } from "~/models/interfaces/IHttpClient";
-import { IApiRequest } from "~/models/interfaces/IApiRequest";
-import type { IApiResponse } from "~/models/interfaces/IApiResponse";
-import { ConfigurationManager } from "~/manager/ConfigurationManager/ConfigurationManager";
-import { LocalStorageService } from "~/services/LocalStorageService";
+import {useAsyncData} from '#app';
+import {IHttpClient} from "~/models/interfaces/IHttpClient";
+import {IApiRequest} from "~/models/interfaces/IApiRequest";
+import type {IApiResponse} from "~/models/interfaces/IApiResponse";
+import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
+import {LocalStorageService} from "~/services/LocalStorageService";
+import type {IApiError} from "~/services/api/interfaces/IApiError";
 
 export class AsyncDataClient implements IHttpClient {
     private token: string | null = null;
@@ -14,6 +15,26 @@ export class AsyncDataClient implements IHttpClient {
         if (_token) {
             this.token = _token;
         }
+    }
+
+    private convertToIApiError(errorObject: any): IApiError {
+        const errorKey = errorObject._key;
+        const errorDetails = errorObject._object[errorKey];
+
+        debugger
+        if (!errorDetails) {
+            return {
+                message: 'Unknown error occurred',
+                statusCode: 500,
+                originalError: errorObject
+            };
+        }
+
+        return {
+            message: errorDetails.message || 'Unknown error occurred',
+            statusCode: errorDetails.statusCode || 500,
+            originalError: errorDetails
+        };
     }
 
     setAuthorizationToken(token: string | null) {
@@ -35,27 +56,32 @@ export class AsyncDataClient implements IHttpClient {
             ...(data && { body: JSON.stringify(data) })
         };
 
-        // Using useAsyncData to handle the request
-        const { data: responseData, error } = await useAsyncData<T>(
-            apiUrl,
-            () => fetch(apiUrl, fetchConfig).then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! Status: ${res.status}`);
-                }
-                return res.json();
-            })
-        );
+        try{
 
-        if (error.value) {
-            throw new Error(`Error fetching data: ${error.value}`);
+            // Using useAsyncData to handle the request
+            const { data: responseData, error } = await useAsyncData<T>(
+                apiUrl,
+                () => fetch(apiUrl, fetchConfig).then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! Status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+            );
+
+            if (error.value) {
+                throw this.convertToIApiError(error);
+            }
+
+            return {
+                data: responseData.value,
+                status: 200,
+                statusText: 'OK',
+                headers: new Headers()
+            };
         }
-
-        // Mocking IApiResponse structure, adjust if needed
-        return {
-            data: responseData.value,
-            status: 200, // use status code from actual fetch response if needed
-            statusText: 'OK', // use status text from actual fetch response if needed
-            headers: new Headers() // mock or adjust according to actual response
-        };
+        catch (e){
+            throw this.convertToIApiError(e);
+        }
     }
 }

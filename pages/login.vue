@@ -12,8 +12,15 @@ import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
 import type {IApiRepositories} from "~/models/interfaces/IApiRepositories";
+import {ApiContainer} from "~/services/api/ApiContainer";
+import {EApiKeys} from "~/models/enum/EApiKeys";
+import type {IAuthRepository} from "~/services/api/interfaces/IAuthRepository";
+import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
 
 const { $api }: IApiRepositories = useNuxtApp();
+const authService: IAuthRepository = ApiContainer.getService<IAuthRepository>(EApiKeys.AuthRepository);
+const userService: IUserRepository = ApiContainer.getService<IAuthRepository>(EApiKeys.UserRepository);
+
 const notifyManager: INotifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const configurationManager: ConfigurationManager = ConfigurationManager.getInstance()
 const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50});
@@ -24,7 +31,7 @@ const localStorageService = new LocalStorageService();
 
 const formData: IAuthorize = ref({} as IAuthorize);
 const login = async () => {
-    const result = await $api.auth.login(formData.value);
+    const result = await authService.login(formData.value);
 
     console.log('Login Ok: ', result);
     const token = result.id_token;
@@ -33,7 +40,7 @@ const login = async () => {
 }
 
 const getAccount = async () => {
-    const result = await $api.user.getAccount();
+    const result = await userService.getAccount();
 
     console.log('account Ok: ', result);
     stateManager.setState('currentUser', result);

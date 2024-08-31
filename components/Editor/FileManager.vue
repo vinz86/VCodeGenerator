@@ -1,19 +1,27 @@
 <script lang="ts" setup>
-import {defineProps, ref, type PropType, computed, nextTick, type Ref} from 'vue';
-import type { TFile } from '~/models/types/TFile';
-import type { Project } from '~/models/interfaces/Project';
-import { DIContainer } from '~/services/DipendencyInjection/DIContainer';
-import { EServiceKeys } from '~/models/enum/EServiceKeys';
-import type { LocalStorageService } from '~/services/LocalStorageService';
-import type { IFileService } from '~/models/interfaces/IFileService';
-import { EFileTypes } from '~/models/enum/EFileTypes';
+import {computed, defineProps, nextTick, onMounted, type Ref, ref} from 'vue';
+import type {TFile} from '~/models/types/TFile';
+import {DIContainer} from '~/services/DipendencyInjection/DIContainer';
+import {EServiceKeys} from '~/models/enum/EServiceKeys';
+import type {LocalStorageService} from '~/services/LocalStorageService';
+import type {IFileService} from '~/models/interfaces/IFileService';
+import {EFileTypes} from '~/models/enum/EFileTypes';
 import type ContextMenu from "primevue/contextmenu";
+import {LoadingManager} from "~/manager/LoadingManager";
+import type {INotifyManager} from "~/models/interfaces/INotifyManager";
+import {ApiContainer} from "~/services/api/ApiContainer";
+import {EApiKeys} from "~/models/enum/EApiKeys";
+import type {IFileRepository} from "~/services/api/interfaces/IFileRepository";
 
 const emit = defineEmits(['selectFile']);
 
+const fileRepository: IFileRepository = ApiContainer.getService<IFileRepository>(EApiKeys.FileRepository);
+
 const fileService = DIContainer.getService<IFileService>(EServiceKeys.FileService);
+const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
+const files: Ref<File[]> = ref([]);
 const newFileName = ref('');
 const newFileType = ref<EFileTypes>(EFileTypes.File);
 const selectedNode = ref<TFile | null>(null);
@@ -24,12 +32,23 @@ const addFolderDialog = ref(false);
 const treeSelectedKey = ref();
 
 const props = defineProps({
-  selectedProject: {
-    type: Object as PropType<Project>,
+  projectId: {
+    type: Number,
     required: true,
   },
 });
 
+onMounted(async ()=> {
+  try{
+    await loadFiles();
+  }
+  catch (e) { notifyManager.error(e); }
+  finally { LoadingManager.getInstance().stop(); }
+});
+
+const loadFiles = async () => {
+  files.value = await fileRepository.getFiles({ "projectId.equals": props.projectId });
+}
 const formatTreeData: any = (files: TFile[]) => {
   return files.map(file => ({
     key: file.id,
@@ -40,10 +59,9 @@ const formatTreeData: any = (files: TFile[]) => {
   }));
 };
 
-const treeData = computed(() => formatTreeData(props.selectedProject.files));
+const treeData = computed(() => formatTreeData(files.value));
 
 const onComponentRightClick = () => {
-  debugger
   event.preventDefault();
   selectFile(event.data)
   if (selectedNode.value) {
@@ -67,25 +85,56 @@ const selectFile = (node: TFile) => {
 };
 
 const addFileToRoot = () => {
-  if (props.selectedProject && newFileName.value.trim()) {
+  if (files.value && newFileName.value.trim()) {
     const newFile = fileService.createFile(newFileName.value, EFileTypes.File);
-    props.selectedProject.files.push(newFile);
+    files.value.push(newFile);
     newFileName.value = '';
   } else {
     console.warn('Progetto non selezionato o nome file non valido');
   }
 };
 
-const addFile = (parent: TFile, name: string, type: 'file' | 'folder') => {
-  const newFile = fileService.createFile(name, type);
-  if (parent.type === EFileTypes.Folder) {
-    parent.children?.push(newFile);
+const addFile = async (parent: TFile, name: string, type: EFileTypes) => {
+  try{
+    debugger
+    const storedSelectedProjectId = localStorageService.load('selectedProjectId')
+    const newFile = await fileRepository.createFile({
+      name: name,
+      type: type,
+      projectId: storedSelectedProjectId,
+      parent: parent,
+      projectId: storedSelectedProjectId,
+      parentId: parent.id,
+    }) //fileService.createFile(name, type);
+    if (parent.type === EFileTypes.Folder) {
+      parent.children?.push(newFile);
+    }
   }
+  catch (e) { notifyManager.error(e); }
+  finally { LoadingManager.getInstance().stop(); }
+};
+
+const addNewFile = async (name: string, type: EFileTypes) => {
+  try{
+    debugger
+    const storedSelectedProjectId = localStorageService.load('selectedProjectId')
+    const newFile = await fileRepository.createFile({
+      name: name,
+      type: type,
+      projectId: storedSelectedProjectId
+    }) //fileService.createFile(name, type);
+
+    if (parent.type === EFileTypes.Folder) {
+      parent.children?.push(newFile);
+    }
+  }
+  catch (e) { notifyManager.error(e); }
+  finally { LoadingManager.getInstance().stop(); }
 };
 
 const deleteFile = (file: TFile) => {
-  if (props.selectedProject) {
-    props.selectedProject.files = fileService.removeFile(props.selectedProject.files, file.id);
+  if (files.value) {
+    files.value = fileService.removeFile(files.value, file.id);
   }
 };
 
@@ -143,15 +192,17 @@ const onDelete = () =>{
   }
 }
 
-const handleAddFile = (type: 'file' | 'folder') => {
+const handleAddFile = async (type: EFileTypes) => {
+  debugger
   if (newFileName.value.trim()) {
     if (selectedNode.value) {
       // Aggiungi file o cartella al nodo selezionato
-      addFile(selectedNode.value, newFileName.value, type);
+      await addFile(selectedNode.value, newFileName.value, type);
     } else {
       // Aggiungi file o cartella alla rooot del progetto
-      const newFile = fileService.createFile(newFileName.value, type);
-      props.selectedProject.files.push(newFile);
+      //const newFile = fileService.createFile(newFileName.value, type);
+      await addNewFile(newFileName.value, type);
+      files.value.push(newFile);
     }
     newFileName.value = '';
     addFileDialog.value = false;
@@ -223,9 +274,9 @@ const newFileTypeValues = [
 
     <Dialog header="Aggiungi File" v-model:visible="addFileDialog">
       <div class="p-fluid">
-        <InputText class="mb-2" v-model="newFileName" placeholder="Nome File" @keyup.enter="handleAddFile('file')" />
+        <InputText class="mb-2" v-model="newFileName" placeholder="Nome File" @keyup.enter="handleAddFile(EFileTypes.File)" />
         <div class="dialog-footer">
-          <Button @click="handleAddFile('file')" icon="pi pi-check" severity="success" label="Aggiungi" />
+          <Button @click="handleAddFile(EFileTypes.File)" icon="pi pi-check" severity="success" label="Aggiungi" />
           <Button class="ml-2" @click="() => addFileDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
         </div>
       </div>
@@ -233,9 +284,9 @@ const newFileTypeValues = [
 
     <Dialog header="Aggiungi Cartella" v-model:visible="addFolderDialog">
       <div class="p-fluid">
-        <InputText class="mb-2" v-model="newFileName" placeholder="Nome Cartella" @keyup.enter="handleAddFile('folder')" />
+        <InputText class="mb-2" v-model="newFileName" placeholder="Nome Cartella" @keyup.enter="handleAddFile(EFileTypes.Folder)" />
         <div class="dialog-footer">
-          <Button @click="handleAddFile('folder')" icon="pi pi-check" severity="success" label="Aggiungi" />
+          <Button @click="handleAddFile(EFileTypes.Folder)" icon="pi pi-check" severity="success" label="Aggiungi" />
           <Button class="ml-2" @click="() => addFolderDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
         </div>
       </div>

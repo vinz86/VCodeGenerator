@@ -3,8 +3,8 @@ interface CacheEntry {
     data: any;
 }
 
-export class CacheManager {
-    private static instance: CacheManager;
+export class ApiCacheManager {
+    private static instance: ApiCacheManager;
     private cache: Map<string, CacheEntry> = new Map();
     private cacheDuration: number = 5 * 60 * 1000; // 5 minuti di durata della cache
 
@@ -12,11 +12,11 @@ export class CacheManager {
         if (cacheDuration) this.cacheDuration = cacheDuration;
     }
 
-    public static getInstance(cacheDuration?: number): CacheManager {
-        if (!CacheManager.instance) {
-            CacheManager.instance = cacheDuration ? new CacheManager(cacheDuration) : new CacheManager();
+    public static getInstance(cacheDuration?: number): ApiCacheManager {
+        if (!ApiCacheManager.instance) {
+            ApiCacheManager.instance = cacheDuration ? new ApiCacheManager(cacheDuration) : new ApiCacheManager();
         }
-        return CacheManager.instance;
+        return ApiCacheManager.instance;
     }
 
     public get(key: string): any | null {

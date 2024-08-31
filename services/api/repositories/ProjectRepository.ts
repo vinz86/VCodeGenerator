@@ -4,6 +4,8 @@ import type {IProjectRepository} from "~/services/api/interfaces/IProjectReposit
 
 export class ProjectRepository extends ApiBaseRepository implements IProjectRepository{
 
+    //constructor() { super(); debugger;}
+
     public getProjects(): Promise<Project[]> {
         return this.get<Project[]>('projects');
     }

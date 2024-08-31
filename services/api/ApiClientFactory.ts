@@ -25,19 +25,4 @@ export class ApiClientFactory {
         return client;
 
     }
-
-/*    private ClassRegistry: Record<string, new () => any> = {
-        [EApiHttpClientType.Axios]: AxiosClient,
-        [EApiHttpClientType.Fetch]: FetchClient,
-        [EApiHttpClientType.AsyncData]: AsyncDataClient,
-    };
-
-    static createClient(type: EApiHttpClientType): IHttpClient {
-        let ClassConstructor = this.ClassRegistry[type];
-        if (!ClassConstructor) {
-            console.error(`Client ${type} non valido. Utilizzo quello di default.`);
-            return new AsyncDataClient();
-        }
-        return new ClassConstructor();
-    }*/
 }

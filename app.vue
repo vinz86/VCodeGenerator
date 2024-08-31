@@ -5,33 +5,15 @@ import {ConfigurationManager} from "~/manager/ConfigurationManager/Configuration
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
 import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import type {IApiRepositories} from "~/models/interfaces/IApiRepositories";
+import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
+import {ApiContainer} from "~/services/api/ApiContainer";
+import {EApiKeys} from "~/models/enum/EApiKeys";
 
 let configManager: IConfigurationManager = DIContainer.getService<IConfigurationManager>(EServiceKeys.ConfigurationManager);
-
-const { $api }: IApiRepositories = useNuxtApp();
-//const apiClient = ApiClient.getInstance(EApiHttpClientType.Axios);
+let userService: IUserRepository = ApiContainer.getService<IUserRepository>(EApiKeys.UserRepository);
 
 async function fetchData() {
-  const data = {
-    "userId": 1,
-    "title": "delectus aut autem",
-    "completed": false
-  };
-
-  try {
-/*    await $api.http.get('todos/1', { }, true);
-    await $api.http.post('todos', data);
-    await $api.http.put('todos/1', data);
-    await $api.http.patch('todos/1', data);
-    await $api.http.delete('todos/1');*/
-
-    await $api.user.getUsers();
-    await $api.project.getProjects();
-
-  } catch (error) {
-    console.error('API Request Error:', error);
-  }
+    await userService.getUsers();
 }
 
 onMounted(async () => {
@@ -42,10 +24,6 @@ onMounted(async () => {
       console.log('configManager.getConfig()', configManager.getConfig())
       LoadingManager.getInstance().stop();
     }
-
-    // Utilizza il repository per ottenere gli utenti
-    //users.value = await $api.userRepository.getUsers();
-
 
     await fetchData();
   } catch (error) {

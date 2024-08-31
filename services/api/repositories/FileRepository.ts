@@ -4,23 +4,25 @@ import type {IFileRepository} from "~/services/api/interfaces/IFileRepository";
 
 export class FileRepository extends ApiBaseRepository implements IFileRepository{
 
-    public getFiles(): Promise<TFile[]> {
-        return this.get<TFile[]>('/api/files');
+    //constructor() { super(); }
+
+    public getFiles(queryParams:Record<string, any>): Promise<TFile[]> {
+        return this.get<TFile[]>('t-files', queryParams);
     }
 
     public getFileById(id: string): Promise<TFile> {
-        return this.get<TFile>(`/api/files/${id}`);
+        return this.get<TFile>(`t-files/${id}`);
     }
 
     public createFile(file: TFile): Promise<TFile> {
-        return this.post<TFile>('/api/files', file);
+        return this.post<TFile>('t-files', file);
     }
 
     public updateFile(id: string, file: Partial<TFile>): Promise<TFile> {
-        return this.put<TFile>(`/api/files/${id}`, file);
+        return this.put<TFile>(`t-files/${id}`, file);
     }
 
     public deleteFile(id: string): Promise<void> {
-        return this.delete<void>(`/api/files/${id}`);
+        return this.delete<void>(`t-files/${id}`);
     }
 }
