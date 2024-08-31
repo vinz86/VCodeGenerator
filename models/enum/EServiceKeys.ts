@@ -9,4 +9,6 @@ export enum EServiceKeys {
     ValidationManager = 'validationManager',
     SaveManager = 'saveManager',
     ConfigurationManager = 'configurationManager',
+    LoggerDecorator = 'loggerDecorator',
+    NotifyAndLog = 'notifyAndLog',
 }

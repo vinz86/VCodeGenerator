@@ -1,5 +1,5 @@
 import type {Project} from "~/models/interfaces/Project";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 

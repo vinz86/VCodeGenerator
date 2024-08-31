@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {computed, defineProps, nextTick, onMounted, type Ref, ref} from 'vue';
 import type {TFile} from '~/models/types/TFile';
-import {DIContainer} from '~/services/DipendencyInjection/DIContainer';
+import {DIContainer} from '~/DipendencyInjection/DIContainer';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
 import type {LocalStorageService} from '~/services/LocalStorageService';
 import type {IFileService} from '~/models/interfaces/IFileService';

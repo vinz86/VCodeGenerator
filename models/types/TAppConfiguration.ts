@@ -1,3 +1,6 @@
+import type {ELoggerLevel} from "~/models/enum/ELoggerLevel";
+import type {ELoggerOutput} from "~/models/enum/ELoggerOutput";
+
 export type TAppConfiguration = {
     appName: string;
     appVersion: string;
@@ -6,5 +9,8 @@ export type TAppConfiguration = {
     featureY: boolean;
     apiBase: string;
     theme: string;
-    [key: string]: any;
+    loggingOutput: ELoggerOutput,
+    loggingLevel: ELoggerLevel,
+    loggingCount: number,
+    //[key: string]: any;
 }

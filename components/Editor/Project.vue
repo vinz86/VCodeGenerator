@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, type Ref, computed, watch } from 'vue';
 import { StateManager } from '~/store/StateManager';
-import { DIContainer } from '~/services/DipendencyInjection/DIContainer';
+import { DIContainer } from '~/DipendencyInjection/DIContainer';
 import { LocalStorageService } from '~/services/LocalStorageService';
 import type { Project } from '~/models/interfaces/Project';
 import type { ComponentsTypesModel } from '~/models/types/ComponentsTypesModel';

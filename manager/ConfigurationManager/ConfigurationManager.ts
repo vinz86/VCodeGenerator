@@ -2,53 +2,42 @@ import type {TAppConfiguration} from '~/models/types/TAppConfiguration';
 import {EClientConfiguration} from '~/models/enum/EClientConfiguration';
 import type {IConfigurationManager} from '~/models/interfaces/IConfigurationManager';
 
+import defaultConfig from '@/manager/ConfigurationManager/configs/default.ts';
+import VCodeGenerator from "~/manager/ConfigurationManager/configs/VCodeGenerator";
+
 export class ConfigurationManager implements IConfigurationManager {
     private static instance: ConfigurationManager;
-    private readonly includePath: string = 'manager/ConfigurationManager/configs' ;
-    private defaultConfig: TAppConfiguration;
-    private clientConfig: TAppConfiguration;
+    private defaultConfig: TAppConfiguration = defaultConfig;
+    private clientConfig: TAppConfiguration = defaultConfig;
 
-    private constructor() {
-        const config = useRuntimeConfig();
-        const clientId: EClientConfiguration = config.public.clientConfig;
+    private constructor() { }
 
-        this.clientConfig = {} as TAppConfiguration;
-
-        this.loadClientConfig(clientId).then((config) => {
-            this.clientConfig = config;
-        }).catch((error) => {
-            console.error("Errore nel caricamento della configurazione:", error);
-        });
-    }
-
-    public static getInstance(): ConfigurationManager {
+    public static getInstance(clientId: EClientConfiguration = EClientConfiguration.Default): IConfigurationManager {
         if (!ConfigurationManager.instance) {
             ConfigurationManager.instance = new ConfigurationManager();
+            ConfigurationManager.instance.initialize(clientId);
         }
         return ConfigurationManager.instance;
     }
 
-    // Carica la configurazione del cliente e quella di default
-    private async loadClientConfig(clientId: EClientConfiguration): Promise<TAppConfiguration> {
-        // configurazione di default
-        const defaultConfigPath: string = `@/${this.includePath}/default.ts`;
-        console.log('defaultConfigPath', `defaultConfigPath`)
-        const defaultConfigModule = await import(`@/manager/ConfigurationManager/configs/default.ts`);
-        const defaultConfig: TAppConfiguration = this.defaultConfig = defaultConfigModule.default;
+    private loadClientConfig(clientId: EClientConfiguration): TAppConfiguration {
 
-        let clientConfig: Partial<TAppConfiguration> = {};
+        const clientConfigs: { [key in EClientConfiguration]: TAppConfiguration } = {
+            [EClientConfiguration.VCodeGenerator]: VCodeGenerator,
+            [EClientConfiguration.Default]: this.defaultConfig,
+        };
 
-        if( clientId!==EClientConfiguration.Default){
-            try {
-                // configurazione cliente
-                const clientConfigModule = await import(`@/manager/ConfigurationManager/configs/${clientId}.ts`);
-                clientConfig = clientConfigModule.default;
-            } catch (error) {
-                console.warn(`Configurazione per "${clientId}" non trovata, utilizzo configurazione di default.`);
-            }
+        const clientConfig = clientConfigs[clientId] || this.defaultConfig;
+        return { ...this.defaultConfig, ...clientConfig };
+    }
+
+    private initialize(clientId: EClientConfiguration): void {
+        try {
+            this.clientConfig = this.loadClientConfig(clientId);
+        } catch (error) {
+            console.error("Errore nel caricamento della configurazione:", error);
+            this.clientConfig = this.defaultConfig; // fallback in caso di errore
         }
-
-        return { ...defaultConfig, ...clientConfig } as TAppConfiguration;
     }
 
     public getConfig(): TAppConfiguration {
@@ -60,7 +49,7 @@ export class ConfigurationManager implements IConfigurationManager {
     }
 
     public isFeatureEnabled(feature: keyof TAppConfiguration): boolean {
-        return this.clientConfig[feature];
+        return !!this.clientConfig[feature];
     }
 
     public getApiBase(): string {

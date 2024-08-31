@@ -23,6 +23,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       clientConfig: 'VCodeGenerator' || process.env.CLIENT_ID || 'default',
+      environment: 'development',
+      mainAppVersion: '1.0.0'
     }
   },
   router: {

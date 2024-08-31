@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 let configManager: IConfigurationManager = DIContainer.getService<IConfigurationManager>(EServiceKeys.ConfigurationManager);
@@ -10,7 +10,7 @@ let configManager: IConfigurationManager = DIContainer.getService<IConfiguration
   <div>
     <Toolbar>
       <template #start>
-        <div class="logo">{{configManager.getName()}} <i class="text-sm">{{ configManager.getVersion() }}-rc <small>{{ configManager.getVersionDate() }}</small></i></div>
+        <div class="logo">{{configManager.getName()}} <i class="text-sm">{{ configManager.getVersion() }} <small>{{ configManager.getVersionDate() }}</small></i></div>
       </template>
 
       <template #center>

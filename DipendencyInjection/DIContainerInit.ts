@@ -2,7 +2,7 @@ import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import type {IFileService} from "~/models/interfaces/IFileService";
 import {FileService} from "~/services/FileService";
@@ -13,10 +13,11 @@ import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
 import type {IValidationManager} from "~/manager/ValidationManager/VValidateModels";
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
 import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
-import {UserRepository} from "~/services/api/repositories/UserRepository";
-import {AuthRepository} from "~/services/api/repositories/AuthRepository";
-import {ProjectRepository} from "~/services/api/repositories/ProjectRepository";
-import type {FileRepository} from "~/services/api/repositories/FileRepository";
+import {LoggerDecorator} from "~/decorator/LoggerDecorator";
+import {ELoggerLevel} from "~/models/enum/ELoggerLevel";
+import {ELoggerOutput} from "~/models/enum/ELoggerOutput";
+import {EClientConfiguration} from "~/models/enum/EClientConfiguration";
+import {NuxtConfigurationManager} from "~/manager/NuxtConfigurationManager";
 
 export class DIContainerInit {
     private static initialized: boolean = false;
@@ -47,31 +48,44 @@ export class DIContainerInit {
     }
 
     private static initialize(): void {
+        const nuxtConfig = NuxtConfigurationManager.getInstance().getConfig();
+        const configurationManager = ConfigurationManager.getInstance(nuxtConfig.clientConfig);
+        const appConfig = configurationManager.getConfig();
+
         try {
+            DIContainerInit.verbose && console.log('Inizializzazione ConfigurationManager.');
+            DIContainer.registerService<IConfigurationManager>(EServiceKeys.ConfigurationManager, ()=> configurationManager);
 
             DIContainerInit.verbose && console.log('Inizializzazione ComponentFactory.');
-            DIContainer.registerService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory, new ComponentFactoryProvider());
+            DIContainer.registerService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory, ()=> new ComponentFactoryProvider());
 
             DIContainerInit.verbose && console.log('Inizializzazione FlyweightFactory.');
-            DIContainer.registerService<Flyweight<any>>(EServiceKeys.FlyweightFactory, new Flyweight());
+            DIContainer.registerService<Flyweight<any>>(EServiceKeys.FlyweightFactory, ()=> new Flyweight());
 
             DIContainerInit.verbose && console.log('Inizializzazione StateManager.');
-            DIContainer.registerService<StateManager>(EServiceKeys.StateManager, StateManager.getInstance());
+            DIContainer.registerService<StateManager>(EServiceKeys.StateManager, ()=> StateManager.getInstance());
 
             DIContainerInit.verbose && console.log('Inizializzazione LocalStorageService.');
-            DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, new LocalStorageService());
+            DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, ()=> new LocalStorageService());
 
             DIContainerInit.verbose && console.log('Inizializzazione FileService.');
-            DIContainer.registerService<IFileService>(EServiceKeys.FileService, FileService.getInstance());
+            DIContainer.registerService<IFileService>(EServiceKeys.FileService, ()=> FileService.getInstance());
 
             DIContainerInit.verbose && console.log('Inizializzazione NotifyManager.');
-            DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
+            DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, ()=> NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
+
+            DIContainerInit.verbose && console.log('Inizializzazione NotifyAndLog');
+            const loggingDecoratorConfig = {
+                level: appConfig.loggingLevel,
+                output: appConfig.loggingEnabled,
+                length: appConfig.loggingCount
+            }
+            const notifyManager = ()=> NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast);
+            DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyAndLog, ()=> new LoggerDecorator(notifyManager, loggingDecoratorConfig).logMethodCalls());
 
             DIContainerInit.verbose && console.log('Inizializzazione ValidationManager.');
-            DIContainer.registerService<IValidationManager>(EServiceKeys.ValidationManager, new ValidationManager({ autoFocus: true }));
+            DIContainer.registerService<IValidationManager>(EServiceKeys.ValidationManager, ()=> new ValidationManager({ autoFocus: true }));
 
-            DIContainerInit.verbose && console.log('Inizializzazione ConfigurationManager.');
-            DIContainer.registerService<IConfigurationManager>(EServiceKeys.ConfigurationManager, ConfigurationManager.getInstance());
         }
         catch (e){
             throw e;

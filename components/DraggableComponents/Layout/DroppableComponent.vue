@@ -4,7 +4,7 @@ import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, 
 import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import {DragDropHelper} from "~/helper/DragDropHelper";
 import type {IComponent} from "~/models/interfaces/IComponent";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";

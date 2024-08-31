@@ -4,7 +4,7 @@ import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
 import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import type {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import type {IFlyweightComponent} from "~/models/interfaces/IFlyweightComponent";

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {LoadingManager} from "~/manager/LoadingManager";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {LoggerDecorator} from "~/decorator/LoggerDecorator";

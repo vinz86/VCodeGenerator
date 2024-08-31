@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {defineModel, type Ref} from 'vue';
 import type {IComponent} from "~/models/interfaces/IComponent";
-import {DIContainer} from "~/services/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DipendencyInjection/DIContainer";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
