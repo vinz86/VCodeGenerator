@@ -37,11 +37,9 @@ const login = async () => {
     const token = result.id_token;
     stateManager.setState('authToken', token);
     localStorageService.save('authToken', stateManager.getState('authToken'));
-    debugger
 }
 
 const getAccount = async () => {
-  debugger
     const result = await userService.getAccount();
 
     console.log('account Ok: ', result);

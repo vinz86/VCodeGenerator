@@ -44,7 +44,6 @@ export class AsyncDataClient implements IHttpClient {
                     if (res.ok) {
                         return res.json();
                     } else {
-                        debugger
                         throw createError({
                             statusCode: res?.status,
                             statusMessage: `${res?.status} - ${res?.statusText}: ${res?.url}`,
