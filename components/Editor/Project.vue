@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, type Ref, computed, watch } from 'vue';
+import { ref, onMounted, type Ref, computed } from 'vue';
 import { StateManager } from '~/store/StateManager';
 import { DIContainer } from '~/DIContainer/DIContainer';
 import { LocalStorageService } from '~/services/LocalStorageService';
@@ -10,12 +10,9 @@ import { EServiceKeys } from '~/models/enum/EServiceKeys';
 import FileManager from "~/components/Editor/FileManager.vue";
 import type {TFile} from "~/models/types/TFile";
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import type {IApiRepositories} from "~/models/interfaces/IApiRepositories";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
-import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
 import {ApiContainer} from "~/services/api/ApiContainer";
-import type {IAuthRepository} from "~/services/api/interfaces/IAuthRepository";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IProjectRepository} from "~/services/api/interfaces/IProjectRepository";
 
@@ -102,10 +99,13 @@ const createProject = () => {
   }
 };
 
-const selectProject = (projectId: string) => {
+const selectProject = async (projectId: string) => {
   const project = projects.value.find(p => p.id === projectId);
   if (project) {
     stateManager.setState('currentProject', project);
+
+    selectedProjectId.value = null;
+    await nextTick();
     selectedProjectId.value = projectId;
     console.log('Progetto Selezionato:', project);
     saveProjects();
@@ -172,7 +172,6 @@ onMounted(async ()=> {
             placeholder="Seleziona un progetto"
             class="w-full mb-1"
         >
-          {{projects.length}}
           <Divider />
           <template #option="slotProps">
             <div class="flex w-full">
@@ -206,8 +205,8 @@ onMounted(async ()=> {
 
     <Divider />
     <FileManager
-        v-if="selectedProject"
-        :projectId="selectedProject.id"
+        v-if="selectedProjectId"
+        :projectId="selectedProjectId"
         @selectFile="onSelectFile"
     />
   </div>
