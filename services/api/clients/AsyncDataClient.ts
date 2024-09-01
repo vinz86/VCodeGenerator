@@ -37,12 +37,11 @@ export class AsyncDataClient implements IHttpClient {
         };
 
         try{
-
             const { data: responseData, error } = await useAsyncData<T>(
                 apiUrl,
                 () => fetch(apiUrl, fetchConfig).then(res => {
                     if (res.ok) {
-                        return res.json();
+                        return res.status !== 204 ? res?.json() : {};
                     } else {
                         throw createError({
                             statusCode: res?.status,
