@@ -3,54 +3,34 @@ import {IHttpClient} from "~/models/interfaces/IHttpClient";
 import {IApiRequest} from "~/models/interfaces/IApiRequest";
 import type {IApiResponse} from "~/models/interfaces/IApiResponse";
 import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
-import {LocalStorageService} from "~/services/LocalStorageService";
 import type {IApiError} from "~/services/api/interfaces/IApiError";
 
 export class AsyncDataClient implements IHttpClient {
-    private token: string | null = null;
 
     constructor() {
-        const localStorageService = new LocalStorageService();
-        const _token = localStorageService.load('authToken');
-        if (_token) {
-            this.token = _token;
-        }
     }
 
     private convertToIApiError(errorObject: any): IApiError {
-        const errorKey = errorObject._key;
-        const errorDetails = errorObject._object[errorKey];
+        if(!errorObject?._key || !errorObject?._object[errorObject?._key]) return;
 
-        debugger
-        if (!errorDetails) {
-            return {
-                message: 'Unknown error occurred',
-                statusCode: 500,
-                originalError: errorObject
-            };
-        }
-
-        return {
-            message: errorDetails.message || 'Unknown error occurred',
-            statusCode: errorDetails.statusCode || 500,
-            originalError: errorDetails
+        const errorKey = errorObject?._key;
+        const errorDetails = errorObject?._object[errorKey];
+        const error = {
+            message: errorDetails?.message || 'Errore http generico',
+            statusCode: errorDetails?.statusCode || 500,
+            originalError: errorObject
         };
+        return error;
     }
 
-    setAuthorizationToken(token: string | null) {
-        this.token = token;
-    }
-
-    async request<T>(config: IApiRequest): Promise<IApiResponse<T>> {
+    async request<T>(config: IApiRequest): Promise<IApiResponse<T>|IApiError> {
         const { method, url, data, headers, responseType } = config;
         const apiUrl = ConfigurationManager.getInstance().getApiBase() + url;
 
-        // Prepare the fetch configuration
         const fetchConfig: RequestInit = {
             method: method.toUpperCase(),
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.token ? `Bearer ${this.token}` : '',
                 ...headers,
             },
             ...(data && { body: JSON.stringify(data) })
@@ -58,19 +38,24 @@ export class AsyncDataClient implements IHttpClient {
 
         try{
 
-            // Using useAsyncData to handle the request
             const { data: responseData, error } = await useAsyncData<T>(
                 apiUrl,
                 () => fetch(apiUrl, fetchConfig).then(res => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! Status: ${res.status}`);
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        debugger
+                        throw createError({
+                            statusCode: res?.status,
+                            statusMessage: `${res?.status} - ${res?.statusText}: ${res?.url}`,
+                        })
                     }
-                    return res.json();
                 })
             );
 
-            if (error.value) {
-                throw this.convertToIApiError(error);
+            //controllo se in error c'è una key corrispondente a quella della request
+            if (error && !!error?._object && !!error?._key && error._object.hasOwnProperty(error._key) && !!error._object[error._key]) {
+                throw error
             }
 
             return {
@@ -84,4 +69,13 @@ export class AsyncDataClient implements IHttpClient {
             throw this.convertToIApiError(e);
         }
     }
+}
+function isIApiError(obj: any): obj is IApiError {
+    return (
+        obj &&
+        typeof obj === 'object' &&
+        typeof obj.message === 'string' &&
+        typeof obj.statusCode === 'number' &&
+        'originalError' in obj // Check if 'originalError' property exists
+    );
 }

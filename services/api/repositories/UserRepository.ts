@@ -8,7 +8,7 @@ export class UserRepository extends ApiBaseRepository implements IUserRepository
     //constructor() { super(); }
 
     public getAccount(): Promise<IAccount[]> {
-        return this.get<IAccount[]>('account');
+        return this.get<IAccount[]>('account', {}, false, true);
     }
 
     public getUsers(): Promise<IUser[]> {

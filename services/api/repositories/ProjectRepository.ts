@@ -7,7 +7,7 @@ export class ProjectRepository extends ApiBaseRepository implements IProjectRepo
     //constructor() { super(); debugger;}
 
     public getProjects(): Promise<Project[]> {
-        return this.get<Project[]>('projects');
+        return this.get<Project[]>('projectsc');
     }
 
     public getProjectById(id: string): Promise<Project> {

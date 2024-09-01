@@ -9,4 +9,5 @@ export interface IApiRequest {
     headers?: HeadersInit;
     responseType?: EApiResponseType;
     cached?: boolean;
+    useAuth?: boolean;
 }

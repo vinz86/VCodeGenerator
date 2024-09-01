@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {LoadingManager} from "~/manager/LoadingManager";
-import {DIContainer} from "~/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DIContainer/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {LoggerDecorator} from "~/decorator/LoggerDecorator";
@@ -37,9 +37,11 @@ const login = async () => {
     const token = result.id_token;
     stateManager.setState('authToken', token);
     localStorageService.save('authToken', stateManager.getState('authToken'));
+    debugger
 }
 
 const getAccount = async () => {
+  debugger
     const result = await userService.getAccount();
 
     console.log('account Ok: ', result);
@@ -49,7 +51,6 @@ const getAccount = async () => {
 const onLoginClick = async () => {
   try{
     await login();
-    debugger
     await getAccount();
 
     await navigateTo('/');

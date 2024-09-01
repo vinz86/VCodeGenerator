@@ -7,7 +7,7 @@ export class AuthRepository extends ApiBaseRepository implements IAuthRepository
     //constructor() { super(); }
 
     public login(formData: IAuthorize): Promise<any> {
-        return this.post<any>('authenticate', formData);
+        return this.post<any>('authenticate', formData, false);
     }
 
 }
