@@ -1,8 +1,8 @@
-import { ApiBaseRepository } from '../ApiBaseRepository';
+import { ApiHttpService } from '../ApiHttpService';
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
-import type {IAuthRepository} from "~/services/api/interfaces/IAuthRepository";
+import type {IAuthService} from "~/services/api/interfaces/IAuthService";
 
-export class AuthRepository extends ApiBaseRepository implements IAuthRepository{
+export class AuthService extends ApiHttpService implements IAuthService{
 
     //constructor() { super(); }
 

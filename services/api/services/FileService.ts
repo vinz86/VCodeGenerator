@@ -1,8 +1,8 @@
-import { ApiBaseRepository } from "~/services/api/ApiBaseRepository";
+import { ApiHttpService } from "~/services/api/ApiHttpService";
 import type {TFile} from "~/models/types/TFile";
-import type {IFileRepository} from "~/services/api/interfaces/IFileRepository";
+import type {IFileService} from "~/services/api/interfaces/IFileService";
 
-export class FileRepository extends ApiBaseRepository implements IFileRepository{
+export class FileService extends ApiHttpService implements IFileService{
 
     //constructor() { super(); }
 

@@ -14,11 +14,11 @@ import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IProjectRepository} from "~/services/api/interfaces/IProjectRepository";
+import type {IProjectService} from "~/services/api/interfaces/IProjectService";
 
 const emit = defineEmits(['changeComponentsType', 'changeSelectedProject', 'selectFile']);
 
-const projectService: IProjectRepository = ApiContainer.getService<IProjectRepository>(EApiKeys.ProjectRepository);
+const projectService: IProjectService = ApiContainer.getService<IProjectService>(EApiKeys.ProjectService);
 
 const stateManager = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);

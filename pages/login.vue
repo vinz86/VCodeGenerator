@@ -11,15 +11,13 @@ import {ConfigurationManager} from "~/manager/ConfigurationManager/Configuration
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
-import type {IApiRepositories} from "~/models/interfaces/IApiRepositories";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IAuthRepository} from "~/services/api/interfaces/IAuthRepository";
-import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
+import type {IAuthService} from "~/services/api/interfaces/IAuthService";
+import type {IUserService} from "~/services/api/interfaces/IUserService";
 
-const { $api }: IApiRepositories = useNuxtApp();
-const authService: IAuthRepository = ApiContainer.getService<IAuthRepository>(EApiKeys.AuthRepository);
-const userService: IUserRepository = ApiContainer.getService<IAuthRepository>(EApiKeys.UserRepository);
+const authService: IAuthService = ApiContainer.getService<IAuthService>(EApiKeys.AuthService);
+const userService: IUserService = ApiContainer.getService<IAuthService>(EApiKeys.UserService);
 
 const notifyManager: INotifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const configurationManager: ConfigurationManager = ConfigurationManager.getInstance()

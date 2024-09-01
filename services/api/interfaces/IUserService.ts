@@ -1,7 +1,7 @@
 import type {IAccount} from "~/models/interfaces/DTO/IAccount";
 import type {IUser} from "~/models/interfaces/DTO/IUser";
 
-export interface IUserRepository {
+export interface IUserService {
     getAccount(): Promise<IAccount[]>;
     getUsers(): Promise<IUser[]>;
     getUserById(id: string): Promise<IUser>;

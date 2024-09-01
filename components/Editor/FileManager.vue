@@ -10,11 +10,11 @@ import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IFileRepository} from "~/services/api/interfaces/IFileRepository";
+import type {IFileService} from "~/services/api/interfaces/IFileService";
 
 const emit = defineEmits(['selectFile']);
 
-const fileRepository: IFileRepository = ApiContainer.getService<IFileRepository>(EApiKeys.FileRepository);
+const fileService: IFileService = ApiContainer.getService<IFileService>(EApiKeys.FileService);
 
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
@@ -107,7 +107,7 @@ const renameFile = async () => {
 
     if (selectedNode.value?.id && newFileName.value?.trim()) {
 
-      const result = await fileRepository.updateFile(selectedNode.value.id, {...selectedNode.value, name: newFileName.value.trim()});
+      const result = await fileService.updateFile(selectedNode.value.id, {...selectedNode.value, name: newFileName.value.trim()});
       await loadFiles();
 
       selectedNode.value = result;
@@ -124,7 +124,7 @@ const handleDelete = async () =>{
     LoadingManager.getInstance().start();
 
     if (selectedNode.value) {
-      await fileRepository.deleteFile(selectedNode.value.id);
+      await fileService.deleteFile(selectedNode.value.id);
       await loadFiles();
       selectedNode.value = null;
     }
@@ -145,7 +145,7 @@ const handleAddFile = async (type: EFileTypes) => {
 
     const storedSelectedProjectId = localStorageService.load('selectedProjectId')
 
-    const newFile: TFile = await fileRepository.createFile({
+    const newFile: TFile = await fileService.createFile({
       name: newFileName.value,
       type: type,
       projectId: storedSelectedProjectId,
@@ -172,7 +172,7 @@ const openCreateFolderDialog = () => {
 };
 
 const loadFiles = async () => {
-  files.value = await fileRepository.getFiles({ "projectId.equals": props.projectId });
+  files.value = await fileService.getFiles({ "projectId.equals": props.projectId });
 }
 
 onMounted(async ()=> {

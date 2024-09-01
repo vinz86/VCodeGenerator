@@ -1,10 +1,10 @@
 import { EApiHttpClientType } from "~/models/enum/EApiHttpClientType";
 import { ApiClient } from "~/services/api/ApiClient";
-import { FileRepository } from "~/services/api/repositories/FileRepository";
+import { FileService } from "~/services/api/services/FileService";
 import { ApiContainer } from "~/services/api/ApiContainer";
-import { UserRepository } from "~/services/api/repositories/UserRepository";
-import { AuthRepository } from "~/services/api/repositories/AuthRepository";
-import { ProjectRepository } from "~/services/api/repositories/ProjectRepository";
+import { UserService } from "~/services/api/services/UserService";
+import { AuthService } from "~/services/api/services/AuthService";
+import { ProjectService } from "~/services/api/services/ProjectService";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 
 export class ApiInit {
@@ -30,11 +30,11 @@ export class ApiInit {
         try {
             const client: EApiHttpClientType = EApiHttpClientType.AsyncData;
 
-            ApiContainer.registerService(EApiKeys.ApiClient, ApiClient.getInstance(client));
-            ApiContainer.registerService(EApiKeys.AuthRepository, () => new AuthRepository(client));
-            ApiContainer.registerService(EApiKeys.UserRepository, () => new UserRepository(client));
-            ApiContainer.registerService(EApiKeys.ProjectRepository, () => new ProjectRepository(client));
-            ApiContainer.registerService(EApiKeys.FileRepository, () => new FileRepository(client));
+            ApiContainer.registerService(EApiKeys.HttpClient, ApiClient.getInstance(client));
+            ApiContainer.registerService(EApiKeys.AuthService, () => new AuthService(client));
+            ApiContainer.registerService(EApiKeys.UserService, () => new UserService(client));
+            ApiContainer.registerService(EApiKeys.ProjectService, () => new ProjectService(client));
+            ApiContainer.registerService(EApiKeys.FileService, () => new FileService(client));
         } catch (e) {
             console.error(`Errore durante l'inizializzazione dei servizi:`, e);
             throw e;

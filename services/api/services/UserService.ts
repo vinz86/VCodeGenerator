@@ -1,9 +1,9 @@
-import { ApiBaseRepository} from "~/services/api/ApiBaseRepository";
+import { ApiHttpService} from "~/services/api/ApiHttpService";
 import type {IAccount} from "~/models/interfaces/DTO/IAccount";
 import type {IUser} from "~/models/interfaces/DTO/IUser";
-import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
+import type {IUserService} from "~/services/api/interfaces/IUserService";
 
-export class UserRepository extends ApiBaseRepository implements IUserRepository{
+export class UserService extends ApiHttpService implements IUserService{
 
     //constructor() { super(); }
 

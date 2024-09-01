@@ -1,8 +1,8 @@
 export enum EApiKeys {
-    ApiClient = 'apiClient',
-    AuthRepository = 'authRepository',
-    UserRepository = 'userRepository',
-    ProjectRepository = 'projectRepository',
-    FileRepository = 'fileRepository',
+    HttpClient = 'httpClient',
+    AuthService = 'authService',
+    UserService = 'userService',
+    ProjectService = 'projectService',
+    FileService = 'fileService',
 
 }

@@ -1,6 +1,6 @@
 import type {Project} from "~/models/interfaces/Project";
 
-export interface IProjectRepository {
+export interface IProjectService {
     getProjects(): Promise<Project[]>;
     getProjectById(id: string): Promise<Project>;
     createProject(project: Project): Promise<Project>;

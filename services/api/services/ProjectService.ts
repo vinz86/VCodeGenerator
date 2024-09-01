@@ -1,8 +1,8 @@
-import { ApiBaseRepository } from "~/services/api/ApiBaseRepository";
+import { ApiHttpService } from "~/services/api/ApiHttpService";
 import type {Project} from "~/models/interfaces/Project";
-import type {IProjectRepository} from "~/services/api/interfaces/IProjectRepository";
+import type {IProjectService} from "~/services/api/interfaces/IProjectService";
 
-export class ProjectRepository extends ApiBaseRepository implements IProjectRepository{
+export class ProjectService extends ApiHttpService implements IProjectService{
     private readonly baseUrl: string
 
     constructor() {

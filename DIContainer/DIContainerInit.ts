@@ -11,6 +11,7 @@ import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
 import type {IValidationManager} from "~/manager/ValidationManager/VValidateModels";
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
 import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
+import {LoggerDecorator} from "~/decorator/LoggerDecorator";
 import {NuxtConfigurationManager} from "~/manager/NuxtConfigurationManager";
 
 export class DIContainerInit {

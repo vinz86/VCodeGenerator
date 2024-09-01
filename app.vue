@@ -3,13 +3,13 @@ import {LoadingManager} from "~/manager/LoadingManager";
 
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
+import type {IUserService} from "~/services/api/interfaces/IUserService";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {ILoggerDecorator} from "~/models/interfaces/ILoggerDecorator";
 
 let notifyAndLog = DIContainer.getService<ILoggerDecorator<any>>(EServiceKeys.NotifyAndLog);
-let userService: IUserRepository = ApiContainer.getService<IUserRepository>(EApiKeys.UserRepository);
+let userService: IUserService = ApiContainer.getService<IUserService>(EApiKeys.UserService);
 
 async function fetchData() {
   await userService.getUsers();

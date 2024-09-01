@@ -1,6 +1,6 @@
 import type {TFile} from "~/models/types/TFile";
 
-export interface IFileRepository {
+export interface IFileService {
     getFiles(): Promise<TFile[]>;
     getFileById(id: string): Promise<TFile>;
     createFile(file: TFile): Promise<TFile>;
