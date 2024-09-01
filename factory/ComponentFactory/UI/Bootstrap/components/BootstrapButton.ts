@@ -1,7 +1,7 @@
 import type { IComponent } from '~/models/interfaces/IComponent';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
-import {DIContainer} from "~/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DIContainer/DIContainer";
 import type {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 

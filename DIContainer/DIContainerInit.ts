@@ -2,7 +2,7 @@ import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
-import {DIContainer} from "~/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DIContainer/DIContainer";
 import {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import type {IFileService} from "~/models/interfaces/IFileService";
 import {FileService} from "~/services/FileService";
@@ -27,7 +27,7 @@ export class DIContainerInit {
      * Inizializza i servizi del contenitore DI. Questo metodo deve essere chiamato una sola volta all'avvio dell'applicazione
      * Plugin esempio:
      * import { defineNuxtPlugin } from '#app';
-     * import {DIContainerInit} from "~/services/DipendencyInjection/DIContainerInit";
+     * import {DIContainerInit} from "~/services/DIContainer/DIContainerInit";
      *
      * export default defineNuxtPlugin(() => {
      *     DIContainerInit.init();

@@ -10,7 +10,7 @@ import {ProjectHelper} from "~/helper/ProjectHelper";
 import HistoryManager from "~/manager/HistoryManager";
 import ImportExport from "~/components/Editor/ImportExport.vue";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
-import {DIContainer} from "~/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DIContainer/DIContainer";
 import type {IComponent} from "~/models/interfaces/IComponent";
 import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
 import DraggableComponent from "~/components/Editor/DraggableComponent.vue";

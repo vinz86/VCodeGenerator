@@ -1,5 +1,5 @@
 import { defineNuxtPlugin } from '#app';
-import {DIContainerInit} from "~/DipendencyInjection/DIContainerInit";
+import {DIContainerInit} from "~/DIContainer/DIContainerInit";
 
 export default defineNuxtPlugin(() => {
     DIContainerInit.init();

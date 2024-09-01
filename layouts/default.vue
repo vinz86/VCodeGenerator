@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
-import {DIContainer} from "~/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DIContainer/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 let configManager: IConfigurationManager = DIContainer.getService<IConfigurationManager>(EServiceKeys.ConfigurationManager);

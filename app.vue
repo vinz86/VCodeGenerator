@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {LoadingManager} from "~/manager/LoadingManager";
 
-import {DIContainer} from "~/DipendencyInjection/DIContainer";
+import {DIContainer} from "~/DIContainer/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import type {IUserRepository} from "~/services/api/interfaces/IUserRepository";
 import {ApiContainer} from "~/services/api/ApiContainer";
@@ -20,7 +20,7 @@ onMounted(async () => {
   try {
     LoadingManager.getInstance().start();
 
-    await fetchData();
+    //await fetchData();
 
   } catch (error) { console.error('Errore durante il recupero dei dati:', error);
   } finally { LoadingManager.getInstance().stop(); }
