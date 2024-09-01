@@ -4,7 +4,6 @@ import type {TFile} from '~/models/types/TFile';
 import {DIContainer} from '~/DIContainer/DIContainer';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
 import type {LocalStorageService} from '~/services/LocalStorageService';
-import type {IFileService} from '~/models/interfaces/IFileService';
 import {EFileTypes} from '~/models/enum/EFileTypes';
 import type ContextMenu from "primevue/contextmenu";
 import {LoadingManager} from "~/manager/LoadingManager";
@@ -17,13 +16,11 @@ const emit = defineEmits(['selectFile']);
 
 const fileRepository: IFileRepository = ApiContainer.getService<IFileRepository>(EApiKeys.FileRepository);
 
-const fileService = DIContainer.getService<IFileService>(EServiceKeys.FileService);
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
 const files: Ref<File[]> = ref([]);
 const newFileName = ref('');
-const newFileType = ref<EFileTypes>(EFileTypes.File);
 const selectedNode = ref<TFile | null>(null);
 const renameDialog = ref(false);
 const contextMenu = ref<ContextMenu | null>(null);
@@ -38,17 +35,32 @@ const props = defineProps({
   },
 });
 
-onMounted(async ()=> {
-  try{
-    await loadFiles();
-  }
-  catch (e) { notifyManager.error(e); }
-  finally { LoadingManager.getInstance().stop(); }
+const contextMenuItems = computed(() => {
+  return [
+    {
+      label: 'Aggiungi',
+      icon: 'pi pi-plus',
+      visible: selectedNode.value?.type === EFileTypes.Folder,
+      command: () => {
+        if (selectedNode.value) {
+          newFileName.value = '';
+          addFileDialog.value = true;
+        }
+      },
+    },
+    {
+      label: 'Rinomina',
+      icon: 'pi pi-pencil',
+      command: () => handleRename(),
+    },
+    {
+      label: 'Elimina',
+      icon: 'pi pi-trash',
+      command: () => handleDelete(),
+    },
+  ];
 });
 
-const loadFiles = async () => {
-  files.value = await fileRepository.getFiles({ "projectId.equals": props.projectId });
-}
 const formatTreeData: any = (files: TFile[]) => {
   return files.map(file => ({
     key: file.id,
@@ -61,7 +73,7 @@ const formatTreeData: any = (files: TFile[]) => {
 
 const treeData = computed(() => formatTreeData(files.value));
 
-const onComponentRightClick = () => {
+const onComponentRightClick = (event) => {
   event.preventDefault();
   selectFile(event.data)
   if (selectedNode.value) {
@@ -84,130 +96,70 @@ const selectFile = (node: TFile) => {
   emit('selectFile', node);
 };
 
-const addFileToRoot = () => {
-  if (files.value && newFileName.value.trim()) {
-    const newFile = fileService.createFile(newFileName.value, EFileTypes.File);
-    files.value.push(newFile);
-    newFileName.value = '';
-  } else {
-    console.warn('Progetto non selezionato o nome file non valido');
-  }
-};
 
-const addFile = async (parent: TFile, name: string, type: EFileTypes) => {
+const renameFile = async () => {
+
+  if (!selectedNode.value || !newFileName.value.trim()) {
+    notifyManager.error('Seleziona un file/folder ed inserisci un nome valido');
+  }
   try{
-    debugger
-    const storedSelectedProjectId = localStorageService.load('selectedProjectId')
-    const newFile = await fileRepository.createFile({
-      name: name,
-      type: type,
-      projectId: storedSelectedProjectId,
-      parent: parent,
-      projectId: storedSelectedProjectId,
-      parentId: parent.id,
-    }) //fileService.createFile(name, type);
-    if (parent.type === EFileTypes.Folder) {
-      parent.children?.push(newFile);
+    LoadingManager.getInstance().start();
+
+    if (selectedNode.value?.id && newFileName.value?.trim()) {
+
+      const result = await fileRepository.updateFile(selectedNode.value.id, {...selectedNode.value, name: newFileName.value.trim()});
+      await loadFiles();
+
+      selectedNode.value = result;
+      newFileName.value = '';
+      renameDialog.value = false;
     }
-  }
-  catch (e) { notifyManager.error(e); }
-  finally { LoadingManager.getInstance().stop(); }
+
+  } catch (e) { notifyManager.error(e)
+  } finally { LoadingManager.getInstance().stop(); }
 };
 
-const addNewFile = async (name: string, type: EFileTypes) => {
+const handleDelete = async () =>{
   try{
-    debugger
-    const storedSelectedProjectId = localStorageService.load('selectedProjectId')
-    const newFile = await fileRepository.createFile({
-      name: name,
-      type: type,
-      projectId: storedSelectedProjectId
-    }) //fileService.createFile(name, type);
+    LoadingManager.getInstance().start();
 
-    if (parent.type === EFileTypes.Folder) {
-      parent.children?.push(newFile);
+    if (selectedNode.value) {
+      await fileRepository.deleteFile(selectedNode.value.id);
+      await loadFiles();
+      selectedNode.value = null;
     }
-  }
-  catch (e) { notifyManager.error(e); }
-  finally { LoadingManager.getInstance().stop(); }
-};
+  } catch (e) { notifyManager.error(e)
+  } finally { LoadingManager.getInstance().stop(); }
+}
 
-const deleteFile = (file: TFile) => {
-  if (files.value) {
-    files.value = fileService.removeFile(files.value, file.id);
-  }
-};
-
-const renameFile = (file: TFile, newName: string) => {
-  if (newName.trim()) {
-    file.name = newName;
-  }
-};
-
-const confirmRename = () => {
-  if (selectedNode.value && newFileName.value.trim()) {
-    renameFile(selectedNode.value, newFileName.value);
-    newFileName.value = '';
-    renameDialog.value = false;
-  }
-};
-
-const contextMenuItems = computed(() => {
-  return [
-    {
-      label: 'Aggiungi',
-      icon: 'pi pi-plus',
-      visible: selectedNode.value?.type === EFileTypes.Folder,
-      command: () => {
-        if (selectedNode.value) {
-          newFileName.value = '';
-          addFileDialog.value = true;
-        }
-      },
-    },
-    {
-      label: 'Rinomina',
-      icon: 'pi pi-pencil',
-      command: () => onRename(),
-    },
-    {
-      label: 'Elimina',
-      icon: 'pi pi-trash',
-      command: () => onDelete(),
-    },
-  ];
-});
-
-const onRename = () =>{
+const handleRename = () =>{
   if (selectedNode.value) {
     newFileName.value = selectedNode.value.name;
     renameDialog.value = true;
   }
 }
 
-const onDelete = () =>{
-  if (selectedNode.value) {
-    deleteFile(selectedNode.value);
-    selectedNode.value = null;
-  }
-}
-
 const handleAddFile = async (type: EFileTypes) => {
-  debugger
-  if (newFileName.value.trim()) {
-    if (selectedNode.value) {
-      // Aggiungi file o cartella al nodo selezionato
-      await addFile(selectedNode.value, newFileName.value, type);
-    } else {
-      // Aggiungi file o cartella alla rooot del progetto
-      //const newFile = fileService.createFile(newFileName.value, type);
-      await addNewFile(newFileName.value, type);
-      files.value.push(newFile);
-    }
+  try{
+    LoadingManager.getInstance().start();
+
+    const storedSelectedProjectId = localStorageService.load('selectedProjectId')
+
+    const newFile: TFile = await fileRepository.createFile({
+      name: newFileName.value,
+      type: type,
+      projectId: storedSelectedProjectId,
+      parent: selectedNode.value || null,
+      parentId: selectedNode.value?.id || null,
+    })
+    await loadFiles();
+
     newFileName.value = '';
     addFileDialog.value = false;
     addFolderDialog.value = false;
-  }
+
+  } catch (e) { notifyManager.error(e);
+  } finally { LoadingManager.getInstance().stop(); }
 };
 
 // Funzioni per aprire i dialog
@@ -219,11 +171,17 @@ const openCreateFolderDialog = () => {
   addFolderDialog.value = true;
 };
 
-// Opzioni per il tipo di file nel Dropdown
-const newFileTypeValues = [
-  { name: 'File', code: EFileTypes.File },
-  { name: 'Cartella', code: EFileTypes.Folder },
-];
+const loadFiles = async () => {
+  files.value = await fileRepository.getFiles({ "projectId.equals": props.projectId });
+}
+
+onMounted(async ()=> {
+  try{
+    await loadFiles();
+  }
+  catch (e) { notifyManager.error(e); }
+  finally { LoadingManager.getInstance().stop(); }
+});
 </script>
 
 
@@ -236,10 +194,10 @@ const newFileTypeValues = [
         <Button @click="openCreateFolderDialog" text severity="warning">
           <i class="fa fa-folder-plus" />
         </Button>
-        <Button @click="onRename" text severity="info">
+        <Button @click="handleRename" text severity="info">
           <i class="fa fa-file-edit" />
         </Button>
-        <Button @click="onDelete" text severity="danger">
+        <Button @click="handleDelete" text severity="danger">
           <i class="fa fa-trash" />
         </Button>
     </div>
@@ -264,9 +222,9 @@ const newFileTypeValues = [
 
     <Dialog header="Rinomina File/Cartella" v-model:visible="renameDialog">
       <div class="p-fluid">
-        <InputText @keyup.enter="confirmRename" class="mb-2" v-model="newFileName" placeholder="Nuovo Nome" />
+        <InputText @keyup.enter="renameFile" class="mb-2" v-model="newFileName" placeholder="Nuovo Nome" />
         <div class="dialog-footer">
-          <Button @click="confirmRename" icon="pi pi-check" severity="success" label="Conferma" />
+          <Button @click="renameFile" icon="pi pi-check" severity="success" label="Conferma" />
           <Button class="ml-2" @click="() => renameDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
         </div>
       </div>
@@ -305,33 +263,8 @@ const newFileTypeValues = [
   margin-top: 10px;
 }
 
-.flex {
-  display: flex;
-}
-
-.flex-grow-1 {
-  flex-grow: 1;
-}
-
-.flex-none {
-  flex: none;
-}
-
-.align-content-center {
-  align-content: center;
-}
-
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-}
-
-/* Aggiungi stili per le icone */
-.pi-folder {
-  color: gold;
-}
-
-.pi-file {
-  color: yellow;
 }
 </style>

@@ -4,8 +4,6 @@ import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
-import type {IFileService} from "~/models/interfaces/IFileService";
-import {FileService} from "~/services/FileService";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
 import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
@@ -13,10 +11,6 @@ import {ValidationManager} from "~/manager/ValidationManager/ValidationManager";
 import type {IValidationManager} from "~/manager/ValidationManager/VValidateModels";
 import type {IConfigurationManager} from "~/models/interfaces/IConfigurationManager";
 import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
-import {LoggerDecorator} from "~/decorator/LoggerDecorator";
-import {ELoggerLevel} from "~/models/enum/ELoggerLevel";
-import {ELoggerOutput} from "~/models/enum/ELoggerOutput";
-import {EClientConfiguration} from "~/models/enum/EClientConfiguration";
 import {NuxtConfigurationManager} from "~/manager/NuxtConfigurationManager";
 
 export class DIContainerInit {
@@ -68,8 +62,8 @@ export class DIContainerInit {
             DIContainerInit.verbose && console.log('Inizializzazione LocalStorageService.');
             DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, ()=> new LocalStorageService());
 
-            DIContainerInit.verbose && console.log('Inizializzazione FileService.');
-            DIContainer.registerService<IFileService>(EServiceKeys.FileService, ()=> FileService.getInstance());
+            // DIContainerInit.verbose && console.log('Inizializzazione FileService.');
+            // DIContainer.registerService<IFileService>(EServiceKeys.FileService, ()=> FileService.getInstance());
 
             DIContainerInit.verbose && console.log('Inizializzazione NotifyManager.');
             DIContainer.registerService<INotifyManager>(EServiceKeys.NotifyManager, ()=> NotifyManagerFactory.getInstance(ENotifyManagerTypes.PrimeVueToast));
