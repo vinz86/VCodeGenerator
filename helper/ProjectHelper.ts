@@ -1,4 +1,4 @@
-import type {IComponent} from "~/models/interfaces/IComponent";
+import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import type {DroppableProps} from "~/models/DroppableProps";
 
@@ -14,7 +14,7 @@ export class ProjectHelper {
         }
     }
 
-    private static processSlotContent = (slotContent: IComponent[]) => {
+    private static processSlotContent = (slotContent: IComponentFactory[]) => {
         let slotCode = '';
 
         if (Array.isArray(slotContent)) {
@@ -28,7 +28,7 @@ export class ProjectHelper {
         return slotCode;
     }
 
-    public static generateCodeFromComponents(components: IComponent[]): string{
+    public static generateCodeFromComponents(components: IComponentFactory[]): string{
         let generatedCodeValue:string = '';
 
         for (const component of components) {
@@ -38,7 +38,7 @@ export class ProjectHelper {
         return generatedCodeValue;
     }
 
-    private static generateCodeRecursive(component: IComponent):string {
+    private static generateCodeRecursive(component: IComponentFactory):string {
         let code = '';
 
         if (!component?.options || !component?.options.tag) {
@@ -75,7 +75,7 @@ export class ProjectHelper {
             }
 
             if (options?.slot) {
-                code += ProjectHelper.processSlotContent(component.options?.slot as IComponent[]);
+                code += ProjectHelper.processSlotContent(component.options?.slot as IComponentFactory[]);
             }
 
             code += `\n</${component.options?.tag}>\n`;

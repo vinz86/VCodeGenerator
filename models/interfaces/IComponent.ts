@@ -1,8 +1,16 @@
 import type {IDroppableComponent} from "~/models/IDroppableComponent";
 
 export interface IComponent {
-  render: () => string;
-  configure(options: IDroppableComponent): void;
-  options: IDroppableComponent;
-  style?: {};
+    id?: number,
+    type: string,
+    style?: object|string,
+    file?: {
+        id: number,
+        name: string,
+        type: File,
+        projectId: number,
+        parentId: number
+    },
+    options?: IDroppableComponent
+    fileId: number
 }

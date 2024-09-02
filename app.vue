@@ -15,12 +15,18 @@ async function fetchData() {
   await userService.getUsers();
   notifyAndLog.error('Errore durante il recupero degli utenti:');
 }
+const getAccount = async () => {
+  const result = await userService.getAccount();
 
+  console.log('account Ok: ', result);
+  stateManager.setState('currentUser', result);
+  localStorageService.save('currentUser', stateManager.getState('currentUser'));
+}
 onMounted(async () => {
   try {
     LoadingManager.getInstance().start();
 
-    //await fetchData();
+    await getAccount();
 
   } catch (error) { console.error('Errore durante il recupero dei dati:', error);
   } finally { LoadingManager.getInstance().stop(); }

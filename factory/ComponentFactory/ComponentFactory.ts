@@ -9,7 +9,7 @@ export class ComponentFactoryProvider {
     console.log('ComponentFactory inizializzato');
   }
 
-  getFactory(type: string): ComponentFactory {
+  getFactory(type: EComponentTypes): ComponentFactory {
     switch (type) {
       case EComponentTypes.PrimeVue:
         return new PrimeVueFactory();
@@ -18,7 +18,6 @@ export class ComponentFactoryProvider {
       case EComponentTypes.HtmlElements:
         return new HtmlElementsFactory();
       default:
-        debugger
         throw new Error('Component Factory non valido');
     }
   }

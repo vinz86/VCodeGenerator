@@ -1,7 +1,7 @@
-import type { IComponent } from '~/models/interfaces/IComponent'
+import type { IComponentFactory } from '~/models/interfaces/IComponentFactory'
 import type { TComponentOptions } from '~/models/types/TComponentOptions'
 
-export class BootstrapButton implements IComponent {
+export class BootstrapButton implements IComponentFactory {
   options = {
     class: '',
     style: '',
@@ -17,7 +17,7 @@ export class BootstrapButton implements IComponent {
   }
 }
 
-export class BootstrapInput implements IComponent {
+export class BootstrapInput implements IComponentFactory {
   options = {
     class: '',
     style: '',

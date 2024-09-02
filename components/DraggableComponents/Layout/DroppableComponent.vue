@@ -3,7 +3,7 @@
 import {defineEmits, defineProps, nextTick, onMounted, type PropType, type Ref, ref, watch} from 'vue';
 import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import {DragDropHelper} from "~/helper/DragDropHelper";
-import type {IComponent} from "~/models/interfaces/IComponent";
+import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
@@ -14,7 +14,7 @@ const componentFactory = defineModel<ComponentFactory>('componentFactory')
 
 const props = defineProps({
   parentComponents: {
-    type: Array as PropType<IComponent[]>,
+    type: Array as PropType<IComponentFactory[]>,
     default: () => []
   },
   attributes: {
@@ -36,7 +36,7 @@ const itemsContextComponent: Ref<{label: string, icon: string, command: () => vo
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
 
-const components: Ref<IComponent[]> = ref([] as IComponent[]);
+const components: Ref<IComponentFactory[]> = ref([] as IComponentFactory[]);
 
 const selectedComponent: Ref<IDroppableComponent | undefined>  = defineModel<IDroppableComponent>('selectedComponent');
 const draggedComponentIndex: Ref<number> = ref(-1);
@@ -50,7 +50,7 @@ const onComponentRightClick = (event: any, component: IDroppableComponent) => {
   });
 };
 
-const duplicateComponent = (component: IComponent) => {
+const duplicateComponent = (component: IComponentFactory) => {
   if (component) {
     const newComponent = JSON.parse(JSON.stringify(component));
     newComponent.id = Date.now().toString();

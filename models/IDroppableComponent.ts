@@ -1,5 +1,5 @@
 import type {DroppableProps} from "~/models/DroppableProps";
-import type {IComponent} from "~/models/interfaces/IComponent";
+import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 
 export interface IDroppableComponent {
     id?: string,
@@ -10,9 +10,9 @@ export interface IDroppableComponent {
     fromEditor?: boolean,
     fromDroppableComponent?: boolean,
     locked?: boolean,
-    slot?: IComponent[],
+    slot?: IComponentFactory[],
     style?: string
-    class?: string;
+    className?: string;
     inner?: string;
     attributes?: DroppableProps;
 }

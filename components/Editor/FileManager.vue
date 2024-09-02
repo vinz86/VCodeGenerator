@@ -11,9 +11,11 @@ import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IFileService} from "~/services/api/interfaces/IFileService";
+import type {IComponentService} from "~/services/api/interfaces/IComponentService";
 
 const emit = defineEmits(['selectFile']);
 
+const componentService: IComponentService = ApiContainer.getService<IComponentService>(EApiKeys.ComponentService);
 const fileService: IFileService = ApiContainer.getService<IFileService>(EApiKeys.FileService);
 
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
@@ -92,8 +94,9 @@ const onComponentRightClick = (event) => {
 
 const selectFile = (node: TFile) => {
   selectedNode.value = node;
+  selectedNode.value?.id && localStorageService.save('selectedFileId', selectedNode.value.id);
   console.log('Selected node:', node);
-  emit('selectFile', node);
+  emit('selectFile', node.id);
 };
 
 
@@ -152,6 +155,8 @@ const handleAddFile = async (type: EFileTypes) => {
       parent: selectedNode.value || null,
       parentId: selectedNode.value?.id || null,
     })
+
+    //componentService.createComponent()
     await loadFiles();
 
     newFileName.value = '';
@@ -177,7 +182,16 @@ const loadFiles = async () => {
 
 onMounted(async ()=> {
   try{
+    let selectedFile: TFile;
+    const selectedFileId: number = localStorageService.load('selectedFileId') || null;
     await loadFiles();
+    if (!!selectedFileId && files.value?.length){
+      const selectedFile = files.value.find(file => file.id === selectedFileId);
+
+      if (selectedFile) {
+        selectFile(selectedFile);
+      }
+    }
   }
   catch (e) { notifyManager.error(e); }
   finally { LoadingManager.getInstance().stop(); }

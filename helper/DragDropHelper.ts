@@ -1,8 +1,8 @@
-import type {IComponent} from "~/models/interfaces/IComponent";
+import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 
 export class DragDropHelper {
 
-    public static findParentComponent(parentId: string, componentsArray: IComponent[]) {
+    public static findParentComponent(parentId: string, componentsArray: IComponentFactory[]) {
         for (const component of componentsArray) {
             if (component?.options?.id?.toString() === parentId) {
                 return component;
@@ -15,7 +15,7 @@ export class DragDropHelper {
         return null;
     };
 
-    public static findObjectById(data: IComponent[], idToFind: string) {
+    public static findObjectById(data: IComponentFactory[], idToFind: string) {
         if (!data || !Array.isArray(data)) {
             return null;
         }
@@ -67,7 +67,7 @@ export class DragDropHelper {
         return false;  // Indica che l'elemento non è stato trovato
     }*/
 
-    public  static removeObjectByPath(components:IComponent[], path:number[], index:number = -1):any {
+    public  static removeObjectByPath(components:IComponentFactory[], path:number[], index:number = -1):any {
         if (!Array.isArray(components) || !Array.isArray(path) || path.length === 0) {
             return null;
         }

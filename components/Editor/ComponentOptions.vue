@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {defineModel, type Ref} from 'vue';
-import type {IComponent} from "~/models/interfaces/IComponent";
+import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
@@ -17,8 +17,8 @@ const validationService = new ValidationManager({}) //DIContainer.getService<IVa
 const factoryProvider: ComponentFactoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
 const componentFactory: ComponentFactory = factoryProvider.getFactory(EComponentTypes.PrimeVue);
 
-const selectedComponent: Ref<IComponent | undefined> = defineModel<IComponent>('selectedComponent');
-const components: Ref<IComponent[] | undefined> = defineModel<IComponent[]>('components');
+const selectedComponent: Ref<IComponentFactory | undefined> = defineModel<IComponentFactory>('selectedComponent');
+const components: Ref<IComponentFactory[] | undefined> = defineModel<IComponentFactory[]>('components');
 let newCustomAttr: Ref<ComponentAttribute<string>> = ref({} as ComponentAttribute<string>);
 
 // validazione
@@ -78,6 +78,7 @@ const removeAttrs = (key: string) => {
            <div v-if="optionsToShow.includes(key)">
              <label :for="`props-${key}`">{{ key }}</label><br>
              <InputText
+                 :disabled="key==='id'"
                  v-if="key !== 'style'"
                  v-model="selectedComponent.options[key]"
                  :id="`props-${key}`"

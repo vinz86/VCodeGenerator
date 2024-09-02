@@ -60,9 +60,18 @@ watch(selectedProjectId, () => {
     componentsType.value = storedComponentsType;
   }
 };*/
+
+const getProjects = async ()=>{
+  try{
+    LoadingManager.getInstance().start();
+    projects.value = await projectService.getProjects();
+  }
+  catch (e) { notifyManager.error(e?.message || e); }
+  finally { LoadingManager.getInstance().stop(); }
+}
 const loadProjects = async () => {
   let storedSelectedProjectId: string;
-  projects.value = await projectService.getProjects();
+  projects.value = getProjects();
 
   storedSelectedProjectId = localStorageService.load('selectedProjectId')
   if (storedSelectedProjectId) {
@@ -78,21 +87,18 @@ const loadComponentType = async () => {
 };
 
 const saveProjects = () => {
-  localStorageService.save('projects', projects.value);
+  //localStorageService.save('projects', projects.value);
   localStorageService.save('selectedProjectId', selectedProjectId.value);
   localStorageService.save('componentsType', componentsType.value);
 };
 
-const createProject = () => {
+const createProject = async () => {
   if (newProjectName.value.trim()) {
-    const newProject: Project = {
-      id: Date.now().toString(),
-      name: newProjectName.value,
-      //files: [],
-    };
 
-    projects.value.push(newProject);
-    selectedProjectId.value = newProject.id;
+    const newProject = await projectService.createProject({name: newProjectName.value.trim()})
+    await getProjects();
+    await selectProject(newProject.id);
+
     newProjectName.value = '';
     saveProjects();
     emit('changeSelectedProject', newProject);
@@ -142,6 +148,7 @@ const onSelectFile = (file: TFile) => {
 
 onMounted(async ()=> {
   try{
+    LoadingManager.getInstance().start();
     await loadProjects();
     await loadComponentType();
   }

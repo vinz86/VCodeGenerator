@@ -1,11 +1,11 @@
-import type { IComponent } from '~/models/interfaces/IComponent';
+import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import type {IFlyweightComponent} from "~/models/interfaces/IFlyweightComponent";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
-export class HTMLElement implements IComponent {
+export class HTMLElement implements IComponentFactory {
     private flyweight: IFlyweightComponent<IDroppableComponent> = {} as IFlyweightComponent<IDroppableComponent>;
     public options: IDroppableComponent = {} as IDroppableComponent;
 

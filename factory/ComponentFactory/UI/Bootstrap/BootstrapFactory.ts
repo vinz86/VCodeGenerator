@@ -1,4 +1,4 @@
-import type { IComponent } from '~/models/interfaces/IComponent';
+import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { ComponentFactory } from '~/models/interfaces/ComponentFactory';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
@@ -14,7 +14,7 @@ import {BootstrapElement} from "~/factory/ComponentFactory/UI/Bootstrap/componen
 export class BootstrapFactory implements ComponentFactory {
   private flyweight: IFlyweightComponent<IDroppableComponent>[] = [];
 
-  private readonly creators: Map<string, () => IComponent> = new Map([
+  private readonly creators: Map<string, () => IComponentFactory> = new Map([
     ['button', () => this.createButton()],
     ['input', () => this.createInput()],
     ['div', () => this.createGenericElement()],
@@ -25,19 +25,19 @@ export class BootstrapFactory implements ComponentFactory {
     console.log('Bootstrap flyweigths: ', this.flyweight)
   }
 
-  createButton(): IComponent {
+  createButton(): IComponentFactory {
     return new BootstrapButton();
   }
 
-  createInput(): IComponent {
+  createInput(): IComponentFactory {
     return new BootstrapInput();
   }
 
-  createGenericElement(): IComponent {
+  createGenericElement(): IComponentFactory {
     return new BootstrapElement();
   }
 
-  createElement(options: IDroppableComponent): IComponent {
+  createElement(options: IDroppableComponent): IComponentFactory {
     if (!options?.tag) {
       console.warn('Nessun tag specificato, viene creato un elemento predefinito');
       return this.createGenericElement();
@@ -58,7 +58,7 @@ export class BootstrapFactory implements ComponentFactory {
     return element;
   }
 
-  updateElement(component: IComponent, options: Partial<IDroppableComponent>): IComponent {
+  updateElement(component: IComponentFactory, options: Partial<IDroppableComponent>): IComponentFactory {
     if (!component) throw new Error('Componente non valido.')
     component.configure(options);
 

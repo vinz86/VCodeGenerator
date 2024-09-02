@@ -3,7 +3,7 @@ export const formComponents = [
     {
         name: 'ButtonComponent',
         tag: 'Button',
-        class: 'p-button',
+        className: 'p-button',
         inner: 'Button',
         cat:'Form',
 

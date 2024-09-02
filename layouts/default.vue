@@ -14,6 +14,7 @@ let configManager: IConfigurationManager = DIContainer.getService<IConfiguration
       </template>
 
       <template #center>
+
       </template>
 
       <template #end>

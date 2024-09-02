@@ -5,6 +5,6 @@ export interface TFile {
     id: string;
     name: string;
     type: EFileTypes;
-    content?: IComponent[];
+    contents?: IComponent[];
     children?: TFile[];
 }

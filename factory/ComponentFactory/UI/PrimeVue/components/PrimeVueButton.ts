@@ -1,11 +1,11 @@
-import type { IComponent } from '~/models/interfaces/IComponent';
+import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
-export class PrimeVueButton implements IComponent {
+export class PrimeVueButton implements IComponentFactory {
     private flyweight: IFlyweightComponent<IDroppableComponent> = {} as IFlyweightComponent<IDroppableComponent>;
     public options: IDroppableComponent = {} as IDroppableComponent;
 
@@ -17,7 +17,6 @@ export class PrimeVueButton implements IComponent {
         this.flyweight = flyweightFactory.getFlyweight('button_PrimeVue', options);
         this.options = { ...this.options, ...this.flyweight.options, ...options };
         //this.flyweight.configure(this.options);
-        debugger
     }
 
     render(): string {

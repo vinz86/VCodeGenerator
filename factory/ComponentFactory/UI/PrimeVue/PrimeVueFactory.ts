@@ -1,4 +1,4 @@
-import type { IComponent } from '~/models/interfaces/IComponent';
+import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { ComponentFactory } from '~/models/interfaces/ComponentFactory';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
@@ -13,7 +13,7 @@ import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponen
 export class PrimeVueFactory implements ComponentFactory {
   private flyweight: Map<string, IFlyweightComponent<IDroppableComponent>> = new Map();
 
-  private readonly creators: Map<string, () => IComponent> = new Map([
+  private readonly creators: Map<string, () => IComponentFactory> = new Map([
     ['button', () => this.createButton()],
     ['input', () => this.createInput()],
     ['div', () => this.createGenericElement()],
@@ -25,23 +25,23 @@ export class PrimeVueFactory implements ComponentFactory {
     console.log('PrimeVue flyweights: ', Array.from(this.flyweight.keys()));
   }
 
-  createButton(): IComponent {
+  createButton(): IComponentFactory {
     return new PrimeVueButton();
   }
 
-  createInput(): IComponent {
+  createInput(): IComponentFactory {
     return new PrimeVueInput();
   }
 
-  createGenericElement(): IComponent {
+  createGenericElement(): IComponentFactory {
     return new PrimeVueElement();
   }
 
-  createContainer(): IComponent {
+  createContainer(): IComponentFactory {
     return new PrimeVueContainer();
   }
 
-  createElement(options: IDroppableComponent): IComponent {
+  createElement(options: IDroppableComponent): IComponentFactory {
     if (!options?.tag) {
       console.warn('Nessun tag specificato, viene creato un elemento predefinito');
       return this.createGenericElement();
@@ -62,7 +62,7 @@ export class PrimeVueFactory implements ComponentFactory {
     return element;
   }
 
-  updateElement(component: IComponent, options: Partial<IDroppableComponent>): IComponent {
+  updateElement(component: IComponentFactory, options: Partial<IDroppableComponent>): IComponentFactory {
     if (!component) throw new Error('Componente non valido.');
 
     // Recupera e aggiorna le opzioni tramite il flyweight
@@ -78,7 +78,7 @@ export class PrimeVueFactory implements ComponentFactory {
     const commonOptions = {
       cat: 'PrimeVue',
       style: '',
-      class: '',
+      className: '',
       inner: '',
       attributes: {},
     };

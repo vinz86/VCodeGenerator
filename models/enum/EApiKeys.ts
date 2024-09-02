@@ -4,5 +4,6 @@ export enum EApiKeys {
     UserService = 'userService',
     ProjectService = 'projectService',
     FileService = 'fileService',
+    ComponentService = 'componentService',
 
 }
