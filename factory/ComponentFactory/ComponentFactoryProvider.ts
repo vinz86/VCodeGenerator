@@ -10,19 +10,21 @@ import type {IComponentFactoryProvider} from "~/models/interfaces/IComponentFact
 
 export class ComponentFactoryProvider implements IComponentFactoryProvider {
   private factory: IComponentFactory;
-  private flyweightFactory: FlyweightFactory;
+  //private flyweightFactory: FlyweightFactory;
 
   constructor() {
-    this.flyweightFactory = DIContainer.getService<IFlyweightFactory<Partial<IDroppableComponent>>>(EServiceKeys.FlyweightFactory);
+    //this.flyweightFactory = DIContainer.getService<IFlyweightFactory<any>>(EServiceKeys.FlyweightFactory);
   }
   getFactory(type: EComponentTypes): IComponentFactory {
     switch (type) {
       case EComponentTypes.Bootstrap:
-        this.factory = new BootstrapFactory(this.flyweightFactory);
+        this.factory = new BootstrapFactory();
+        //this.factory = new BootstrapFactory(this.flyweightFactory);
         break;
       case EComponentTypes.PrimeVue:
       default:
-        this.factory = new PrimeVueFactory(this.flyweightFactory);
+        this.factory = new PrimeVueFactory();
+        //this.factory = new PrimeVueFactory(this.flyweightFactory);
     }
     return this.factory;
   }

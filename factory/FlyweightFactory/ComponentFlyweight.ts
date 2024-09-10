@@ -1,7 +1,7 @@
 import type { IFlyweightComponent } from "~/models/interfaces/IFlyweightComponent";
 
 export class ComponentFlyweight<T> implements IFlyweightComponent<T> {
-    private sharedState: string;
+    private readonly sharedState: string;
     public options: T;
 
     constructor(private uniqueState: string, initialOptions: T) {

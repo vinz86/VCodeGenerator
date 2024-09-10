@@ -21,7 +21,17 @@ export class PrimeVueButton implements IComponentFactory {
             className: '',
             inner: 'Inner',
             tag: 'Button',
-            attributes: { label: "Label", icon: '', size: '', unstyled: false },
+            attributes: {
+                label: "Label",
+                text: false,
+                rounded: false,
+                outlined: false,
+                severity: 'primary',
+                icon: '',
+                size: '',
+                loading: false,
+                unstyled: false ,
+            },
         });
         this.flyweight.push(flyweight);
         console.log('Flyweight creato:', flyweight);
