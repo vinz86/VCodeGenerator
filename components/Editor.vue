@@ -233,7 +233,6 @@ const getComponents = async (fileId?:number) => {
   const resultComponents = await componentService.getComponents({'fileId.equals': fileId});
   if (resultComponents) {
     components.value = ComponentHelper.createFactoryComponents(resultComponents || [], factoryProvider);
-    debugger
   }
 };
 
@@ -261,6 +260,7 @@ debugger
         newFactoryComponent.configure({id: resultCreateComponent.id, style: resultCreateComponent?.style || ''});
       }
       targetComponents.push(newFactoryComponent);
+      selectedComponent.value = newFactoryComponent;
     }
   }
   catch (e) { notifyManager.error(e?.message || e); }

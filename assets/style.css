@@ -134,3 +134,13 @@ html, body{
     padding:0;
     margin:0;
 }
+
+#component-options-wrapper{
+    font-size:.9rem;
+    .p-inputtext,
+    .p-inputnumber,
+    .p-button{
+        padding: 1px 5px;
+        font-size:.9rem;
+    }
+}

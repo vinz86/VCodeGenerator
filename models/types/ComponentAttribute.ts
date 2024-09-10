@@ -1,7 +1,7 @@
-import type {EComponentTypes} from "~/models/enum/EComponentTypes";
+import {ECustomAttributesType} from "~/models/enum/ECustomAttributesType";
 
 export type ComponentAttribute<T> = {
     name: string;
-    type?: EComponentTypes,
+    type?: ECustomAttributesType,
     value: T;
 }

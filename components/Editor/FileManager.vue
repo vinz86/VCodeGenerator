@@ -158,6 +158,7 @@ const handleAddFile = async (type: EFileTypes) => {
 
     //componentService.createComponent()
     await loadFiles();
+    selectFile(newFile);
 
     newFileName.value = '';
     addFileDialog.value = false;

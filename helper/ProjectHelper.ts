@@ -207,4 +207,27 @@ export class ProjectHelper {
         const filteredComponents = targetComponents.filter(c => c.options.parentId === parentId);
         return filteredComponents?.length || 0;
     }
+
+    public static stringToObject(str: string): object {
+        try{
+            let objStr = str.replaceAll(/(\w+):/g, '"$1":').replaceAll(/'/g, '"');
+            return JSON.parse(objStr);
+        } catch (e) {
+            return {};
+        }
+    }
+
+    public static stringToBoolean(str: string): boolean {
+        if(!str) return false
+
+        return str.toLowerCase() === 'true' || parseInt(str) === 1;
+    }
+
+    public static stringToNumber(str: string): number {
+        try{
+            return str && isNaN(str) ? parseInt(str) : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
 }
