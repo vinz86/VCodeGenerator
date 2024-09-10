@@ -1,19 +1,27 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import  Aura from '@primevue/themes/aura'
+
 export default defineNuxtConfig({
   ssr: false,
   components: true,
   devtools: { enabled: true },
   modules: [
-    'nuxt-primevue'
+    '@primevue/nuxt-module'
   ],
   primevue: {
-    components: {
-      include: '*',
-      exclude: ['Editor']
+    options: {
+      ripple: true,
+      inputVariant: 'filled',
+      theme: {
+        preset: Aura,
+        options: {
+          prefix: 'p',
+          darkModeSelector: '.app-dark', //system
+        }
+      }
     }
   },
   css: [
-    'primevue/resources/themes/aura-light-blue/theme.css',
     '@/assets/theme_override.css',
     'primeflex/primeflex.min.css',
     'primeicons/primeicons.css',

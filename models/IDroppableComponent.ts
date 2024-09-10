@@ -6,7 +6,7 @@ export interface IDroppableComponent {
     name?: string,
     label?: string,
     cat?: string,
-    tag?: string,
+    tag: string,
     fromEditor?: boolean,
     fromDroppableComponent?: boolean,
     locked?: boolean,
@@ -15,4 +15,7 @@ export interface IDroppableComponent {
     className?: string;
     inner?: string;
     attributes?: DroppableProps;
+    parentId: number;
+    fileId: number;
+    order: number;
 }

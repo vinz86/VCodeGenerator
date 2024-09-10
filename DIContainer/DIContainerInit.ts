@@ -1,9 +1,9 @@
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import {DIContainer} from "~/DIContainer/DIContainer";
-import {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
+import {FlyweightFactory} from "~/factory/FlyweightFactory/FlyweightFactory";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
 import {ENotifyManagerTypes} from "~/models/enum/ENotifyManagerTypes";
@@ -55,7 +55,7 @@ export class DIContainerInit {
             DIContainer.registerService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory, ()=> new ComponentFactoryProvider());
 
             DIContainerInit.verbose && console.log('Inizializzazione FlyweightFactory.');
-            DIContainer.registerService<Flyweight<any>>(EServiceKeys.FlyweightFactory, ()=> new Flyweight());
+            DIContainer.registerService<FlyweightFactory<any>>(EServiceKeys.FlyweightFactory, ()=> new FlyweightFactory());
 
             DIContainerInit.verbose && console.log('Inizializzazione StateManager.');
             DIContainer.registerService<StateManager>(EServiceKeys.StateManager, ()=> StateManager.getInstance());

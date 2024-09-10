@@ -89,7 +89,7 @@ export class ApiClient {
         return `${url}:${JSON.stringify(data)}`;
     }
 
-    public get<T>(url: string, queryParams?: Record<string, any>, cached: boolean = false, useAuth: boolean = true): Promise<IApiResponse<T>> {
+/*    public get<T>(url: string, queryParams?: Record<string, any>, cached: boolean = false, useAuth: boolean = true): Promise<IApiResponse<T>> {
         const queryString = queryParams ? new URLSearchParams(queryParams).toString() : '';
         return this.request<T>({ method: 'GET', url: `${url}?${queryString}`, cached: cached, useAuth: useAuth });
     }
@@ -108,5 +108,5 @@ export class ApiClient {
 
     public delete<T>(url: string, useAuth: boolean = true): Promise<IApiResponse<T>> {
         return this.request<T>({ method: 'DELETE', url, useAuth: useAuth });
-    }
+    }*/
 }

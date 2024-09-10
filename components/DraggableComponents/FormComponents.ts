@@ -2,16 +2,14 @@ export const formComponents = [
 
     {
         name: 'ButtonComponent',
-        tag: 'Button',
-        className: 'p-button',
+        tag: 'button',
         inner: 'Button',
-        cat:'Form',
+        cat: 'Form',
 
     },
     {
         name: 'InputText',
-        cat:'Form',
-        tag: 'InputText',
-
+        cat: 'Form',
+        tag: 'input',
     }
 ];

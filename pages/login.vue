@@ -25,6 +25,9 @@ const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELogger
 const stateManager = StateManager.getInstance<AppState>();
 const localStorageService = new LocalStorageService();
 
+definePageMeta({
+  layout: 'empty'
+})
 
 
 const formData: IAuthorize = ref({} as IAuthorize);
@@ -57,35 +60,40 @@ const onLoginClick = async () => {
 </script>
 
 <template>
-  <div class="surface-card p-4 shadow-2 border-round w-full w-6; " style="margin: 0 auto;">
-    <div class="text-center mb-5">
-      <div class="text-900 text-3xl font-medium mb-3">
-        {{ configurationManager.getName() }}
-        <small>{{ configurationManager.getVersion()}}</small>
-      </div>
-      <span class="text-600 font-medium line-height-3">Non hai un account?</span>
-      <a class="font-medium no-underline ml-2 text-blue-500 cursor-pointer">Registrati!</a>
-    </div>
+  <div class="w-full flex align-items-center" style="height: 100vh">
 
-    <div>
-      <label for="user" class="block text-900 font-medium mb-2">Nome Utente</label>
-      <InputText id="user" v-model="formData.username" placeholder="Nome Utente" class="w-full mb-3" />
-
-      <label for="password" class="block text-900 font-medium mb-2">Password</label>
-      <Password id="password" v-model="formData.password" type="password" placeholder="Password" class="w-full mb-3" />
-
-      <div class="flex align-items-center justify-content-between mb-6">
-        <div class="flex align-items-center">
-          <Checkbox id="rememberme" v-model="formData.rememberMe" :binary="true" styleClass="mr-2"></Checkbox>
-          <label for="rememberme" class="text-900">Ricordami</label>
+    <div class="surface-card p-4 shadow-2 border-round w-full max-w-30rem" style=" margin: 0 auto;">
+      <div class="text-center mb-5">
+        <div class="text-900 text-3xl font-medium mb-3">
+          {{ configurationManager.getName() }}
+          <small>{{ configurationManager.getVersion()}}</small>
         </div>
+        <span class="text-600 font-medium line-height-3">Non hai un account?</span>
+        <a class="font-medium no-underline ml-2 text-blue-500 cursor-pointer">Registrati!</a>
       </div>
 
-      <Button @click="onLoginClick" pRipple label="Login" icon="pi pi-user" class="w-full" />
+      <div>
+        <label for="user" class="block text-900 font-medium mb-2">Nome Utente</label>
+        <InputText id="user" v-model="formData.username" placeholder="Nome Utente" class="w-full mb-3" />
+
+        <label for="password" class="block text-900 font-medium mb-2">Password</label>
+        <Password id="password" v-model="formData.password" type="password" placeholder="Password" class="w-full mb-3" style="width:100%" />
+
+        <div class="flex align-items-center justify-content-between mb-6">
+          <div class="flex align-items-center">
+            <Checkbox id="rememberme" v-model="formData.rememberMe" :binary="true" styleClass="mr-2"></Checkbox>
+            <label for="rememberme" class="text-900">Ricordami</label>
+          </div>
+        </div>
+
+        <Button @click="onLoginClick" pRipple label="Login" icon="pi pi-user" class="w-full" />
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-
+<style >
+.p-password-input{
+  width:100%
+}
 </style>

@@ -7,9 +7,13 @@ import type {IUserService} from "~/services/api/interfaces/IUserService";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {ILoggerDecorator} from "~/models/interfaces/ILoggerDecorator";
+import {LocalStorageService} from "~/services/LocalStorageService";
+import type {StateManager} from "~/store/StateManager";
 
 let notifyAndLog = DIContainer.getService<ILoggerDecorator<any>>(EServiceKeys.NotifyAndLog);
 let userService: IUserService = ApiContainer.getService<IUserService>(EApiKeys.UserService);
+let stateManager: StateManager<any> = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
+let localStorageService: LocalStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
 async function fetchData() {
   await userService.getUsers();
@@ -35,6 +39,7 @@ onMounted(async () => {
 
 <template>
   <div>
+    <DynamicDialog />
     <Toast />
     <ProgressBar mode="indeterminate" style="height: 6px" v-if="LoadingManager.getInstance().isLoading().value"></ProgressBar>
     <NuxtLayout>

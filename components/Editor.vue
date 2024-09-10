@@ -1,30 +1,23 @@
 <script setup lang="ts">
 import type {Ref} from "vue";
-import {nextTick, onMounted, onUnmounted, ref, watch} from 'vue';
+import {nextTick, onMounted, onUnmounted, ref} from 'vue';
 import ComponentOptions from "~/components/Editor/ComponentOptions.vue";
 import {DragDropHelper} from "~/helper/DragDropHelper";
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import type {DroppableProps} from "~/models/DroppableProps";
-import {ExportHelper} from "~/helper/ExportHelper";
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import HistoryManager from "~/manager/HistoryManager";
 import ImportExport from "~/components/Editor/ImportExport.vue";
-import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
 import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import Project from "~/components/Editor/Project.vue";
 import {type Project as IProject} from '~/models/interfaces/Project';
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {TFile} from "~/models/types/TFile";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
-import {LoggerDecorator} from "~/decorator/LoggerDecorator";
-import {ELoggerLevel} from "~/models/enum/ELoggerLevel";
-import {ELoggerOutput} from "~/models/enum/ELoggerOutput";
 import {SaveManager} from "~/manager/SaveManager";
 import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 import {EFileTypes} from "~/models/enum/EFileTypes";
@@ -33,16 +26,19 @@ import type {IFileService} from "~/services/api/interfaces/IFileService";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IComponentService} from "~/services/api/interfaces/IComponentService";
+import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import {ComponentHelper} from "~/helper/ComponentHelper";
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import ComponentRenderer from "~/components/Editor/ComponentRenderer.vue";
 
-const components: Ref<IComponentFactory[]> = ref([] as IComponentFactory[]);
-const selectedComponent: Ref<IComponentFactory> = ref({} as IComponentFactory);
-const selectedProject: Ref<IProject> = ref({} as IProject);
-const selectedComponentsType: Ref<EComponentTypes> = ref({} as EComponentTypes);
+const components = ref<IComponentFactory[]>([] as IComponentFactory[]);
+const selectedProject = ref<IProject>({} as IProject);
+const selectedComponent = ref<IComponentFactory>({} as IComponentFactory);
 const selectedFile = ref<TFile | null>(null);
 const componentsType: Ref<IComponentFactory> = ref({} as IComponentFactory);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
-const keyOptions: Ref<number> = ref(0);
 const draggedComponentIndex: Ref<number|null> = ref(null);
 const draggedFrom: Ref<any> = ref(null);
 const dragOverIndex: Ref<any> = ref(null);
@@ -51,56 +47,32 @@ const isSavingState: Ref<boolean> = ref(false);
 const isEditorEnabled: Ref<boolean> = computed(()=>!!selectedFile.value && selectedFile.value.type===EFileTypes.File);
 
 const contextMenu = ref();
-const contextMenuEditor = ref();
+const projectRef = ref();
 
 const fileService: IFileService = ApiContainer.getService<IFileService>(EApiKeys.FileService);
 const componentService: IComponentService = ApiContainer.getService<IComponentService>(EApiKeys.ComponentService);
 const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
 let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory); // verrà assegnata in modo dinamico
-//const htmlElementsFactory = factoryProvider.getFactory(EComponentTypes.HtmlElements);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
-const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50});
-const logNotify: INotifyManager = notifyManagerAndLogger.logMethodCalls();
-const saveManager = new SaveManager<IComponentFactory>( () => console.error('Aggiungere callback'), 1000);
-
-const HistoryM = new HistoryManager();
+// const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+// const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50});
+// const logNotify: INotifyManager = notifyManagerAndLogger.logMethodCalls();
+const logNotify = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyAndLog);
+const saveManager = new SaveManager<IComponentFactory>( () => console.error('TODO: Aggiungere callback SaveManager'), 1000);
+// TODO: aggiungere HistoryManager in DI
+//const HistoryM = new HistoryManager();
 
 const itemsContextComponent: Ref<TItemContextMenu[]> = ref([
   {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as IComponentFactory)},
   {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
-const itemsContextEditor: Ref<TItemContextMenu[]> = ref([
-  {label: 'Annulla', icon: 'fa fa-undo', command: () => undo()},
-  {label: 'Ripeti', icon: 'fa fa-redo', command: () => redo()},
-]);
 
-const onFileChange = async (fileId: number) => {
-  const file = await fileService.getFileById(fileId);
-  if (file){
-    selectedFile.value = file;
-    await getComponents(fileId)
-  }
-};
-
-const onProjectChange = (project: IProject) => {
-  selectedProject.value = project;
-  if (project.files.length > 0) {
-    const file = project.files[0] as TFile;
-    selectedFile.value = file;
-    components.value = file.contents || [];
-  }
-};
-
-const onComponentsTypeChange = (): void => {
-  componentFactory.value = factoryProvider.getFactory(selectedComponentsType.value);
-  localStorageService.save('componentsType', selectedComponentsType.value)
-}
-
-const handleComponentClick = (component: IComponentFactory) => {
-  selectedComponent.value = component;
-  keyOptions.value = keyOptions.value + 1;
+const handleComponentClick = async (component: IComponentFactory) => {
+  selectedComponent.value = null;
+  await nextTick(()=>{
+    selectedComponent.value = component;
+  })
 };
 
 const handleComponentRightClick = (event: any, component: IComponentFactory) => {
@@ -111,25 +83,12 @@ const handleComponentRightClick = (event: any, component: IComponentFactory) => 
   });
 };
 
-const handleComponentRightClickEditor = (event: any) => {
-  contextMenuEditor.value.hide();
-  nextTick(() => {
-    contextMenuEditor.value.show(event);
-  });
-};
-
-const createFactoryComponents = (data: ComponentData[]): IComponentFactory[] => {
-  return data.map( (c,i ) => {
-    return componentFactory.value.createElement(c)
-  } );
-}
-
 const duplicateComponent = async (component: IComponentFactory) => {
   if (component) {
 
-await addComponent(component);
-//TODO devo duplicare tutti i componenti contenuti al suo interno
-/*    let newComponentOptions: IDroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
+  await addComponent(component, components.value);
+  //TODO devo duplicare tutti i componenti contenuti al suo interno
+      let newComponentOptions: IDroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
     newComponentOptions.className = (component?.options?.className || '').replace('selectedComponent', '');
     const newComponent: IComponentFactory = componentFactory.value.createElement(newComponentOptions);
 
@@ -139,7 +98,7 @@ await addComponent(component);
         await duplicateComponent(newComponent.options.slot);
       }
 
-    }*/
+    }
   }
 };
 
@@ -161,33 +120,12 @@ const removeComponent = async (index?: string): boolean => {
       return true
     }
   } catch (e) {
-    notifyManager.error(e);
+    logNotify.error(e);
     return false;
   } finally {
     LoadingManager.getInstance().stop();
   }
 };
-
-
-
-const undo = (): void => {
-  const previousState = HistoryM.undoState();
-  if (previousState) {
-    isSavingState.value = true;
-    components.value = previousState;
-    console.log('Undo: components.value', components.value);
-  }
-}
-
-const redo = ()=>{
-  const nextState = HistoryM.redoState();
-  if (nextState) {
-    isSavingState.value = true;
-    components.value = nextState;
-    console.log('Redo: components.value', components.value);
-  }
-}
-
 
 const removeDraggedComponent = (event: any) => {
   if (!event) return;
@@ -237,31 +175,9 @@ const onDrop = (event: any) => {
 
   if (draggedComponent) {
     if (dropTarget && dropTarget.dataset.dropTarget === 'editor') {
+      //components.value['tag'] = null;
       addComponent(draggedComponent, components.value);
     }
-  }
-};
-
-const addComponent = async (component: any, targetComponents: any) => {
-  try{
-
-    if (Array.isArray(targetComponents)) {
-      const newFactoryComponent = componentFactory.value.createElement(component);
-      targetComponents.push(newFactoryComponent);
-
-      await componentService.createComponent({
-        type: newFactoryComponent?.constructor?.name || '',
-        fileId: selectedFile.value.id,
-        ...newFactoryComponent?.options,
-      })
-    } else {
-      console.error('targetComponents non è un array', targetComponents);
-    }
-
-  } catch (e) {
-    notifyManager.error(e);
-  } finally {
-    LoadingManager.getInstance().stop();
   }
 };
 
@@ -296,26 +212,6 @@ const onDropComponent = (index: number) => {
   }
 };
 
-const updateComponent = (updatedProps: DroppableProps) => {
-  if (!selectedComponent.value?.options?.id) return;
-
-
-
-  componentFactory.updateElement(selectedComponent.value, options);
-
-  const index = components.value.findIndex(c => c?.options.id === selectedComponent.value?.options?.id);
-  if (index !== -1) {
-    components.value[index].options.attributes = selectedComponent.value.options.attributes = updatedProps;
-    keyEditor.value++;
-  }
-};
-
-const updateGeneratedCode = () => {
-  if (!components.value.length) return;
-
-  generatedCode.value = ProjectHelper.generateCodeFromComponents(components.value);
-};
-
 const updateNestedComponents = (id: string, nestedComponents: IComponentFactory[]) => {
   const updateComponents = (componentsArray: IComponentFactory[]) => {
     for (const component of componentsArray) {
@@ -331,45 +227,99 @@ const updateNestedComponents = (id: string, nestedComponents: IComponentFactory[
   updateComponents(components.value);
 };
 
-const getComponent = (component: IComponentFactory)=> component?.render || 'div';
+//#
+const getComponents = async (fileId?:number) => {
+  components.value = null;
+  const resultComponents = await componentService.getComponents({'fileId.equals': fileId});
+  if (resultComponents) {
+    components.value = ComponentHelper.createFactoryComponents(resultComponents || [], factoryProvider);
+    debugger
+  }
+};
 
-// IMPORT / EXPORT
-const exportProject = () => selectedProject.value && ExportHelper.exportProject(selectedProject.value.files);
+//#
+const addComponent = async (component: IComponentFactory, targetComponents: IComponentFactory[]) => {
+  try {
+    LoadingManager.getInstance().start();
+debugger
+    if (Array.isArray(targetComponents)) {
+      let newFactoryComponent = componentFactory.value.createElement(component);
 
-const importProject = async (event: any) => {
-  const file = event.files[0];
-  if (!file) return;
+      const parentId = ProjectHelper.findParentId(component, targetComponents);
+      newFactoryComponent.configure({
+        ...component,
+        type: newFactoryComponent?.constructor?.name || '',
+        fileId: selectedFile.value.id,
+        order: ProjectHelper.getComponentOrder(parentId, targetComponents),
+        parentId: parentId,
+/*        inner: selectedComponent.value.inner,
+        className: selectedComponent.value.class,*/
+      });
 
-  const importedProject: IProject|boolean = await ExportHelper.importProject(file);
-  if (typeof importedProject === 'object') {
-    selectedProject.value = importedProject;
-    components.value = selectedProject.value.files[0].contents || [];
+      const resultCreateComponent = await componentService.createComponent(newFactoryComponent?.options);
+      if(resultCreateComponent?.id){
+        newFactoryComponent.configure({id: resultCreateComponent.id, style: resultCreateComponent?.style || ''});
+      }
+      targetComponents.push(newFactoryComponent);
+    }
+  }
+  catch (e) { notifyManager.error(e?.message || e); }
+  finally { LoadingManager.getInstance().stop(); }
+};
+
+//#
+const updateComponent = async (component: IDroppableComponent) => {
+  if (!component?.options?.id && !selectedComponent.value?.options?.id) return;
+
+  const componentOptions = component ? component.options: selectedComponent.value.options
+
+  try{
+    LoadingManager.getInstance().start();
+
+    const index = components.value.findIndex(c => c?.options.id === componentOptions?.id);
+    if (index !== -1) {
+      //const className = componentOptions?.class || '';
+      const updatedComponent: IDroppableComponent = await componentService.updateComponent(componentOptions?.id, {
+        ...componentOptions,
+        //className: className,
+      });
+      components.value[index] = componentFactory.value.updateElement(components.value[index], updatedComponent);
+    }
+  }
+  catch (e) { notifyManager.error(e?.message || e); }
+  finally { LoadingManager.getInstance().stop(); }
+};
+
+//#
+const onFileChange = async (fileId: number) => {
+  try{
+    LoadingManager.getInstance().start();
+    const file = await fileService.getFileById(fileId);
+    if (file){
+      selectedFile.value = file;
+      await getComponents(fileId)
+    }
+  }
+  catch (e) { notifyManager.error(e?.message || e); }
+  finally { LoadingManager.getInstance().stop(); }
+};
+
+//#
+const onProjectChange = async (project: IProject) => {
+  selectedProject.value = project;
+  componentFactory.value = factoryProvider.getFactory(project.componentsTypes);
+
+  if (project.files.length > 0) {
+    const file = project.files[0] as TFile;
+    await onFileChange(file)
+  } else {
+    selectedFile.value = {};
+    components.value = []
   }
 };
 
 
-const getComponents = async (fileId?:number)=>{
-  components.value = null;
-  const resultComponents = await componentService.getComponents({'fileId.equals': fileId})
-  if (resultComponents){
-    await nextTick()
-    components.value = createFactoryComponents(resultComponents || []);
-  }
-}
-
 onMounted(async () => {
-
-  selectedComponentsType.value = localStorageService.load('componentsType') || EComponentTypes.PrimeVue;
-  await nextTick(()=>{ onComponentsTypeChange(); })
-
-  const fileId = localStorageService.load('selectedFileId');
-  if (fileId) {
-    // await nextTick( onFileChange(fileId)) ;
-    await getComponents(fileId)
-  }
-
-  HistoryM.saveState(components.value);
-
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
       event.preventDefault();
@@ -384,7 +334,6 @@ onMounted(async () => {
   };
 
   window.addEventListener('keydown', handleKeyDown);
-
   //saveManager.startAutoSave(components, 5000);
 
   onUnmounted(() => {
@@ -393,32 +342,28 @@ onMounted(async () => {
   });
 });
 
+
 </script>
 <template>
   <div id="wrapper">
-
-    <ContextMenu ref="contextMenuEditor" :model="itemsContextEditor" />
     <ContextMenu ref="contextMenu" :model="itemsContextComponent" />
 
     <div class="container flex flex-column">
-      <EditorMenubar />
+<!--      <EditorMenubar />-->
 
-      <Splitter class="w-full m-0 flex-grow-1" layout="horizontal"  @contextmenu.stop="handleComponentRightClickEditor($event)">
+      <Splitter class="w-full m-0 flex-grow-1" layout="horizontal" >
         <!-- LEFT -->
         <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
               <Project
+                  ref="projectRef"
                   v-model="selectedProject"
-                  v-model:components-type="selectedComponentsType"
-                  @change-selected-project="onProjectChange"
-                  @change-components-type="onComponentsTypeChange"
+                  @select-project="onProjectChange"
                   @select-file="onFileChange" />
             </div>
             <div class="flex-none w-full">
-              <ImportExport
-                  @exportProject="exportProject"
-                  @importProject="importProject($event)" />
+              <ImportExport />
             </div>
           </div>
         </SplitterPanel>
@@ -444,17 +389,31 @@ onMounted(async () => {
                       data-drop-target="editor"
                       data-component-id="editor"
                   >
-                    <div
+<!--                    <ComponentRenderer
+                        v-model:components="components"
+                        v-model:selectedComponent="selectedComponent"
+                        v-model:componentFactory="componentFactory"
+                        @updateNestedComponents="updateNestedComponents"
+                        @removeComponent="removeDraggedComponent"
+                    />-->
+
+
+
+<!--                :class="{
+                      'selectedComponent': selectedComponent?.options?.id === component?.options?.id,
+                      [component?.options?.class]: component?.options?.class?.length
+                    }"-->
+                      <div
                         v-for="(component, index) in components"
-                        :key="`${component?.options?.id}-${component?.options?.name}`"
-                        :class="{'selectedComponent': selectedComponent?.options?.id === component?.options?.id, [component?.options?.class]: component?.options?.class?.length}"
+                        :key="`${component?.options?.id}-${index}`"
+                        :class="{
+                          'selectedComponent': selectedComponent?.options?.id === component?.options?.id,                         }"
                         class="draggable-component"
                         @drop="onDropComponent(index)"
                         draggable="true"
                         @dragstart="!component?.options?.locked ? onDragStart($event, index) : ''"
                         @dragenter="onDragEnter(index)"
                         @dragleave="onDragLeave()"
-                        @click.stop="handleComponentClick(component)"
                         @contextmenu.stop="handleComponentClick(component); handleComponentRightClick($event);"
                     >
 
@@ -469,22 +428,57 @@ onMounted(async () => {
                             @updateNestedComponents="updateNestedComponents"
                             @removeComponent="removeDraggedComponent($event)"
                             @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+                            @click.stop="handleComponentClick(component)"
                         />
                       </template>
-                      <component
+                      <template v-else>
+                        <component
+                            v-if="component.options?.inner?.trim()!==''"
+                            v-model:selectedComponent="selectedComponent"
+                            :is="component.render()"
+                            :class="{[component?.options?.class]: component?.options?.class?.length}"
+                            :style="component?.options?.style"
+                            :componentId="component?.options?.id"
+                            :parentComponents="component?.options?.children"
+                            v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+                            @updateSelectedComponent="handleComponentClick"
+                            @updateNestedComponents="updateNestedComponents"
+                            @removeComponent="removeDraggedComponent($event)"
+                            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+                            @click.stop="handleComponentClick(component)"
+                        >{{ component.options?.inner }}</component>
+
+                        <component
+                            v-else
+                            v-model:selectedComponent="selectedComponent"
+                            :is="component.render()"
+                            :class="{[component?.options?.class]: component?.options?.class?.length}"
+                            :style="component?.options?.style"
+                            :componentId="component?.options?.id"
+                            :parentComponents="component?.options?.children"
+                            v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+                            @updateSelectedComponent="handleComponentClick"
+                            @updateNestedComponents="updateNestedComponents"
+                            @removeComponent="removeDraggedComponent($event)"
+                            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+                            @click.stop="handleComponentClick(component)"
+                        />
+                      </template>
+<!--                      <component
                           v-else
                           v-model:selectedComponent="selectedComponent"
-                          :is="getComponent(component)"
-                          :class="component?.options?.class"
+                          :is="component.render()"
+                          :class="{[component?.options?.class]: component?.options?.class?.length}"
                           :style="component?.options?.style"
                           :componentId="component?.options?.id"
-                          v-bind="ProjectHelper.getBindAttributes(component.options?.attributes as DroppableProps)"
-                          :parentComponents="component?.options?.slot"
+                          :parentComponents="component?.options?.children"
+                          v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
                           @updateSelectedComponent="handleComponentClick"
                           @updateNestedComponents="updateNestedComponents"
                           @removeComponent="removeDraggedComponent($event)"
                           @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
-                      >{{ component?.options?.inner }}</component>
+                          @click.stop="handleComponentClick(component)"
+                       >{{ component.options?.inner }}</component>-->
 
                     </div>
                   </div>
@@ -501,7 +495,7 @@ onMounted(async () => {
 
         <!-- RIGHT -->
         <SplitterPanel :size="20">
-          <ComponentOptions v-if="selectedComponent" v-model:components="components" v-model:selectedComponent="selectedComponent" @update:model-value="updateComponent" />
+          <ComponentOptions v-if="selectedComponent" v-model:components="components" v-model:selectedComponent="selectedComponent" @update:selectedComponent="updateComponent" />
         </SplitterPanel>
       </Splitter>
     </div>

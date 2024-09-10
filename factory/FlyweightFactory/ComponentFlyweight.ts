@@ -1,19 +1,19 @@
-import type { IFlyweightComponent } from "~/models/interfaces/IFlyweightComponent";  // Importa l'interfaccia
+import type { IFlyweightComponent } from "~/models/interfaces/IFlyweightComponent";
 
 export class ComponentFlyweight<T> implements IFlyweightComponent<T> {
-    private sharedState: string;  // Proprietà privata per lo stato condiviso
-    public options: T;  // Proprietà pubblica per le opzioni
+    private sharedState: string;
+    public options: T;
 
-    constructor(private uniqueState: string, initialOptions: T) {  // Costruttore con stato unico e opzioni iniziali
-        this.sharedState = 'common-state';  // Inizializza lo stato condiviso
-        this.options = initialOptions;  // Inizializza le opzioni
+    constructor(private uniqueState: string, initialOptions: T) {
+        this.sharedState = 'common-state';
+        this.options = initialOptions;
     }
 
     configure(options: T): void {
         this.options = { ...this.options, ...options };
     }
 
-    render(): string {  // Implementazione del metodo render
+    render(): string {
         return `<p>${this.sharedState} - ${this.uniqueState}</p>`;
     }
 }

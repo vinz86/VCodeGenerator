@@ -1,8 +1,8 @@
-import { ApiHttpService } from "~/services/api/ApiHttpService";
+import { HttpService } from "~/services/api/services/HttpService";
 import type {TFile} from "~/models/types/TFile";
 import type {IFileService} from "~/services/api/interfaces/IFileService";
 
-export class FileService extends ApiHttpService implements IFileService{
+export class FileService extends HttpService implements IFileService{
 
     constructor() {
         super();

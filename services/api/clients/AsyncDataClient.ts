@@ -37,6 +37,19 @@ export class AsyncDataClient implements IHttpClient {
         };
 
         try{
+/*            const { data: responseData, error } = await useAsyncData<T>(
+                apiUrl,
+                () => fetch(apiUrl, fetchConfig).then(res => {
+                    if (res.ok) {
+                        return res.status !== 204 ? res?.json() : {};
+                    } else {
+                        throw createError({
+                            statusCode: res?.status,
+                            statusMessage: `${res?.status} - ${res?.statusText}: ${res?.url}`,
+                        })
+                    }
+                })
+            );*/
             const { data: responseData, error } = await useAsyncData<T>(
                 apiUrl,
                 () => fetch(apiUrl, fetchConfig).then(res => {
@@ -50,7 +63,6 @@ export class AsyncDataClient implements IHttpClient {
                     }
                 })
             );
-
             //controllo se in error c'è una key corrispondente a quella della request
             if (error && !!error?._object && !!error?._key && error._object.hasOwnProperty(error._key) && !!error._object[error._key]) {
                 throw error

@@ -1,5 +1,5 @@
 export enum EComponentTypes {
-    PrimeVue = 'primevue',
-    Bootstrap = 'bootstrap',
-    HtmlElements = 'htmlelements',
+    PrimeVue = 'PrimeVue',
+    Bootstrap = 'Bootstrap',
+    HtmlElements = 'HtmlElements',
 }

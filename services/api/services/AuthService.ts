@@ -1,8 +1,8 @@
-import { ApiHttpService } from '../ApiHttpService';
+import { HttpService } from './HttpService';
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
 import type {IAuthService} from "~/services/api/interfaces/IAuthService";
 
-export class AuthService extends ApiHttpService implements IAuthService{
+export class AuthService extends HttpService implements IAuthService{
 
     //constructor() { super(); }
 

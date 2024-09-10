@@ -16,7 +16,7 @@ export class ApiInit {
     }
 
     // singleton peer essere sicuri che i servizi vengano registrati una sola volta
-    // da chiamare in un plugin
+    // da chiamare in un plugin all'avvio di un'applicazine
     public static getInstance(): ApiInit {
         if (!ApiInit.instance) {
             ApiInit.instance = new ApiInit();

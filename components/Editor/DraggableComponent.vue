@@ -28,7 +28,7 @@ const onDragStart = (event: any, component: IDroppableComponent): void => {
           :key="component.name">
           <small> {{ component.label || component.name }}</small>
           <div
-              class="draggable-component"
+              class="draggable-component inline-block"
               :id="ProjectHelper.getUniqueID().toString()+'container'"
               draggable="true"
               @dragstart="onDragStart($event, component)"

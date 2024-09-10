@@ -1,22 +1,22 @@
 <script lang="ts" setup>
-import { ref, onMounted, type Ref, computed } from 'vue';
-import { StateManager } from '~/store/StateManager';
-import { DIContainer } from '~/DIContainer/DIContainer';
-import { LocalStorageService } from '~/services/LocalStorageService';
-import type { Project } from '~/models/interfaces/Project';
-import type { ComponentsTypesModel } from '~/models/types/ComponentsTypesModel';
-import { EComponentTypes } from '~/models/enum/EComponentTypes';
-import { EServiceKeys } from '~/models/enum/EServiceKeys';
+import {onMounted, ref, type Ref} from 'vue';
+import {StateManager} from '~/store/StateManager';
+import {DIContainer} from '~/DIContainer/DIContainer';
+import {LocalStorageService} from '~/services/LocalStorageService';
+import type {Project} from '~/models/interfaces/Project';
+import type {ComponentsTypesModel} from '~/models/types/ComponentsTypesModel';
+import {EComponentTypes} from '~/models/enum/EComponentTypes';
+import {EServiceKeys} from '~/models/enum/EServiceKeys';
 import FileManager from "~/components/Editor/FileManager.vue";
 import type {TFile} from "~/models/types/TFile";
-import {ProjectHelper} from "~/helper/ProjectHelper";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IProjectService} from "~/services/api/interfaces/IProjectService";
+import {ProjectHelper} from "~/helper/ProjectHelper";
 
-const emit = defineEmits(['changeComponentsType', 'changeSelectedProject', 'selectFile']);
+const emit = defineEmits([ 'selectProject', 'selectFile']);
 
 const projectService: IProjectService = ApiContainer.getService<IProjectService>(EApiKeys.ProjectService);
 
@@ -25,102 +25,86 @@ const localStorageService = DIContainer.getService<LocalStorageService>(EService
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 
 const projects: Ref<Project[]> = ref([]);
-const newProjectName = ref('');
-
 const selectedProjectId = ref<string | null>(null);
-const componentsType = defineModel<EComponentTypes>('componentsType');
-
-const selectedProject = computed(() => {
-  return projects.value.length>0 ? projects.value.find(project => project.id === selectedProjectId.value) : null;
-});
-
-/*watch(projects, () => {
-  saveProjects();
-}, { deep: true });
-
-watch(selectedProjectId, () => {
-  saveProjects();
-});*/
-
-/*const loadProjects = () => {
-  let storedSelectedProjectId: string;
-  const storedProjects: Project[] = localStorageService.load('projects');
-  const storedComponentsType: string = localStorageService.load('componentsType');
-
-  if (storedProjects?.length>0) {
-    projects.value = storedProjects;
-
-    storedSelectedProjectId = localStorageService.load('selectedProjectId')
-    if (storedSelectedProjectId) {
-      selectedProjectId.value = storedSelectedProjectId;
-    }
-
-  }
-  if (storedComponentsType) {
-    componentsType.value = storedComponentsType;
-  }
-};*/
+const defaultProject: Partial<Project> = { name: '', componentsType: EComponentTypes.PrimeVue }
+const newProject: Ref<Partial<Project>> = ref(defaultProject);
 
 const getProjects = async ()=>{
   try{
     LoadingManager.getInstance().start();
+
     projects.value = await projectService.getProjects();
   }
   catch (e) { notifyManager.error(e?.message || e); }
   finally { LoadingManager.getInstance().stop(); }
 }
-const loadProjects = async () => {
-  let storedSelectedProjectId: string;
-  projects.value = getProjects();
 
-  storedSelectedProjectId = localStorageService.load('selectedProjectId')
-  if (storedSelectedProjectId) {
-    selectedProjectId.value = storedSelectedProjectId;
-  }
-};
+const loadProjects = async (): Project => {
+  const storedSelectedProjectId: string = localStorageService.load('selectedProjectId');
 
-const loadComponentType = async () => {
-  const storedComponentsType: string = localStorageService.load('componentsType');
-  if (storedComponentsType) {
-    componentsType.value = storedComponentsType;
+  await getProjects();
+
+  if(storedSelectedProjectId){
+    await selectProject(storedSelectedProjectId);
   }
 };
 
 const saveProjects = () => {
-  //localStorageService.save('projects', projects.value);
   localStorageService.save('selectedProjectId', selectedProjectId.value);
-  localStorageService.save('componentsType', componentsType.value);
 };
 
-const createProject = async () => {
-  if (newProjectName.value.trim()) {
+const createProject = async (e) => {
+  e.preventDefault();
+  try{
+    LoadingManager.getInstance().start();
 
-    const newProject = await projectService.createProject({name: newProjectName.value.trim()})
-    await getProjects();
-    await selectProject(newProject.id);
+    if (newProject.value?.name?.trim() || newProject.value?.componentsType?.trim()) {
+      const resultAddProject = await projectService.createProject(newProject.value)
+      await getProjects();
+      await selectProject(resultAddProject.id);
 
-    newProjectName.value = '';
-    saveProjects();
-    emit('changeSelectedProject', newProject);
+      newProject.value = defaultProject;
+    } else {
+      notifyManager.error('Inserisci un nome valido')
+    }
   }
+  catch (e) { notifyManager.error(e) }
+  finally { LoadingManager.getInstance().stop(); }
 };
 
 const selectProject = async (projectId: string) => {
-  const project = projects.value.find(p => p.id === projectId);
-  if (project) {
-    stateManager.setState('currentProject', project);
+  const project = ProjectHelper.findProjectById(projectId, projects.value);
 
+  if (project) {
     selectedProjectId.value = null;
     await nextTick();
     selectedProjectId.value = projectId;
-    console.log('Progetto Selezionato:', project);
     saveProjects();
-    emit('changeSelectedProject', project);
+    emit('selectProject', project);
   }
 };
 
-const deleteProject = (projectId: string) => {
-  projects.value = projects.value.filter((project) => project.id !== projectId);
+const deleteProject = async (projectId: string) => {
+  try{
+    LoadingManager.getInstance().start();
+
+    if (projectId) {
+
+      // TODO: BE Cancellare anche tutti i file contenuti all'interno
+      await projectService.deleteProject(projectId)
+
+      notifyManager.success('Progetto eliminato correttamente!')
+      await getProjects();
+
+    } else {
+      notifyManager.error('ID progetto non valido')
+    }
+  }
+  catch (e) { notifyManager.error(e) }
+  finally { LoadingManager.getInstance().stop(); }
+
+
+  projects.value = ProjectHelper.removeProjectById(projectId);
 
   if (selectedProjectId.value === projectId) {
     selectedProjectId.value = null;
@@ -135,42 +119,39 @@ const componentsTypeValues: Ref<ComponentsTypesModel> = ref([
   { name: 'Bootstrap', code: EComponentTypes.Bootstrap },
 ]);
 
-const onchangeType = (): void => {
-  saveProjects();
-  emit('changeComponentsType', componentsType.value);
-};
-
-
 const onSelectFile = (file: TFile) => {
   emit('selectFile', file);
 };
 
-
 onMounted(async ()=> {
-  try{
-    LoadingManager.getInstance().start();
     await loadProjects();
-    await loadComponentType();
-  }
-  catch (e) { notifyManager.error(e?.message || e); }
-  finally { LoadingManager.getInstance().stop(); }
 });
 
 </script>
 
 <template>
   <div class="project-manager w-full">
-    <div class="flex m-1">
-      <InputGroup>
-        <InputText v-model="newProjectName" class="m-0"  placeholder="Nome progetto" />
-        <Button class="m-0"  @click="createProject" icon="fa fa-plus" />
-      </InputGroup>
-    </div>
-    <Divider />
-    <div class="flex flex-column m-1">
-      <div>
-        <Dropdown
-            v-if="projects.length>0"
+    <Panel header="Nuovo Progetto" class="m-0 p-0" toggleable collapsed>
+      <div class="flex m-o p-0 flex-column">
+        <Select
+            v-model="newProject.componentsTypes"
+            :options="componentsTypeValues"
+            optionLabel="name"
+            option-value="code"
+            placeholder="Seleziona il tipo dei componenti"
+            class="w-full mb-1"
+        />
+        <InputGroup>
+          <InputText v-model="newProject.name" class="m-0" placeholder="Nome progetto" />
+          <Button class="m-0" @click="createProject" icon="fa fa-plus" />
+        </InputGroup>
+      </div>
+    </Panel>
+
+    <Panel header="Lista Progetti" class="m-0 p-0" toggleable>
+      <div class="flex m-o p-0 flex-column">
+        <Select
+            v-if="projects?.length>0"
             @change="selectedProjectId && selectProject(selectedProjectId)"
             v-model="selectedProjectId"
             :options="projects"
@@ -179,7 +160,6 @@ onMounted(async ()=> {
             placeholder="Seleziona un progetto"
             class="w-full mb-1"
         >
-          <Divider />
           <template #option="slotProps">
             <div class="flex w-full">
               <div class="flex-grow-1">
@@ -195,27 +175,19 @@ onMounted(async ()=> {
               Nessun Progetto disponibile
             </div>
           </template>
-        </Dropdown>
+        </Select>
       </div>
-      <div>
-        <Dropdown
-            v-model="componentsType"
-            @change="onchangeType"
-            :options="componentsTypeValues"
-            optionLabel="name"
-            option-value="code"
-            placeholder="Seleziona il tipo dei componenti"
-            class="w-full"
-        />
-      </div>
-    </div>
+    </Panel>
 
-    <Divider />
-    <FileManager
-        v-if="selectedProjectId"
-        :projectId="selectedProjectId"
-        @selectFile="onSelectFile"
-    />
+
+    <Panel header="Files e Folders" id="panel-projects-files" class="m-0 p-0"  toggleable>
+
+      <FileManager
+          v-if="selectedProjectId"
+          :projectId="selectedProjectId"
+          @selectFile="onSelectFile"
+      />
+    </Panel>
   </div>
 </template>
 

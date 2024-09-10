@@ -5,7 +5,7 @@ import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/component
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
 import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
 import {DIContainer} from "~/DIContainer/DIContainer";
-import type {Flyweight} from "~/factory/FlyweightFactory/Flyweight";
+import type {FlyweightFactory} from "~/factory/FlyweightFactory/FlyweightFactory";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import type {IFlyweightComponent} from "~/models/interfaces/IFlyweightComponent";
 import {BootstrapButton, BootstrapInput} from "~/factory/ComponentFactory/UI/Bootstrap/BootstrapComponentsImpl";
@@ -53,7 +53,7 @@ export class BootstrapFactory implements ComponentFactory {
     const element = creator();
 
     element.configure({...options});
-    //this.Flyweight.configure(this.options);
+    //this.FlyweightFactory.configure(this.options);
 
     return element;
   }
@@ -66,7 +66,7 @@ export class BootstrapFactory implements ComponentFactory {
   }
 
   setFlyweights(): void {
-    const flyweightFactory = DIContainer.getService<Flyweight<Partial<IDroppableComponent>>>(EServiceKeys.FlyweightFactory);
+    const flyweightFactory = DIContainer.getService<FlyweightFactory<Partial<IDroppableComponent>>>(EServiceKeys.FlyweightFactory);
     const commonOptions = {
       cat: 'Bootstrap',
       style: '',

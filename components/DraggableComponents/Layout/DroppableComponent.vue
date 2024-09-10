@@ -5,7 +5,7 @@ import type {IDroppableComponent} from "~/models/IDroppableComponent";
 import {DragDropHelper} from "~/helper/DragDropHelper";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DIContainer} from "~/DIContainer/DIContainer";
-import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactory";
+import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type { EComponentTypes } from '~/models/enum/EComponentTypes';
@@ -52,7 +52,7 @@ const onComponentRightClick = (event: any, component: IDroppableComponent) => {
 
 const duplicateComponent = (component: IComponentFactory) => {
   if (component) {
-    const newComponent = JSON.parse(JSON.stringify(component));
+    const newComponent = component; // JSON.parse(JSON.stringify(component));
     newComponent.id = Date.now().toString();
     newComponent.options['class'] = (component.options?.class || '').replace('selectedComponent', '');
 

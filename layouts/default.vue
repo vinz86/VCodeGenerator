@@ -10,7 +10,7 @@ let configManager: IConfigurationManager = DIContainer.getService<IConfiguration
   <div>
     <Toolbar>
       <template #start>
-        <div class="logo">{{configManager.getName()}} <i class="text-sm">{{ configManager.getVersion() }} <small>{{ configManager.getVersionDate() }}</small></i></div>
+        <div class="logo"><span class="font-bold">{{configManager.getName()}}</span> <i class="text-sm">{{ configManager.getVersion() }} <small>{{ configManager.getVersionDate() }}</small></i></div>
       </template>
 
       <template #center>
@@ -18,6 +18,9 @@ let configManager: IConfigurationManager = DIContainer.getService<IConfiguration
       </template>
 
       <template #end>
+        <Button icon="pi pi-sun" class="mr-2" rounded />
+        <Button icon="pi pi-user" class="mr-2" rounded />
+        <Button icon="pi pi-sign-out" rounded />
       </template>
     </Toolbar>
 

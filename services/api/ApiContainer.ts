@@ -5,7 +5,7 @@ export type AsyncServiceFactory<T> = () => Promise<T>;
 export type ServiceFactoryType<T> = ServiceFactory<T> | AsyncServiceFactory<T>;
 
 export interface ServiceConfig {
-  singleton?: boolean; // Indica se il servizio deve essere trattato come singleton
+  singleton?: boolean; // il servizio deve essere trattato come singleton?
 }
 
 export class ApiContainer {
@@ -20,23 +20,22 @@ export class ApiContainer {
   }
 
   static getService<T>(key: EServiceKeys): T {
-    const serviceEntry = ApiContainer.services.get(key);
+    const currentService = ApiContainer.services.get(key);
 
-    if (!serviceEntry) {
+    if (!currentService) {
       throw new Error(`Servizio ${key} non trovato`);
     }
 
-    if (serviceEntry.config.singleton) {
-      if (!serviceEntry.instance) {
-        serviceEntry.instance = serviceEntry.factory();
-        // Se la factory ritorna una promise (asincrona), lancia un errore.
-        if (serviceEntry.instance instanceof Promise) {
+    if (currentService.config.singleton) {
+      if (!currentService.instance) {
+        currentService.instance = currentService.factory();
+        if (currentService.instance instanceof Promise) {
           throw new Error(`Servizio ${key} è stato registrato come asincrono. Utilizzare getServiceAsync.`);
         }
       }
-      return serviceEntry.instance;
+      return currentService.instance;
     } else {
-      const instance = serviceEntry.factory();
+      const instance = currentService.factory();
       if (instance instanceof Promise) {
         throw new Error(`Servizio ${key} è stato registrato come asincrono. Utilizzare getServiceAsync.`);
       }
@@ -45,19 +44,19 @@ export class ApiContainer {
   }
 
   static async getServiceAsync<T>(key: EServiceKeys): Promise<T> {
-    const serviceEntry = ApiContainer.services.get(key);
+    const currentService = ApiContainer.services.get(key);
 
-    if (!serviceEntry) {
+    if (!currentService) {
       throw new Error(`Servizio ${key} non trovato`);
     }
 
-    if (serviceEntry.config.singleton) {
-      if (!serviceEntry.instance) {
-        serviceEntry.instance = await serviceEntry.factory();
+    if (currentService.config.singleton) {
+      if (!currentService.instance) {
+        currentService.instance = await currentService.factory();
       }
-      return serviceEntry.instance;
+      return currentService.instance;
     } else {
-      return await serviceEntry.factory() as T;
+      return await currentService.factory() as T;
     }
   }
 
@@ -65,7 +64,7 @@ export class ApiContainer {
     if (ApiContainer.services.has(key)) {
       ApiContainer.services.delete(key);
     } else {
-      console.warn(`Tentativo di rimuovere un servizio non registrato con chiave ${key}.`);
+      console.warn(`Il servizio ${key} non è registrato.`);
     }
   }
 

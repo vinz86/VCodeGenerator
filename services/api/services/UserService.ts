@@ -1,9 +1,9 @@
-import { ApiHttpService} from "~/services/api/ApiHttpService";
+import { HttpService} from "~/services/api/services/HttpService";
 import type {IAccount} from "~/models/interfaces/DTO/IAccount";
 import type {IUser} from "~/models/interfaces/DTO/IUser";
 import type {IUserService} from "~/services/api/interfaces/IUserService";
 
-export class UserService extends ApiHttpService implements IUserService{
+export class UserService extends HttpService implements IUserService{
 
     //constructor() { super(); }
 
