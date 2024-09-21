@@ -15,6 +15,7 @@ import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IProjectService} from "~/services/api/interfaces/IProjectService";
 import {ProjectHelper} from "~/helper/ProjectHelper";
+import type ConfirmManager from "~/manager/ConfirmManager";
 
 const emit = defineEmits([ 'selectProject', 'selectFile']);
 
@@ -23,6 +24,7 @@ const projectService: IProjectService = ApiContainer.getService<IProjectService>
 const stateManager = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+const confirmManager = DIContainer.getService<ConfirmManager>(EServiceKeys.ConfirmManager);
 
 const projects: Ref<Project[]> = ref([]);
 const selectedProjectId = ref<string | null>(null);
@@ -85,32 +87,25 @@ const selectProject = async (projectId: string) => {
 };
 
 const deleteProject = async (projectId: string) => {
-  try{
+  try {
     LoadingManager.getInstance().start();
-
     if (projectId) {
-
       // TODO: BE Cancellare anche tutti i file contenuti all'interno
       await projectService.deleteProject(projectId)
-
       notifyManager.success('Progetto eliminato correttamente!')
       await getProjects();
-
     } else {
       notifyManager.error('ID progetto non valido')
     }
   }
   catch (e) { notifyManager.error(e) }
   finally { LoadingManager.getInstance().stop(); }
-
-
+/*
   projects.value = ProjectHelper.removeProjectById(projectId);
-
   if (selectedProjectId.value === projectId) {
     selectedProjectId.value = null;
   }
-
-  saveProjects();
+  saveProjects();*/
 };
 
 const componentsTypeValues: Ref<ComponentsTypesModel> = ref([
@@ -166,7 +161,13 @@ onMounted(async ()=> {
                 <div>{{ slotProps.option.name }}</div>
               </div>
               <div class="flex-none">
-                <i class="fa fa-trash cursor-pointer text-red-800" @click="deleteProject(slotProps.option.id)" />
+                <i class="fa fa-trash cursor-pointer text-red-800" @click="confirmManager
+                  .setMessage(`Confermi l'eliminazione dell'elemento con ID ${slotProps.option.id}?`)
+                  .setAcceptCallback(async () => {
+                    await deleteProject(slotProps.option.id)
+                  })
+                  .open($event.currentTarget as HTMLElement)"
+                />
               </div>
             </div>
           </template>

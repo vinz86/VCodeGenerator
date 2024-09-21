@@ -13,6 +13,10 @@ import type {IConfigurationManager} from "~/models/interfaces/IConfigurationMana
 import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
 import {LoggerDecorator} from "~/decorator/LoggerDecorator";
 import {NuxtConfigurationManager} from "~/manager/NuxtConfigurationManager";
+import DialogManager from "~/manager/DialogManager";
+import HistoryManager from "~/manager/HistoryManager";
+import ConfirmManager from "~/manager/ConfirmManager";
+import {CookieService} from "~/services/CookieService";
 
 export class DIContainerInit {
     private static initialized: boolean = false;
@@ -61,7 +65,7 @@ export class DIContainerInit {
             DIContainer.registerService<StateManager>(EServiceKeys.StateManager, ()=> StateManager.getInstance());
 
             DIContainerInit.verbose && console.log('Inizializzazione LocalStorageService.');
-            DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, ()=> new LocalStorageService());
+            DIContainer.registerService<LocalStorageService>(EServiceKeys.LocalStorageService, ()=> new LocalStorageService(appConfig.encryptionKey));
 
             // DIContainerInit.verbose && console.log('Inizializzazione FileService.');
             // DIContainer.registerService<IFileService>(EServiceKeys.FileService, ()=> FileService.getInstance());
@@ -81,7 +85,19 @@ export class DIContainerInit {
             DIContainerInit.verbose && console.log('Inizializzazione ValidationManager.');
             DIContainer.registerService<IValidationManager>(EServiceKeys.ValidationManager, ()=> new ValidationManager({ autoFocus: true }));
 
+            DIContainerInit.verbose && console.log('Inizializzazione DialogManager.');
+            DIContainer.registerService<IDialogManager>(EServiceKeys.DialogManager, ()=> new DialogManager());
+
+            DIContainerInit.verbose && console.log('Inizializzazione HistoryManager.');
+            DIContainer.registerService<HistoryManager>(EServiceKeys.HistoryManager, ()=> new HistoryManager());
+
+            DIContainerInit.verbose && console.log('Inizializzazione ConfirmManager.');
+            DIContainer.registerService<ConfirmManager>(EServiceKeys.ConfirmManager, ()=> new ConfirmManager());
+
+            DIContainerInit.verbose && console.log('Inizializzazione CookieService.');
+            DIContainer.registerService<CookieService>(EServiceKeys.CookieService, ()=> new CookieService());
         }
+
         catch (e){
             throw e;
         }

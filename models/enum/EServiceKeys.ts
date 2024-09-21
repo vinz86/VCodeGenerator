@@ -11,4 +11,8 @@ export enum EServiceKeys {
     ConfigurationManager = 'configurationManager',
     LoggerDecorator = 'loggerDecorator',
     NotifyAndLog = 'notifyAndLog',
+    DialogManager = 'dialogManager',
+    HistoryManager = 'historyManager',
+    ConfirmManager = 'confirmManager',
+    CookieService = 'cookieService',
 }

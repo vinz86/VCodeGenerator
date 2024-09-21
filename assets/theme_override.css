@@ -5,3 +5,7 @@ html {
 .p-tree .p-tree-container .p-treenode .p-treenode-content {
     padding: 0;
 }
+.p-tree-node-content.p-tree-node-selected {
+    background: #000000;
+    color: #ffffff;
+}

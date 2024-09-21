@@ -7,6 +7,7 @@ import { AuthService } from "~/services/api/services/AuthService";
 import { ProjectService } from "~/services/api/services/ProjectService";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import {ComponentService} from "~/services/api/services/ComponentService";
+import {HttpService} from "~/services/api/services/HttpService";
 
 export class ApiInit {
     private static instance: ApiInit | null = null;

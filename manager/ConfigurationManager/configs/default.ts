@@ -13,6 +13,7 @@ const defaultConfig: TAppConfiguration = {
     loggingOutput: ELoggerOutput.LocalStorage,
     loggingLevel: ELoggerLevel.Error,
     loggingCount: 50,
+    encryptionKey: 'chiaveSegreta12345'
 };
 
 export default defaultConfig;

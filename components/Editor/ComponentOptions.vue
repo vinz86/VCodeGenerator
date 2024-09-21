@@ -154,7 +154,7 @@ const removeAttrs = (key: string) => {
                  </div>
                </div>
 
-               <div class="field grid">
+               <div class="field grid" v-if="newCustomAttr.type">
                  <span  class="col-fixed font-normal text-overflow-ellipsis overflow-hidden" style="width:25%; text-align:right">Value:&nbsp;</span>
                  <div class="flex justify-content-between col">
                    <InputByType

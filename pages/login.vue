@@ -15,15 +15,17 @@ import {ApiContainer} from "~/services/api/ApiContainer";
 import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IAuthService} from "~/services/api/interfaces/IAuthService";
 import type {IUserService} from "~/services/api/interfaces/IUserService";
+import {CookieService} from "~/services/CookieService";
 
 const authService: IAuthService = ApiContainer.getService<IAuthService>(EApiKeys.AuthService);
 const userService: IUserService = ApiContainer.getService<IAuthService>(EApiKeys.UserService);
 
 const notifyManager: INotifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-const configurationManager: ConfigurationManager = ConfigurationManager.getInstance()
+const configurationManager: ConfigurationManager = DIContainer.getService<ConfigurationManager>(EServiceKeys.ConfigurationManager);
 const notifyManagerAndLogger = new LoggerDecorator(notifyManager, {level:ELoggerLevel.Debug, output: ELoggerOutput.LocalStorage, length: 50});
-const stateManager = StateManager.getInstance<AppState>();
-const localStorageService = new LocalStorageService();
+const stateManager: StateManager<AppState> = DIContainer.getService<StateManager<AppState>>(EServiceKeys.StateManager);
+const localStorageService: LocalStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
+const cookieService: CookieService = DIContainer.getService<CookieService>(EServiceKeys.CookieService);
 
 definePageMeta({
   layout: 'empty'
@@ -36,8 +38,13 @@ const login = async () => {
 
     console.log('Login Ok: ', result);
     const token = result.id_token;
-    stateManager.setState('authToken', token);
-    localStorageService.save('authToken', stateManager.getState('authToken'));
+    if(token){
+      //stateManager.setState('authToken', token);
+      //cookieService.save('authToken', token, 1);
+      localStorageService.save('authToken', token);
+      await getAccount();
+      await navigateTo('/');
+    }
 }
 
 const getAccount = async () => {
@@ -45,14 +52,12 @@ const getAccount = async () => {
 
     console.log('account Ok: ', result);
     stateManager.setState('currentUser', result);
-    localStorageService.save('currentUser', stateManager.getState('currentUser'));
+    localStorageService.save('currentUser', result);
 }
+
 const onLoginClick = async () => {
   try{
     await login();
-    await getAccount();
-
-    await navigateTo('/');
   }
   catch (e) { notifyManager.error(e)  }
   finally { LoadingManager.getInstance().stop() }

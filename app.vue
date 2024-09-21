@@ -39,9 +39,10 @@ onMounted(async () => {
 
 <template>
   <div>
+    <ConfirmDialog />
     <DynamicDialog />
     <Toast />
-    <ProgressBar mode="indeterminate" style="height: 6px" v-if="LoadingManager.getInstance().isLoading().value"></ProgressBar>
+    <ProgressBar mode="indeterminate" style="position:absolute; top:0; left:0; width:100%; height: 6px" v-if="LoadingManager.getInstance().isLoading().value"></ProgressBar>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

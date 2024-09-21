@@ -108,6 +108,19 @@ export class DragDropHelper {
         const index = components.findIndex(component => component.id === target.dataset.componentId);
         return index;
     }
+
+    static calculateDropIndex = (mouseY: number): number => {
+            const componentElements = document.querySelectorAll('.draggable-component');
+            if (componentElements.length === 0) return 0; // se non ci sono componenti, return 0
+
+            for (let i = 0; i < componentElements.length; i++) {
+                const { top, bottom } = componentElements[i].getBoundingClientRect();
+                if (mouseY < top) {
+                    return i; // return index se il mouse è sopra un componente
+                }
+            }
+            return componentElements.length; // se il mouse è sotto tutti i componenti
+        };
 }
 
 
