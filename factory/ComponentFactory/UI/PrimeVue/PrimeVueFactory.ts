@@ -2,8 +2,8 @@ import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
 import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
-import { PrimeVueContainer } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueContainer';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
+import {GenericHtmlElement} from "~/factory/ComponentFactory/Shared/GenericHtmlElement";
 
 export class PrimeVueFactory implements IComponentFactory {
 
@@ -11,7 +11,10 @@ export class PrimeVueFactory implements IComponentFactory {
     ['button', (options:IDroppableComponent) => new PrimeVueButton(options)],
     ['input', (options:IDroppableComponent) => new PrimeVueInput(options)],
     ['div', (options:IDroppableComponent) => new PrimeVueElement(options)],
-    ['container', (options:IDroppableComponent) => new PrimeVueContainer(options)],
+    ['p', (options: IDroppableComponent) => new GenericHtmlElement({ tag: 'p', ...options })],
+    ['label', (options: IDroppableComponent) => new GenericHtmlElement({ tag: 'label', ...options })],
+    ['hr', (options: IDroppableComponent) => new GenericHtmlElement({ tag: 'hr', ...options })],
+    ['br', (options: IDroppableComponent) => new GenericHtmlElement({ tag: 'br', ...options })],
   ]);
 
   constructor(){ }

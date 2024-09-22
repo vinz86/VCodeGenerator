@@ -1,25 +1,24 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { IDroppableComponent } from '~/models/IDroppableComponent';
 import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
-import {DIContainer} from "~/DIContainer/DIContainer";
-import type {FlyweightFactory} from "~/factory/FlyweightFactory/FlyweightFactory";
-import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import { DIContainer } from "~/DIContainer/DIContainer";
+import type { FlyweightFactory } from "~/factory/FlyweightFactory/FlyweightFactory";
+import { EServiceKeys } from "~/models/enum/EServiceKeys";
 import Button from "primevue/button";
 
 export class PrimeVueButton implements IComponentFactory {
     private flyweightFactory = DIContainer.getService<FlyweightFactory<IDroppableComponent>>(EServiceKeys.FlyweightFactory);
-    private flyweight: IFlyweightComponent<IDroppableComponent>[] = [] as IFlyweightComponent<IDroppableComponent>[];
+    private flyweight: IFlyweightComponent<IDroppableComponent>;
     public options: IDroppableComponent = {} as IDroppableComponent;
 
     constructor(options: IDroppableComponent = {} as IDroppableComponent) {
-        this.setFlyweights()
+        this.configure(options);
     }
 
-    setFlyweights(): void {
-        const flyweight = this.flyweightFactory.getFlyweight('button_PrimeVue', {
+    configure(options: Partial<IDroppableComponent> = {}): void {
+        this.flyweight = this.flyweightFactory.getFlyweight('button_PrimeVue', {
             cat: 'PrimeVue',
             className: '',
-            inner: 'Inner',
             tag: 'Button',
             attributes: {
                 label: "Label",
@@ -30,24 +29,13 @@ export class PrimeVueButton implements IComponentFactory {
                 icon: '',
                 size: '',
                 loading: false,
-                unstyled: false ,
+                unstyled: false,
             },
         });
-        this.flyweight.push(flyweight);
-        console.log('Flyweight creato:', flyweight);
+
+        this.options = { ...this.flyweight.options, ...options };
     }
 
-    configure(options: IDroppableComponent): void {
-        const flyweight = this.flyweightFactory.getFlyweight('button_PrimeVue');
-
-        if (flyweight) {
-            this.flyweight = [flyweight];
-            this.options = { ...this.options, ...flyweight.options, ...options };
-            console.log('PrimeVueButton creato con opzioni:', this.options);
-        } else {
-            console.error('Nessun flyweight trovato per "button_PrimeVue"');
-        }
-    }
     render(): string {
         return Button;
     }
