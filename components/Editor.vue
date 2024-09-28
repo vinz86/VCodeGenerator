@@ -47,73 +47,22 @@ const logNotify = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyAndL
 const saveManager = new SaveManager<IComponentFactory>( () => console.error('TODO: Aggiungere callback SaveManager'), 1000);
 const HistoryM = DIContainer.getService<HistoryManager>(EServiceKeys.HistoryManager);
 
+const componentTree = computed(() => ComponentHelper.buildComponentTree(components.value));
+const primeVueTreeNodes = computed(() => ComponentHelper.buildPrimeVueTree(components.value));
 
-// Funzione per ottenere i componenti figli in base al parentId
-const getChildren = (parentId) => {
-  return components.value.filter(component => component.parentId === parentId);
-};
+const getComponents = async (fileId?: number) => {
+  try{
+    LoadingManager.getInstance().start();
 
-
-function buildComponentTree(components: IComponentFactory[]): IComponentFactory[] {
-  if (!components) return [];
-
-  const componentMap: { [key: number]: IComponentFactory } = {};
-  const tree: IComponentFactory[] = [];
-
-  // Crea una mappa dei componenti e inizializza lo slot per i figli
-  components.forEach((component) => {
-    componentMap[component.options.id] = component;
-    component.options.slot = [];
-  });
-
-  // Funzione ricorsiva per popolare i figli
-  function buildSlots(component: IComponentFactory) {
-    const parentId = component.options.id;
-
-    // Trova tutti i componenti che hanno come genitore l'id attuale
-    const children = components.filter(c => c.options.parentId === parentId);
-
-    // Per ogni figlio, costruisci il suo albero e aggiungilo allo slot del genitore
-    children.forEach((child) => {
-      component.options.slot.push(child);
-      buildSlots(child);  // Richiama la funzione ricorsivamente per il figlio
-    });
-  }
-
-  // Avvia la costruzione dell'albero partendo dai componenti radice
-  components.forEach((component) => {
-    if (component.options.parentId === null || component.options.parentId === 0) {
-      tree.push(component);
-      buildSlots(component);  // Costruisci ricorsivamente lo slot per questo componente
+    fileId = fileId ? fileId : selectedFile.value?.id;
+    components.value = null;
+    const resultComponents = await componentService.getComponents({'fileId.equals': fileId});
+    if (resultComponents) {
+      components.value = ComponentHelper.createFactoryComponents(resultComponents || [], factoryProvider);
     }
-  });
-
-  return tree;
-}
-
-
-function getRootComponents(components: IComponentFactory[]): IComponentFactory[] {
-  if (!components) return [];
-
-  return components.filter(component =>
-      component.options.parentId === null || component.options.parentId === 0
-  );
-}
-
-// Costruisci l'albero dei componenti
-const componentTree = computed(() => {
-  console.log('component-tree', buildComponentTree(components.value)) // TODO debug
-  return buildComponentTree(components.value);
-});
-
-
-const getComponents = async (fileId?:number) => {
-  fileId = fileId ? fileId : selectedFile.value?.id;
-  components.value = null;
-  const resultComponents = await componentService.getComponents({'fileId.equals': fileId});
-  if (resultComponents) {
-    components.value = ComponentHelper.createFactoryComponents(resultComponents || [], factoryProvider);
   }
+  catch (e) { notifyManager.error(e?.message || e); }
+  finally { LoadingManager.getInstance().stop(); }
 };
 
 const updateComponent = async (component: IDroppableComponent) => {
@@ -160,6 +109,13 @@ const onProjectChange = async (project: IProject) => {
   }
 };
 
+const selectedTreeKey = ref();
+const onTreeNodeSelect = (node) => {
+  console.log('Nodo selezionato:', node);
+  selectedComponent.value = node.data
+  console.warn('Selezionare il componente')
+};
+
 onMounted(async () => {
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
@@ -185,7 +141,7 @@ onMounted(async () => {
 <template>
   <div id="wrapper">
     <div class="container flex flex-column">
-      <EditorMenubar />
+<!--      <EditorMenubar />-->
 
       <Splitter class="w-full m-0 flex-grow-1" layout="horizontal" >
         <!-- LEFT -->
@@ -208,16 +164,22 @@ onMounted(async () => {
             <div class="flex-grow-1">
               <BlockUI v-if="!isEditorEnabled">Seleziona file</BlockUI>
               <DraggableComponent v-else v-model="componentsType" :factory="componentFactory" />
+<!--              <Tree :value="primeVueTreeNodes" v-model:selectionKeys="selectedTreeKey" selectionMode="single"  @node-select="onTreeNodeSelect" />-->
             </div>
           </div>
         </SplitterPanel>
         <!-- CENTER -->
         <SplitterPanel :size="45" class="flex flex-column h-full">
             <div class="editor" v-if="!isEditorEnabled">Seleziona prima un file per spostare gli elementi nell'editor</div>
-            <TabView v-if="isEditorEnabled">
-              <TabPanel header="Visual Editor" class="overflow-y-auto flex-grow-1 h-full" id="panel-editor" style="height: calc(100vh - 100px);">
 
-                <div class="editor" :key="keyEditor" @click="selectedComponent = null">
+          <Tabs value="0" v-if="isEditorEnabled">
+            <TabList>
+              <Tab value="0">Visual Editor</Tab>
+              <Tab value="1">Code Editor</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel value="0" class="overflow-y-auto flex-grow-1 h-full" id="panel-editor" style="height: calc(100vh - 200px) !important;">
+                <div id="editor-components-wrapper" class="editor" :key="keyEditor" @click="selectedComponent = null">
                   <EditorPanel
                       v-model:components="componentTree"
                       v-model:selected-component="selectedComponent"
@@ -228,10 +190,12 @@ onMounted(async () => {
                   />
                 </div>
               </TabPanel>
-              <TabPanel header="Code Editor">
+              <TabPanel value="1" class="overflow-y-auto flex-grow-1 h-full" id="panel-editor" style="height: calc(100vh - 100px);">
                 <Textarea :value="generatedCode" class="w-full min-h-full" />
               </TabPanel>
-            </TabView>
+            </TabPanels>
+          </Tabs>
+
           <!-- OUTPUT -->
 <!--          <OutputComponent v-model="generatedCode" />-->
         </SplitterPanel>

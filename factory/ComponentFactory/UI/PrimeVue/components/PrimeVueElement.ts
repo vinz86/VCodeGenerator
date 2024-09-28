@@ -18,6 +18,7 @@ export class PrimeVueElement implements IComponentFactory {
     configure(options: Partial<IDroppableComponent> = {}): void {
         this.flyweight = this.flyweightFactory.getFlyweight('element_PrimeVue', {
             cat: 'PrimeVue',
+            name: 'div',
             className: '',
             tag: 'div',
         });

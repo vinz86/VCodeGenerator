@@ -30,7 +30,7 @@ onMounted(async () => {
   try {
     LoadingManager.getInstance().start();
 
-    await getAccount();
+    //await getAccount();
 
   } catch (error) { console.error('Errore durante il recupero dei dati:', error);
   } finally { LoadingManager.getInstance().stop(); }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import type {DroppableProps} from "~/models/DroppableProps";
-import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DragDropHelper} from "~/helper/DragDropHelper";
 import {nextTick, onMounted, onUnmounted, ref, type Ref} from "vue";
@@ -17,6 +16,8 @@ import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {TFile} from "~/models/types/TFile";
 import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import {ComponentHelper} from "~/helper/ComponentHelper";
+import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 
 const emit = defineEmits(['updateComponents']);
 const props = defineProps({
@@ -51,12 +52,13 @@ const itemsContextComponent: Ref<TItemContextMenu[]> = ref([
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
 
+
+
 //#
 const addComponent = async (component: IComponentFactory, parentId: string = null, dropIndex?: number) => {
   try {
     LoadingManager.getInstance().start();
       let newFactoryComponent = componentFactory.value.createElement(component);
-
       newFactoryComponent.configure({
         ...component,
         type: newFactoryComponent?.constructor?.name || '',
@@ -70,10 +72,11 @@ const addComponent = async (component: IComponentFactory, parentId: string = nul
         newFactoryComponent.configure({id: resultCreateComponent.id});
       }
 
-      // TODO: aggiornare array invece di evento?
-      //targetComponents.splice(dropIndex, 0, newFactoryComponent);
+      components.value.splice(dropIndex, 0, newFactoryComponent);
+      updateOrderForSiblings(components.value, parentId);
 
-      //targetComponents.push(newFactoryComponent);
+      await ComponentHelper.updateComponentsOrder(components.value)
+
       emit('updateComponents');
       selectedComponent.value = newFactoryComponent;
     }
@@ -100,22 +103,30 @@ const duplicateComponent = async (component: IComponentFactory) => {
     }
   }
 };
-
-const removeComponent = async (index?: string): boolean => {
-  try{
+const removeComponent = async (index?: string): Promise<boolean> => {
+  try {
     LoadingManager.getInstance().start();
+    debugger
 
     if (!index) {
       index = components.value.findIndex(x => x.options.id === selectedComponent.value?.options?.id);
     }
 
-    if(index>=0){
-      await componentService.deleteComponent(components.value[index]?.options?.id);
+    if (index >= 0) {
+      const componentToRemove = components.value[index];
+      const parentId = componentToRemove.options.parentId;
+
+      components.value.splice(index, 1);
+      await updateOrderForSiblings(components.value, parentId);
+
+
+      await componentService.deleteComponent(componentToRemove.options.id);
+      await ComponentHelper.updateComponentsOrder(components.value)
+
+      emit('updateComponents');
+
       selectedComponent.value = {};
-      if(selectedFile.value.id){
-        emit('updateComponents');
-      }
-      return true
+      return true;
     }
   } catch (e) {
     notifyManager.error(e);
@@ -125,21 +136,33 @@ const removeComponent = async (index?: string): boolean => {
   }
 };
 
+// TODO: da verificare
+function updateOrderForSiblings(components: IComponentFactory[], parentId: string | null): void {
+  // Filtra i componenti per il parentId passato come argomento
+  const siblings = components.filter(component => component.options.parentId === parentId);
+
+  // Ordina i sibling components in base all'ordine corrente
+  siblings.sort((a, b) => a.options.order - b.options.order);
+
+  // Aggiorna l'ordine dei componenti sequenzialmente, a partire da 1
+  siblings.forEach((component, index) => {
+    component.options.order = index + 1;
+  });
+}
+
 const onDrop = (event: DragEvent, index: number) => {
   event.preventDefault();
   event.stopPropagation();
 
   if(!selectedProject) return;
-
-  const mouseY = event.clientY;
-  const dropIndex = DragDropHelper.calculateDropIndex(mouseY);
   const dropTarget = event.target.closest('[data-drop-target]');
+  const dropIndex = DragDropHelper.calculateDropIndex(event.clientX, event.clientY, dropTarget);
   let componentData = event.dataTransfer.getData('component');
   componentData = componentData && componentData?.trim() !== '' && JSON.parse(componentData);
 
   console.log('dropTarget:', dropTarget);
   console.log('dropTarget dataset:', dropTarget?.dataset);
-debugger
+
   if (componentData.fromEditor) return;
 
   let draggedComponent;
@@ -171,6 +194,7 @@ debugger
         addComponent(draggedComponent, parentComponentId, dropIndex);
       }
     }
+
   }
 
 };
@@ -193,7 +217,7 @@ const onDragOver = (event: any) => event.preventDefault();
 
 const onDropComponent = (index: number) => {
   if (draggedComponentIndex.value !== null) {
-    debugger
+
     const draggedItem = components.value.splice(draggedComponentIndex.value, 1)[0];
     if (index) {
       components.value.splice(index, 0, draggedItem);
@@ -249,6 +273,27 @@ const handleComponentRightClick = (event: any, component: IComponentFactory) => 
   });
 };
 
+const getComponentAttributes = (component) => {
+  const baseAttributes = ProjectHelper.getBindAttributes(component.options as DroppableProps) || {};
+
+  if (isDroppableComponent(component)) {
+    return {
+      ...baseAttributes,
+      file: selectedFile,
+      component: component,
+      componentFactory: componentFactory,
+      children: component.options?.slot,
+    };
+  }
+
+  return baseAttributes;
+};
+
+const isDroppableComponent = (component) => {
+  return component.options?.type === 'DroppableComponent';
+};
+
+
 onMounted(async () => {
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Delete') {
@@ -264,7 +309,6 @@ onMounted(async () => {
   });
 });
 
-const getSelectedComponentOptions = computed(()=> selectedComponent.options || {})
 </script>
 
 <template>
@@ -278,7 +322,7 @@ const getSelectedComponentOptions = computed(()=> selectedComponent.options || {
       :data-drop-target="props.parentId ? 'droppable': 'editor'"
       :data-component-id="props.parentId ? props.parentId : 'editor'"
   >
-    <template
+    <div
         v-for="(component, index) in components"
         :key="`${component?.options?.id}-${index}`"
         :class="{'selectedComponent': selectedComponent?.options?.id === component?.options?.id}"
@@ -292,26 +336,37 @@ const getSelectedComponentOptions = computed(()=> selectedComponent.options || {
         v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
     >
 
-      <template v-if="component.options?.name==='DroppableComponent'">
-         <DroppableComponent
+      <template v-if="component.options?.inner">
+        <component
+            v-model:selectedComponent="selectedComponent"
+            :is="component.render()"
+            :class="{[component?.options?.class]: component?.options?.class?.length}"
+            :style="component?.options?.style"
+            :component-id="component?.options?.id"
+            v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+            @update-components="emit('updateComponents', $event)"
+            @click.stop="handleComponentClick(component)"
+            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+            @removeComponent="removeDraggedComponent($event)"
+        >{{ component.options?.inner }}</component>
+      </template>
+      <template v-if="component.options.name==='DroppableComponent'">
+        <DroppableComponent
+            v-model:selectedComponent="selectedComponent"
+            :is="component.render()"
+            :class="{[component?.options?.class]: component?.options?.class?.length}"
+            :style="component?.options?.style"
+            :component-id="component?.options?.id"
+            :component-factory="componentFactory"
+            :file="selectedFile"
             :children="component.options?.slot"
             :component="component"
-            :component-factory="componentFactory"
-            :attributes="component?.options?.attributes"
-            :component-id="component?.options?.id as string"
-            :parent-components="component.options.slot"
-            :parent-component-id="component.options.parentId"
-            :file="selectedFile"
-            v-model:selectedComponent="selectedComponent"
+            v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
             @update-components="emit('updateComponents', $event)"
-            @updateSelectedComponent="handleComponentClick"
-            @updateNestedComponents="updateNestedComponents"
-            @removeComponent="removeDraggedComponent($event)"
-            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
             @click.stop="handleComponentClick(component)"
-        />
-
-
+            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+            @removeComponent="removeDraggedComponent($event)"
+        >{{ component.options?.inner }}</DroppableComponent>
       </template>
       <template v-else>
         <component
@@ -319,18 +374,37 @@ const getSelectedComponentOptions = computed(()=> selectedComponent.options || {
             :is="component.render()"
             :class="{[component?.options?.class]: component?.options?.class?.length}"
             :style="component?.options?.style"
-            :componentId="component?.options?.id"
-            :parentComponents="component?.options?.children"
+            :component-id="component?.options?.id"
+            :component-factory="componentFactory"
+            :file="selectedFile"
+            :children="component.options?.slot"
+            :component="component"
             v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
-            @updateSelectedComponent="handleComponentClick"
-            @updateNestedComponents="updateNestedComponents"
-            @removeComponent="removeDraggedComponent($event)"
-            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+            @update-components="emit('updateComponents', $event)"
             @click.stop="handleComponentClick(component)"
-        >{{ component.options?.inner }}</component>
+            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+            @removeComponent="removeDraggedComponent($event)"
+        />
+<!--        <component
+            v-model:selectedComponent="selectedComponent"
+            :is="component.render()"
+            :class="{[component?.options?.class]: component?.options?.class?.length}"
+            :style="component?.options?.style"
+            :component-id="component?.options?.id"
+            :component-factory="componentFactory"
+            :file="selectedFile"
+            :children="component.options?.slot"
+            :component="component"
+            v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+            @update-components="emit('updateComponents', $event)"
+            @click.stop="handleComponentClick(component)"
+            @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component): ''"
+            @removeComponent="removeDraggedComponent($event)"
+        />-->
       </template>
 
-    </template>
+
+    </div>
   </div>
 </template>
 

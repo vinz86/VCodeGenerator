@@ -81,10 +81,10 @@ const onComponentRightClick = (event) => {
   if (selectedNode.value) {
     nextTick(() => {
       if (contextMenu.value) {
-        console.log('Showing context menu for:', selectedNode.value);
+        // console.log('Menu per:', selectedNode.value);
         contextMenu.value.show(event);
       } else {
-        console.error('ContextMenu not found');
+        console.error('ContextMenu non trovato');
       }
     });
   } else {
@@ -95,7 +95,7 @@ const onComponentRightClick = (event) => {
 const selectFile = (node: TFile) => {
   selectedNode.value = node;
   selectedNode.value?.id && localStorageService.save('selectedFileId', selectedNode.value.id);
-  console.log('Selected node:', node);
+  // console.log('Selected node:', node);
   emit('selectFile', node.id);
 };
 
@@ -225,11 +225,11 @@ onMounted(async ()=> {
           filterMode="strict"
         :metaKeySelection="false"
         @node-select="(event) => {
-          console.log('Node selected:', event.data);
+          //console.log('Node selected:', event.data);
           selectFile(event.data);
         }"
         @contextmenu="(event) => {
-          console.log('contextmenu:', event.data);
+          //console.log('contextmenu:', event.data);
           onComponentRightClick()
         }"
     />

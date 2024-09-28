@@ -168,6 +168,7 @@ export class ProjectHelper {
         return attributes;*/
 
         if (!options) return;
+
         return {
             ...options.attributes,
             id: options.id || '',

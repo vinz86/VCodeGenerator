@@ -35,7 +35,7 @@ export class AxiosClient implements IHttpClient {
             headers,
             responseType: responseType as any
         };
-        debugger
+
         if(this.token){
             axiosConfig = {
                 ...axiosConfig,

@@ -26,11 +26,7 @@ const props = defineProps({
   }
 });
 
-const fileId = props.component.options.file.id;
-const projectId = props.component.options.file.projectId;
-
 const onUpdateComponents = ()=> {
-  debugger
   emit('updateComponents')
 }
 </script>
@@ -38,14 +34,17 @@ const onUpdateComponents = ()=> {
 <template>
     <!-- Renderizza il componente padre -->
     <component
+        v-if="component && component.options"
         v-model:selectedComponent="selectedComponent"
         :data-drop-target="'droppable'"
-        @drop="onDrop"
         class="droppable-component"
         :is="component?.options?.tag || 'div'"
         :component-id="component?.options?.id"
         :style="component?.options?.style"
     >
+      <div v-if="component?.options?.inner">
+        {{component?.options?.inner}}
+      </div>
 <!--      //v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"-->
 
 <!--      <EditorPanel style="min-height: 40px" :components="children" :component-factory="props.componentFactory" />-->
@@ -58,7 +57,7 @@ const onUpdateComponents = ()=> {
           class="child-components"
           v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
           @update-components="onUpdateComponents"
-      />
+      ></EditorPanel>
     </component>
 </template>
 

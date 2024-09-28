@@ -15,28 +15,22 @@ export class DragDropHelper {
         return null;
     };
 
-    public static findObjectById(data: IComponentFactory[], idToFind: string) {
-        if (!data || !Array.isArray(data)) {
-            return null;
-        }
-
-        for (let i = 0; i < data.length; i++) {
-            const item = data[i];
-
-            if (item?.options?.id?.toString() === idToFind) {
-                return [i]; // Trovato un oggetto, restituisco la sua index
+    static findObjectById(components, id) {
+        for (const component of components) {
+            if (component.options.id === id) {
+                return component; // Se trovi il componente, restituiscilo
             }
 
-            if (item?.options?.slot && item?.options?.slot?.length > 0) {
-                const nestedPath: any = DragDropHelper.findObjectById(item?.options?.slot, idToFind);
-                if (nestedPath !== null) {
-                    return [i, ...nestedPath]; // Restituisce il path completo
+            if (component.options.slot && component.options.slot.length > 0) {
+                const found = this.findObjectById(component.options.slot, id);
+                if (found) {
+                    return found;
                 }
             }
         }
-
-        return null; // Non trovato
+        return null;
     }
+
 
 /*    public static findComponentByPath(components: IDroppableComponent, path: number[]): IDroppableComponent|null {
         let currentComponent = components;
@@ -109,18 +103,37 @@ export class DragDropHelper {
         return index;
     }
 
+/*
     static calculateDropIndex = (mouseY: number): number => {
-            const componentElements = document.querySelectorAll('.draggable-component');
-            if (componentElements.length === 0) return 0; // se non ci sono componenti, return 0
+        const componentElements = document.querySelectorAll('.draggable-component');
+        if (componentElements.length === 0) return 0; // se non ci sono componenti, return 0
 
-            for (let i = 0; i < componentElements.length; i++) {
-                const { top, bottom } = componentElements[i].getBoundingClientRect();
-                if (mouseY < top) {
-                    return i; // return index se il mouse è sopra un componente
-                }
+        for (let i = 0; i < componentElements.length; i++) {
+            const { top, bottom } = componentElements[i].getBoundingClientRect();
+            if (mouseY < top) {
+                return i; // return index se il mouse è sopra un componente
             }
-            return componentElements.length; // se il mouse è sotto tutti i componenti
-        };
+        }
+        return componentElements.length; // se il mouse è sotto tutti i componenti
+    };
+*/
+
+    static calculateDropIndex = (mouseX: number, mouseY: number, dropTarget: HTMLElement | null): number => {
+        const componentElements = dropTarget?.querySelectorAll('.draggable-component');
+        if (!componentElements || componentElements.length === 0) return 0;
+
+        for (let i = 0; i < componentElements.length; i++) {
+            const { top, bottom, left, right } = componentElements[i].getBoundingClientRect();
+
+            // Verifica se il mouse è sopra un componente
+            if (mouseY >= top && mouseY <= bottom && mouseX >= left && mouseX <= right) {
+                return i; // Ritorna l'indice del componente corrente
+            }
+        }
+
+        // Se il mouse è oltre l'ultimo componente, inserisci alla fine
+        return componentElements.length;
+    };
 }
 
 

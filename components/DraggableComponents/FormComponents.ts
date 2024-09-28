@@ -3,7 +3,6 @@ export const formComponents = [
     {
         name: 'ButtonComponent',
         tag: 'button',
-        inner: 'Button',
         cat: 'Form',
 
     },

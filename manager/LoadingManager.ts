@@ -38,11 +38,11 @@ export class LoadingManager implements ILoadingManager {
     private updateLoadingState(): void {
         if (this.checkLoading()) {
             this.isLoadingRef.value = true;
-            console.log('Loading start...');
+            //console.log('Loading start...');
         } else {
             this.isLoadingRef.value = false;
-            this.loadingCount = 0;
-            console.log('Loading stop.');
+            this.loadingCount = this.loadingCount < 0 ? 0 : this.loadingCount;
+            //console.log('Loading stop.');
         }
     }
 }

@@ -16,6 +16,7 @@ import {EApiKeys} from "~/models/enum/EApiKeys";
 import type {IProjectService} from "~/services/api/interfaces/IProjectService";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import type ConfirmManager from "~/manager/ConfirmManager";
+import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
 
 const emit = defineEmits([ 'selectProject', 'selectFile']);
 
@@ -126,69 +127,78 @@ onMounted(async ()=> {
 
 <template>
   <div class="project-manager w-full">
-    <Panel header="Nuovo Progetto" class="m-0 p-0" toggleable collapsed>
-      <div class="flex m-o p-0 flex-column">
-        <Select
-            v-model="newProject.componentsTypes"
-            :options="componentsTypeValues"
-            optionLabel="name"
-            option-value="code"
-            placeholder="Seleziona il tipo dei componenti"
-            class="w-full mb-1"
-        />
-        <InputGroup>
-          <InputText v-model="newProject.name" class="m-0" placeholder="Nome progetto" />
-          <Button class="m-0" @click="createProject" icon="fa fa-plus" />
-        </InputGroup>
-      </div>
-    </Panel>
 
-    <Panel header="Lista Progetti" class="m-0 p-0" toggleable>
-      <div class="flex m-o p-0 flex-column">
-        <Select
-            v-if="projects?.length>0"
-            @change="selectedProjectId && selectProject(selectedProjectId)"
-            v-model="selectedProjectId"
-            :options="projects"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Seleziona un progetto"
-            class="w-full mb-1"
-        >
-          <template #option="slotProps">
-            <div class="flex w-full">
-              <div class="flex-grow-1">
-                <div>{{ slotProps.option.name }}</div>
-              </div>
-              <div class="flex-none">
-                <i class="fa fa-trash cursor-pointer text-red-800" @click="confirmManager
+    <Accordion value="2">
+      <AccordionPanel value="0">
+        <AccordionHeader>Nuovo Progetto</AccordionHeader>
+        <AccordionContent>
+          <div class="flex m-o p-0 flex-column">
+            <Select
+                v-model="newProject.componentsTypes"
+                :options="componentsTypeValues"
+                optionLabel="name"
+                option-value="code"
+                placeholder="Seleziona il tipo dei componenti"
+                class="w-full mb-1"
+            />
+            <InputGroup>
+              <InputText v-model="newProject.name" class="m-0" placeholder="Nome progetto" />
+              <Button class="m-0" @click="createProject" icon="fa fa-plus" />
+            </InputGroup>
+          </div>
+        </AccordionContent>
+      </AccordionPanel>
+      <AccordionPanel value="1">
+        <AccordionHeader>Lista Progetti</AccordionHeader>
+        <AccordionContent>
+          <div class="flex m-o p-0 flex-column">
+            <Select
+                v-if="projects?.length>0"
+                @change="selectedProjectId && selectProject(selectedProjectId)"
+                v-model="selectedProjectId"
+                :options="projects"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleziona un progetto"
+                class="w-full mb-1"
+            >
+              <template #option="slotProps">
+                <div class="flex w-full">
+                  <div class="flex-grow-1">
+                    <div>{{ slotProps.option.name }}</div>
+                  </div>
+                  <div class="flex-none">
+                    <i class="fa fa-trash cursor-pointer text-red-800" @click="confirmManager
                   .setMessage(`Confermi l'eliminazione dell'elemento con ID ${slotProps.option.id}?`)
                   .setAcceptCallback(async () => {
                     await deleteProject(slotProps.option.id)
                   })
                   .open($event.currentTarget as HTMLElement)"
-                />
-              </div>
-            </div>
-          </template>
-          <template #empty>
-            <div class="flex w-full">
-              Nessun Progetto disponibile
-            </div>
-          </template>
-        </Select>
-      </div>
-    </Panel>
+                    />
+                  </div>
+                </div>
+              </template>
+              <template #empty>
+                <div class="flex w-full">
+                  Nessun Progetto disponibile
+                </div>
+              </template>
+            </Select>
+          </div>
+        </AccordionContent>
+      </AccordionPanel>
+      <AccordionPanel value="2">
+        <AccordionHeader>Files e Folders</AccordionHeader>
+        <AccordionContent>
+          <FileManager
+              v-if="selectedProjectId"
+              :projectId="selectedProjectId"
+              @selectFile="onSelectFile"
+          />
+        </AccordionContent>
+      </AccordionPanel>
+    </Accordion>
 
-
-    <Panel header="Files e Folders" id="panel-projects-files" class="m-0 p-0"  toggleable>
-
-      <FileManager
-          v-if="selectedProjectId"
-          :projectId="selectedProjectId"
-          @selectFile="onSelectFile"
-      />
-    </Panel>
   </div>
 </template>
 
