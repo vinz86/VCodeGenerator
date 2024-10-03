@@ -9,3 +9,11 @@ html {
     background: #000000;
     color: #ffffff;
 }
+
+.p-menubar-submenu {
+z-index:999 !important
+}
+
+.p-tree input{
+    width: 100%;
+}
