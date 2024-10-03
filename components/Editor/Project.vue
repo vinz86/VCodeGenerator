@@ -4,25 +4,26 @@ import {StateManager} from '~/store/StateManager';
 import {DIContainer} from '~/DIContainer/DIContainer';
 import {LocalStorageService} from '~/services/LocalStorageService';
 import type {Project} from '~/models/interfaces/Project';
-import type {ComponentsTypesModel} from '~/models/types/ComponentsTypesModel';
+import type {TComponentFactoryDropdown} from '~/models/types/TComponentFactoryDropdown';
 import {EComponentTypes} from '~/models/enum/EComponentTypes';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
 import FileManager from "~/components/Editor/FileManager.vue";
 import type {TFile} from "~/models/types/TFile";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IProjectService} from "~/services/api/interfaces/IProjectService";
+import {Api} from "~/services/api/core/Api";
+import {ApiKeys} from "~/services/api/ApiKeys";
+import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import type ConfirmManager from "~/manager/ConfirmManager";
-import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
+import ConfirmManager, {EConfirmType} from "~/manager/ConfirmManager";
+import {useAppStore} from "~/store/AppStore";
 
 const emit = defineEmits([ 'selectProject', 'selectFile']);
 
-const projectService: IProjectService = ApiContainer.getService<IProjectService>(EApiKeys.ProjectService);
+const projectStore = useAppStore();
 
-const stateManager = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
+const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const confirmManager = DIContainer.getService<ConfirmManager>(EServiceKeys.ConfirmManager);
@@ -54,25 +55,7 @@ const loadProjects = async (): Project => {
 
 const saveProjects = () => {
   localStorageService.save('selectedProjectId', selectedProjectId.value);
-};
-
-const createProject = async (e) => {
-  e.preventDefault();
-  try{
-    LoadingManager.getInstance().start();
-
-    if (newProject.value?.name?.trim() || newProject.value?.componentsType?.trim()) {
-      const resultAddProject = await projectService.createProject(newProject.value)
-      await getProjects();
-      await selectProject(resultAddProject.id);
-
-      newProject.value = defaultProject;
-    } else {
-      notifyManager.error('Inserisci un nome valido')
-    }
-  }
-  catch (e) { notifyManager.error(e) }
-  finally { LoadingManager.getInstance().stop(); }
+  projectStore.setProject(ProjectHelper.findProjectById(selectedProjectId.value, projects.value))
 };
 
 const selectProject = async (projectId: string) => {
@@ -87,34 +70,6 @@ const selectProject = async (projectId: string) => {
   }
 };
 
-const deleteProject = async (projectId: string) => {
-  try {
-    LoadingManager.getInstance().start();
-    if (projectId) {
-      // TODO: BE Cancellare anche tutti i file contenuti all'interno
-      await projectService.deleteProject(projectId)
-      notifyManager.success('Progetto eliminato correttamente!')
-      await getProjects();
-    } else {
-      notifyManager.error('ID progetto non valido')
-    }
-  }
-  catch (e) { notifyManager.error(e) }
-  finally { LoadingManager.getInstance().stop(); }
-/*
-  projects.value = ProjectHelper.removeProjectById(projectId);
-  if (selectedProjectId.value === projectId) {
-    selectedProjectId.value = null;
-  }
-  saveProjects();*/
-};
-
-const componentsTypeValues: Ref<ComponentsTypesModel> = ref([
-  { name: 'Basic HTML', code: EComponentTypes.HtmlElements },
-  { name: 'PrimeVue', code: EComponentTypes.PrimeVue },
-  { name: 'Bootstrap', code: EComponentTypes.Bootstrap },
-]);
-
 const onSelectFile = (file: TFile) => {
   emit('selectFile', file);
 };
@@ -127,9 +82,9 @@ onMounted(async ()=> {
 
 <template>
   <div class="project-manager w-full">
-
+<Button @click="getProjects()" icon="pi pi-refresh" />
     <Accordion value="2">
-      <AccordionPanel value="0">
+<!--      <AccordionPanel value="0">
         <AccordionHeader>Nuovo Progetto</AccordionHeader>
         <AccordionContent>
           <div class="flex m-o p-0 flex-column">
@@ -147,7 +102,7 @@ onMounted(async ()=> {
             </InputGroup>
           </div>
         </AccordionContent>
-      </AccordionPanel>
+      </AccordionPanel>-->
       <AccordionPanel value="1">
         <AccordionHeader>Lista Progetti</AccordionHeader>
         <AccordionContent>
@@ -161,6 +116,7 @@ onMounted(async ()=> {
                 optionValue="id"
                 placeholder="Seleziona un progetto"
                 class="w-full mb-1"
+                id="select-project"
             >
               <template #option="slotProps">
                 <div class="flex w-full">
@@ -168,12 +124,16 @@ onMounted(async ()=> {
                     <div>{{ slotProps.option.name }}</div>
                   </div>
                   <div class="flex-none">
-                    <i class="fa fa-trash cursor-pointer text-red-800" @click="confirmManager
-                  .setMessage(`Confermi l'eliminazione dell'elemento con ID ${slotProps.option.id}?`)
-                  .setAcceptCallback(async () => {
-                    await deleteProject(slotProps.option.id)
-                  })
-                  .open($event.currentTarget as HTMLElement)"
+                    <i class="fa fa-trash cursor-pointer text-red-800"
+                      @click="confirmManager
+                        .setMessage(`Confermi l'eliminazione dell'elemento con ID ${slotProps.option.id}?`)
+                        .setType(EConfirmType.DIALOG)
+                        .setAcceptCallback(async () => {
+                          await projectService.deleteProject(slotProps.option.id)
+                          notifyManager.success('Progetto eliminato correttamente!')
+                          await getProjects();
+                        })
+                        .open($event.currentTarget as HTMLElement)"
                     />
                   </div>
                 </div>

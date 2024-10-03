@@ -59,5 +59,5 @@ export class SaveManager<T> implements ISaveManager<T>{
             this.saveStatus.value = 'Errore';
             console.error('Errore nel salvataggio del progetto:', error);
         }
-    }
+    }s
 }

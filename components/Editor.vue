@@ -2,13 +2,11 @@
 import type {Ref} from "vue";
 import {onMounted, onUnmounted, ref} from 'vue';
 import ComponentOptions from "~/components/Editor/ComponentOptions.vue";
-import ImportExport from "~/components/Editor/ImportExport.vue";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import Project from "~/components/Editor/Project.vue";
 import {type Project as IProject} from '~/models/interfaces/Project';
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type {LocalStorageService} from "~/services/LocalStorageService";
@@ -17,18 +15,24 @@ import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {SaveManager} from "~/manager/SaveManager";
 import {EFileTypes} from "~/models/enum/EFileTypes";
 import {LoadingManager} from "~/manager/LoadingManager";
-import type {IFileService} from "~/services/api/interfaces/IFileService";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IComponentService} from "~/services/api/interfaces/IComponentService";
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import type {IFileService} from "~/services/api/services/interfaces/IFileService";
+import {Api} from "~/services/api/core/Api";
+import {ApiKeys} from "~/services/api/ApiKeys";
+import type {IComponentService} from "~/services/api/services/interfaces/IComponentService";
+import type {IComponentOptions} from "~/models/IComponentOptions";
 import {ComponentHelper} from "~/helper/ComponentHelper";
 import type HistoryManager from "~/manager/HistoryManager";
+import type {ICodeGenerator} from "~/services/api/services/interfaces/ICodeGenerator";
+import {ApiFilterBuilder} from "~/services/api/core/ApiFilterBuilder";
+import {EApiFilters} from "~/services/api/core/models/enum/EApiFilters";
+import {useAppStore} from "~/store/AppStore";
+import FileManager from "~/components/Editor/FileManager.vue";
+import NoProjectSelected from "~/components/project/NoProjectSelected.vue";
 
 const components = ref<IComponentFactory[]>([] as IComponentFactory[]);
-const selectedProject = ref<IProject>({} as IProject);
-const selectedComponent = ref<IComponentFactory>({} as IComponentFactory);
-const selectedFile = ref<TFile | null>(null);
+const selectedProject: Ref<IProject> = ref<IProject>({} as IProject);
+const selectedComponent: Ref<IComponentFactory>  = ref<IComponentFactory>({} as IComponentFactory);
+const selectedFile: Ref<TFile | null> = ref<TFile | null>(null);
 const componentsType: Ref<IComponentFactory> = ref({} as IComponentFactory);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
@@ -37,15 +41,23 @@ const isSavingState: Ref<boolean> = ref(false);
 
 const projectRef = ref();
 
-const fileService: IFileService = ApiContainer.getService<IFileService>(EApiKeys.FileService);
-const componentService: IComponentService = ApiContainer.getService<IComponentService>(EApiKeys.ComponentService);
+// servizi
+const apiFilter = new ApiFilterBuilder();
+const fileService: IFileService = Api.getService<IFileService>(ApiKeys.FileService);
+const componentService: IComponentService = Api.getService<IComponentService>(ApiKeys.ComponentService);
+const codeService: ICodeGenerator = Api.getService<ICodeGenerator>(ApiKeys.CodeGeneratorService);
+
+// dipendenze
 const factoryProvider = DIContainer.getService<ComponentFactoryProvider>(EServiceKeys.ComponentFactory);
 let componentFactory: Ref<ComponentFactory> = ref({} as ComponentFactory); // verrà assegnata in modo dinamico
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-const logNotify = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyAndLog);
+//const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyAndLog);
 const saveManager = new SaveManager<IComponentFactory>( () => console.error('TODO: Aggiungere callback SaveManager'), 1000);
 const HistoryM = DIContainer.getService<HistoryManager>(EServiceKeys.HistoryManager);
+
+// stores
+const appStore = useAppStore();
 
 const componentTree = computed(() => ComponentHelper.buildComponentTree(components.value));
 const primeVueTreeNodes = computed(() => ComponentHelper.buildPrimeVueTree(components.value));
@@ -56,7 +68,10 @@ const getComponents = async (fileId?: number) => {
 
     fileId = fileId ? fileId : selectedFile.value?.id;
     components.value = null;
-    const resultComponents = await componentService.getComponents({'fileId.equals': fileId});
+    const queryParams = apiFilter
+        .addFilter('fileId', EApiFilters.EQUALS, fileId)
+        .build('json');
+    const resultComponents = await componentService.getComponents(queryParams);
     if (resultComponents) {
       components.value = ComponentHelper.createFactoryComponents(resultComponents || [], factoryProvider);
     }
@@ -65,7 +80,7 @@ const getComponents = async (fileId?: number) => {
   finally { LoadingManager.getInstance().stop(); }
 };
 
-const updateComponent = async (component: IDroppableComponent) => {
+const updateComponent = async (component: IComponentOptions) => {
   if (!component?.options?.id && !selectedComponent.value?.options?.id) return;
 
   const componentOptions = component ? component.options: selectedComponent.value.options
@@ -75,7 +90,7 @@ const updateComponent = async (component: IDroppableComponent) => {
 
     const index = components.value.findIndex(c => c?.options.id === componentOptions?.id);
     if (index !== -1) {
-      const updatedComponent: IDroppableComponent = await componentService.updateComponent(componentOptions?.id, componentOptions);
+      const updatedComponent: IComponentOptions = await componentService.updateComponent(componentOptions?.id, componentOptions);
       components.value[index] = componentFactory.value.updateElement(components.value[index], updatedComponent);
     }
   }
@@ -89,6 +104,8 @@ const onFileChange = async (fileId: number) => {
     const file = await fileService.getFileById(fileId);
     if (file){
       selectedFile.value = file;
+      appStore.setFile(file)
+      appStore.setComponent({})
       await getComponents(fileId)
     }
   }
@@ -96,11 +113,16 @@ const onFileChange = async (fileId: number) => {
   finally { LoadingManager.getInstance().stop(); }
 };
 
-const onProjectChange = async (project: IProject) => {
+const onProjectChange = async (project: Project) => {
+  if (!project) return;
+
   selectedProject.value = project;
   componentFactory.value = factoryProvider.getFactory(project.componentsTypes);
+  appStore.setProject(project)
+  appStore.setFile({})
+  appStore.setComponent({})
 
-  if (project.files.length > 0) {
+  if (project.files?.length > 0) {
     const file = project.files[0] as TFile;
     await onFileChange(file)
   } else {
@@ -115,6 +137,24 @@ const onTreeNodeSelect = (node) => {
   selectedComponent.value = node.data
   console.warn('Selezionare il componente')
 };
+
+watch(components, async ()=>{
+  try{
+    LoadingManager.getInstance().start();
+    if(selectedFile.value.id){
+      generatedCode.value = await codeService.generateCodeByFileId(selectedFile.value.id);
+    }
+  }
+  catch (e) { notifyManager.error(e?.message || e); }
+  finally { LoadingManager.getInstance().stop(); }
+})
+
+const unselectProject = () => {
+  selectedProject.value = {};
+  appStore.setProject({})
+}
+
+watch(selectedFile, async () => await getComponents(selectedFile.value?.id));
 
 onMounted(async () => {
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -136,42 +176,69 @@ onMounted(async () => {
   });
 });
 
-
+defineExpose({unselectProject})
 </script>
 <template>
   <div id="wrapper">
     <div class="container flex flex-column">
-<!--      <EditorMenubar />-->
+      <EditorMenubar
+          v-if="Object.keys(selectedProject).length"
+          class="pt-1 pb-1 border-round bg-black-alpha-10"
+          @add-project="onProjectChange($event)"
+          @edit-project="onProjectChange($event)"
+          @select-project="onProjectChange($event)"
+          @delete-project="onProjectChange($event)"
+      />
 
-      <Splitter class="w-full m-0 flex-grow-1" layout="horizontal" >
+      <div class="editor" v-if="!Object.keys(selectedProject).length">
+        <NoProjectSelected @select-project="onProjectChange($event)" />
+      </div>
+
+      <Splitter v-else class="w-full m-0 flex-grow-1 border-none" layout="horizontal" >
         <!-- LEFT -->
         <SplitterPanel :size="15">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
-              <Project
-                  ref="projectRef"
-                  v-model="selectedProject"
-                  @select-project="onProjectChange"
-                  @select-file="onFileChange" />
+              <Tabs value="0">
+                <TabList>
+                  <Tab value="0">Files</Tab>
+                  <Tab value="1">Componenti</Tab>
+                </TabList>
+                <TabPanels>
+                  <TabPanel value="0">
+                    <FileManager
+                        v-if="selectedProject.id"
+                        v-model:selectedProject="selectedProject"
+                        v-model:selectedFile="selectedFile"
+                        @select-file="getComponents"
+                    />
+                  </TabPanel>
+                  <TabPanel value="1">
+<!--                     <Tree :value="primeVueTreeNodes" v-model:selectionKeys="selectedTreeKey" selectionMode="single"  @node-select="onTreeNodeSelect" />-->
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
+
             </div>
             <div class="flex-none w-full">
-              <ImportExport />
+
             </div>
           </div>
         </SplitterPanel>
-        <SplitterPanel :size="15">
+        <SplitterPanel :size="10">
           <div class="flex flex-column h-full">
             <div class="flex-grow-1">
               <BlockUI v-if="!isEditorEnabled">Seleziona file</BlockUI>
               <DraggableComponent v-else v-model="componentsType" :factory="componentFactory" />
-<!--              <Tree :value="primeVueTreeNodes" v-model:selectionKeys="selectedTreeKey" selectionMode="single"  @node-select="onTreeNodeSelect" />-->
             </div>
           </div>
         </SplitterPanel>
         <!-- CENTER -->
         <SplitterPanel :size="45" class="flex flex-column h-full">
-            <div class="editor" v-if="!isEditorEnabled">Seleziona prima un file per spostare gli elementi nell'editor</div>
 
+          <div class="p-2" v-if="!isEditorEnabled">
+            Seleziona o crea un file
+          </div>
           <Tabs value="0" v-if="isEditorEnabled">
             <TabList>
               <Tab value="0">Visual Editor</Tab>
@@ -191,7 +258,7 @@ onMounted(async () => {
                 </div>
               </TabPanel>
               <TabPanel value="1" class="overflow-y-auto flex-grow-1 h-full" id="panel-editor" style="height: calc(100vh - 100px);">
-                <Textarea :value="generatedCode" class="w-full min-h-full" />
+                <Textarea :value="generatedCode.code" class="w-full min-h-full" />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -201,7 +268,7 @@ onMounted(async () => {
         </SplitterPanel>
 
         <!-- RIGHT -->
-        <SplitterPanel :size="20">
+        <SplitterPanel :size="25">
           <ComponentOptions v-if="selectedComponent" v-model:components="components" v-model:selectedComponent="selectedComponent" @update:selectedComponent="updateComponent" />
         </SplitterPanel>
       </Splitter>

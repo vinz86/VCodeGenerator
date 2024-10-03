@@ -4,6 +4,6 @@ import type {EComponentTypes} from "~/models/enum/EComponentTypes";
 export interface Project {
   id: string;
   name: string;
-  componentsTypes: EComponentTypes;
+  componentsType: EComponentTypes;
   files: TFile[];
 }

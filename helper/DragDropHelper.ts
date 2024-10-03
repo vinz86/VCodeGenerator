@@ -32,7 +32,7 @@ export class DragDropHelper {
     }
 
 
-/*    public static findComponentByPath(components: IDroppableComponent, path: number[]): IDroppableComponent|null {
+/*    public static findComponentByPath(components: IComponentOptions, path: number[]): IComponentOptions|null {
         let currentComponent = components;
         for (const index of path) {
             if (Array.isArray(currentComponent)) {
@@ -44,7 +44,7 @@ export class DragDropHelper {
         return currentComponent;
     }*/
 
-/*    public  static removeComponentById(components: IDroppableComponent[], id:string) {
+/*    public  static removeComponentById(components: IComponentOptions[], id:string) {
         for (let i = 0; i < components.length; i++) {
             const component = components[i];
             if (component.id === id) {

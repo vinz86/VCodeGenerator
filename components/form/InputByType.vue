@@ -8,33 +8,43 @@ const props = defineProps({
   size: 'small' | 'large'
 });
 const value = defineModel();
+const bind = ref();
 
-const emit = defineEmits(['update:modelValue']);
+//const emit = defineEmits(['update:modelValue']);
 </script>
 
 <template>
-  <InputText
-      v-if="props.type === ECustomAttributesType.STRING"
-      v-model="value"
-      class="w-full form-control"
-      :size="props.size"
-  />
-  <InputNumber
-      v-if="props.type === ECustomAttributesType.NUMBER"
-      v-model="value"
-      class="w-full form-control"
-      :size="props.size"
-  />
-  <Checkbox
-      v-if="props.type === ECustomAttributesType.BOOLEAN"
-      v-model="value"
-      :binary="true"
-  />
-  <JsonTextarea
-      v-if="props.type === ECustomAttributesType.OBJECT"
-      variant="j"
-      v-model="value"
-      @update:model-value="args => {value = args}"
-      :size="props.size"
-  ></JsonTextarea>
+  <IconField v-if="props.type === ECustomAttributesType.STRING">
+    <InputText
+        v-model="value"
+        class="w-full form-control"
+        :size="props.size"
+    />
+    <InputIcon class="pi pi-times" />
+  </IconField>
+
+  <IconField v-if="props.type === ECustomAttributesType.NUMBER">
+    <InputNumber
+        v-model="value"
+        class="w-full form-control"
+        :size="props.size"
+    />
+    <InputIcon class="pi pi-times" />
+  </IconField>
+
+    <Checkbox
+        v-if="props.type === ECustomAttributesType.BOOLEAN"
+        v-model="value"
+        :binary="true"
+    />
+
+  <IconField v-if="props.type === ECustomAttributesType.OBJECT">
+    <JsonTextarea
+        variant="j"
+        v-model="value"
+        @update:model-value="args => {value = args}"
+        :size="props.size"
+    ></JsonTextarea>
+    <InputIcon class="pi pi-times" />
+  </IconField>
 </template>

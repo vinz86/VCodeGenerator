@@ -11,14 +11,14 @@ import {ConfigurationManager} from "~/manager/ConfigurationManager/Configuration
 import {StateManager} from "~/store/StateManager";
 import {LocalStorageService} from "~/services/LocalStorageService";
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IAuthService} from "~/services/api/interfaces/IAuthService";
-import type {IUserService} from "~/services/api/interfaces/IUserService";
+import {Api} from "~/services/api/core/Api";
+import {ApiKeys} from "~/services/api/ApiKeys";
+import type {IAuthService} from "~/services/api/services/interfaces/IAuthService";
+import type {IUserService} from "~/services/api/services/interfaces/IUserService";
 import {CookieService} from "~/services/CookieService";
 
-const authService: IAuthService = ApiContainer.getService<IAuthService>(EApiKeys.AuthService);
-const userService: IUserService = ApiContainer.getService<IAuthService>(EApiKeys.UserService);
+const authService: IAuthService = Api.getService<IAuthService>(ApiKeys.AuthService);
+const userService: IUserService = Api.getService<IAuthService>(ApiKeys.UserService);
 
 const notifyManager: INotifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const configurationManager: ConfigurationManager = DIContainer.getService<ConfigurationManager>(EServiceKeys.ConfigurationManager);
@@ -40,7 +40,7 @@ const login = async () => {
     const token = result.id_token;
     if(token){
       //stateManager.setState('authToken', token);
-      //cookieService.save('authToken', token, 1);
+      cookieService.save('authToken', token, 1);
       localStorageService.save('authToken', token);
       await getAccount();
       await navigateTo('/');

@@ -1,26 +1,40 @@
-import { EApiHttpClientType } from "~/models/enum/EApiHttpClientType";
-import { ApiClient } from "~/services/api/ApiClient";
+import { EApiHttpClientType } from "~/services/api/core/models/enum/EApiHttpClientType";
+import { ApiClient, EApiAuthType } from "~/services/api/core/ApiClient";
 import { FileService } from "~/services/api/services/FileService";
-import { ApiContainer } from "~/services/api/ApiContainer";
+import { Api } from "~/services/api/core/Api";
 import { UserService } from "~/services/api/services/UserService";
 import { AuthService } from "~/services/api/services/AuthService";
 import { ProjectService } from "~/services/api/services/ProjectService";
-import {EApiKeys} from "~/models/enum/EApiKeys";
-import {ComponentService} from "~/services/api/services/ComponentService";
-import {HttpService} from "~/services/api/services/HttpService";
+import { ApiKeys } from "~/services/api/ApiKeys";
+import { ComponentService } from "~/services/api/services/ComponentService";
+import { ApiHttpService } from "~/services/api/core/ApiHttpService";
+import { CodeGeneratorService } from "~/services/api/services/CodeGeneratorService";
+import type {EServiceEntry} from "~/services/api/core/models/type/EServiceEntry";
 
+//da chiamare (una sola volta) in un plugin o all'avvio dell'applicazione
 export class ApiInit {
     private static instance: ApiInit | null = null;
 
-    private constructor() {
+    private serviceKeys: EServiceEntry[] = [
+        { key: ApiKeys.AuthService, service: AuthService },
+        { key: ApiKeys.UserService, service: UserService },
+        { key: ApiKeys.ProjectService, service: ProjectService },
+        { key: ApiKeys.FileService, service: FileService },
+        { key: ApiKeys.ComponentService, service: ComponentService },
+        { key: ApiKeys.CodeGeneratorService, service: CodeGeneratorService },
+    ];
+
+    private constructor(
+        private client: EApiHttpClientType,
+        private cacheTimeout: number,
+        private authType: EApiAuthType
+    ) {
         this.registerServices();
     }
 
-    // singleton peer essere sicuri che i servizi vengano registrati una sola volta
-    // da chiamare in un plugin all'avvio di un'applicazine
-    public static getInstance(): ApiInit {
+    public static getInstance(client: EApiHttpClientType, timeout: number, authType: EApiAuthType): ApiInit {
         if (!ApiInit.instance) {
-            ApiInit.instance = new ApiInit();
+            ApiInit.instance = new ApiInit(client, timeout, authType);
         } else {
             console.warn('Servizi già registrati');
         }
@@ -30,14 +44,12 @@ export class ApiInit {
 
     private registerServices(): void {
         try {
-            const client: EApiHttpClientType = EApiHttpClientType.AsyncData;
+            ApiClient.getInstance(this.client, this.cacheTimeout, this.authType);
+            Api.registerService(ApiKeys.HttpClient, () => new ApiHttpService(this.client));
 
-            ApiContainer.registerService(EApiKeys.HttpClient, ApiClient.getInstance(client));
-            ApiContainer.registerService(EApiKeys.AuthService, () => new AuthService(client));
-            ApiContainer.registerService(EApiKeys.UserService, () => new UserService(client));
-            ApiContainer.registerService(EApiKeys.ProjectService, () => new ProjectService(client));
-            ApiContainer.registerService(EApiKeys.FileService, () => new FileService(client));
-            ApiContainer.registerService(EApiKeys.ComponentService, () => new ComponentService(client));
+            for (const { key, service, params } of this.serviceKeys) {
+                Api.registerService(key, () => new service(this.client, ...(params || [])));
+            }
         } catch (e) {
             console.error(`Errore durante l'inizializzazione dei servizi:`, e);
             throw e;

@@ -13,13 +13,20 @@ export enum EConfirmDialogPosition {
     BOTTOMRIGHT = 'bottomright',
 }
 
+export enum EConfirmType {
+    DIALOG = 'dialog',
+    POPUP = 'popup',
+}
+
 export default class ConfirmManager {
     private ConfirmService: { require: (options: ConfirmationOptions) => void };
     private defaultConfirmOptions: ConfirmationOptions;
     private confirmOptions: ConfirmationOptions;
+    private confirmType: EConfirmType;
 
-    constructor() {
+    constructor(type: EConfirmType = EConfirmType.DIALOG) {
         this.ConfirmService = useConfirm();
+        this.confirmType = type;
         this.confirmOptions = this.defaultConfirmOptions = {
             header: 'Conferma azione',
             message: 'Sei sicuro di voler procedere?',
@@ -36,6 +43,11 @@ export default class ConfirmManager {
                 console.log('Azione rifiutata');
             },
         };
+    }
+
+    setType(type: EConfirmType): this {
+        this.confirmType = type;
+        return this;
     }
 
     setMessage(message: string): this {
@@ -114,10 +126,15 @@ export default class ConfirmManager {
     }
 
     open(target: HTMLElement): void {
-        this.ConfirmService.require({
-            ...this.confirmOptions,
-            target: target,
-        });
+        const options = { ...this.confirmOptions };
+
+        if (this.confirmType === EConfirmType.POPUP) {
+            options.target = target;
+            delete options.position;
+        }
+
+        this.ConfirmService.require(options);
+
         this.confirmOptions = { ...this.defaultConfirmOptions };
     }
 }

@@ -1,8 +1,8 @@
-import { HttpService } from "~/services/api/services/HttpService";
 import type {TFile} from "~/models/types/TFile";
-import type {IFileService} from "~/services/api/interfaces/IFileService";
+import type {IFileService} from "~/services/api/services/interfaces/IFileService";
+import {ApiHttpService} from "~/services/api/core/ApiHttpService";
 
-export class FileService extends HttpService implements IFileService{
+export class FileService extends ApiHttpService implements IFileService{
 
     constructor() {
         super();
@@ -22,7 +22,7 @@ export class FileService extends HttpService implements IFileService{
     }
 
     public updateFile(id: string, file: Partial<TFile>): Promise<TFile> {
-        return this.put<TFile>(`${this.baseUrl}/${id}`, file);
+        return this.patch<TFile>(`${this.baseUrl}/${id}`, file);
     }
 
     public deleteFile(id: string): Promise<void> {

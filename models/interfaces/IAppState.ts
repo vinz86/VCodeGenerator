@@ -1,6 +1,6 @@
-import type {IAccount} from "~/models/interfaces/DTO/IAccount";
 
-interface IAppState {
-    authToken: string;
-    currentUser: IAccount;
+export interface IAppState {
+    selectedProject: number,
+    selectedFile: number,
+    selectedComponent: number
 }

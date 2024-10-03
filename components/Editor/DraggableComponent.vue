@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {availableComponents} from "~/components/DraggableComponents/ListDraggableComponents";
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import type {IComponentOptions} from "~/models/IComponentOptions";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 
-const groupByCategory = (components: IDroppableComponent[]) => {
-  return components.reduce((acc: any, component: IDroppableComponent, currentIndex) => {
+const groupByCategory = (components: IComponentOptions[]) => {
+  return components.reduce((acc: any, component: IComponentOptions, currentIndex) => {
     (acc[component.cat||currentIndex] = acc[component.cat||currentIndex] || []).push(component);
     return acc;
   }, {});
@@ -12,7 +12,7 @@ const groupByCategory = (components: IDroppableComponent[]) => {
 
 const groupedComponents = computed(() => groupByCategory(availableComponents));
 
-const onDragStart = (event: any, component: IDroppableComponent): void => {
+const onDragStart = (event: any, component: IComponentOptions): void => {
     event.dataTransfer.setData('component', JSON.stringify(component));
 };
 </script>

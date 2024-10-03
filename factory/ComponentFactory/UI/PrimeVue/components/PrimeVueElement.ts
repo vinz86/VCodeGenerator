@@ -1,5 +1,5 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
-import type { IDroppableComponent } from '~/models/IDroppableComponent';
+import type { IComponentOptions } from '~/models/IComponentOptions';
 import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
 import { DIContainer } from "~/DIContainer/DIContainer";
 import type { FlyweightFactory } from "~/factory/FlyweightFactory/FlyweightFactory";
@@ -7,18 +7,18 @@ import { EServiceKeys } from "~/models/enum/EServiceKeys";
 import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 
 export class PrimeVueElement implements IComponentFactory {
-    private flyweightFactory = DIContainer.getService<FlyweightFactory<IDroppableComponent>>(EServiceKeys.FlyweightFactory);
-    private flyweight: IFlyweightComponent<IDroppableComponent>;
-    public options: IDroppableComponent = {} as IDroppableComponent;
+    private flyweightFactory = DIContainer.getService<FlyweightFactory<IComponentOptions>>(EServiceKeys.FlyweightFactory);
+    private flyweight: IFlyweightComponent<IComponentOptions>;
+    public options: IComponentOptions = {} as IComponentOptions;
 
-    constructor(options: IDroppableComponent = {} as IDroppableComponent) {
+    constructor(options: IComponentOptions = {} as IComponentOptions) {
         this.configure(options);
     }
 
-    configure(options: Partial<IDroppableComponent> = {}): void {
+    configure(options: Partial<IComponentOptions> = {}): void {
         this.flyweight = this.flyweightFactory.getFlyweight('element_PrimeVue', {
             cat: 'PrimeVue',
-            name: 'div',
+            name: 'DroppableComponent',
             className: '',
             tag: 'div',
         });

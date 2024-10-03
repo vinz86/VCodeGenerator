@@ -2,7 +2,7 @@
 import { defineProps } from 'vue';
 import EditorPanel from "~/components/Editor/EditorPanel.vue";
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import type {DroppableProps} from "~/models/DroppableProps";
+import type {IComponentAttributes} from "~/models/IComponentAttributes";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 
 const emit = defineEmits(['updateComponents']);
@@ -45,19 +45,28 @@ const onUpdateComponents = ()=> {
       <div v-if="component?.options?.inner">
         {{component?.options?.inner}}
       </div>
-<!--      //v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"-->
+<!--      //v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"-->
 
 <!--      <EditorPanel style="min-height: 40px" :components="children" :component-factory="props.componentFactory" />-->
-      <EditorPanel
+<!--      <EditorPanel
           v-model:selectedComponent="selectedComponent"
           v-model:components="props.children"
           :component-factory="componentFactory"
           :parentId="component?.options?.id"
           :file="props.file"
           class="child-components"
-          v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+          v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
           @update-components="onUpdateComponents"
-      ></EditorPanel>
+      ></EditorPanel>-->
+      <EditorPanel
+          v-model:components="componentTree"
+          v-model:selected-component="selectedComponent"
+          v-model:project="selectedProject"
+          v-model:file="selectedFile"
+          :component-factory="componentFactory"
+          @update-components="getComponents()"
+          v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
+      />
     </component>
 </template>
 

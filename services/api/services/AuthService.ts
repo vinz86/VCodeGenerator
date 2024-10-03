@@ -1,10 +1,10 @@
-import { HttpService } from './HttpService';
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
-import type {IAuthService} from "~/services/api/interfaces/IAuthService";
+import type {IAuthService} from "~/services/api/services/interfaces/IAuthService";
+import {ApiHttpService} from "~/services/api/core/ApiHttpService";
 
-export class AuthService extends HttpService implements IAuthService{
+export class AuthService extends ApiHttpService implements IAuthService{
 
-    //constructor() { super(); }
+    constructor() { super(); }
 
     public setTokenInCookie(token: string): void {
         document.cookie = `authToken=${token}; path=/; Secure; SameSite=Lax`;

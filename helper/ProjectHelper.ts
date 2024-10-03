@@ -1,35 +1,61 @@
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
-import type {DroppableProps} from "~/models/DroppableProps";
-import type {IProjectService} from "~/services/api/interfaces/IProjectService";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
+import type {IComponentOptions} from "~/models/IComponentOptions";
+import type {IComponentAttributes} from "~/models/IComponentAttributes";
+import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
+import {Api} from "~/services/api/core/Api";
+import {ApiKeys} from "~/services/api/ApiKeys";
 import type {Project} from "~/models/interfaces/Project";
 import {LoadingManager} from "~/manager/LoadingManager";
+import {DIContainer} from "~/DIContainer/DIContainer";
+import type {INotifyManager} from "~/models/interfaces/INotifyManager";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 export class ProjectHelper {
 
-    public static async getProjects (){
+    public static async getProjects (payload: Partial<Project>): Promise<Project[]>{
+        const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
             LoadingManager.getInstance().start();
-            return await projectService.getProjects();
+            const projectsData = await projectService.getProjects(payload);
+            if (Array.isArray(projectsData)) {
+                return projectsData;
+            } else {
+                return [] as Project[];
+            }
         }
         catch (e) { notifyManager.error(e?.message || e); }
         finally { LoadingManager.getInstance().stop(); }
     }
 
     public static async addProject (project: Partial<Project>): Promise<Project> {
+        const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
             LoadingManager.getInstance().start();
 
-            return await projectService.createProject(newProject.value)
+            return await projectService.createProject(project)
+        }
+        catch (e) { notifyManager.error(e) }
+        finally { LoadingManager.getInstance().stop(); }
+    };
+
+    public static async editProject (project: Partial<Project>): Promise<Project> {
+        debugger
+        const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+        try{
+            LoadingManager.getInstance().start();
+
+            return await projectService.updateProject(project.id, project)
         }
         catch (e) { notifyManager.error(e) }
         finally { LoadingManager.getInstance().stop(); }
     };
 
     public static async deleteProject (projectId: string) {
-        const projectService: IProjectService = ApiContainer.getService<IProjectService>(EApiKeys.ProjectService);
+        const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
             LoadingManager.getInstance().start();
             if (!projectId) notifyManager.error('ID Progetto non valido')
@@ -40,6 +66,17 @@ export class ProjectHelper {
             return true;
         }
         catch (e) { notifyManager.error(e); return false; }
+        finally { LoadingManager.getInstance().stop(); }
+    };
+
+    public static async countProjects (): Promise<number> {
+        const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+        try{
+            LoadingManager.getInstance().start();
+            return await projectService.count()
+        }
+        catch (e) { notifyManager.error(e); }
         finally { LoadingManager.getInstance().stop(); }
     };
 
@@ -92,7 +129,7 @@ export class ProjectHelper {
         if (!component?.options || !component?.options.tag) {
             return code;
         }
-        const options: IDroppableComponent = component?.options;
+        const options: IComponentOptions = component?.options;
 
         if (options) {
             code += `<${options?.tag} `;
@@ -133,40 +170,7 @@ export class ProjectHelper {
 
         return code;
     };
-    public static getBindAttributes (options: IDroppableComponent){
-
-/*        {
-            "label": "Label",
-            "": "",
-            "inner": "Button",
-            "tag": "Button",
-            "attributes": {
-                "label": "Label"
-            },
-            "fileId": 1504,
-            "order": 2,
-            "parentId": null,
-            "id": 1513,
-            "class": "",
-            "style": null
-        }
-
-        */
-
-
-/*        if (!attributes) return;
-        'selectedComponent' in attributes && delete attributes?.selectedComponent;
-        'parentComponents' in attributes && delete attributes?.parentComponents;
-        'type' in attributes && delete attributes?.type;
-        'cat' in attributes && delete attributes?.cat;
-        'componentsType' in attributes && delete attributes?.componentsType;
-        'className' in attributes && delete attributes?.className;
-        'attributes' in attributes && delete attributes?.attributes;
-        'order' in attributes && delete attributes?.order;
-        'tag' in attributes && delete attributes?.tag;
-
-        return attributes;*/
-
+    public static getBindAttributes (options: IComponentOptions){
         if (!options) return;
 
         return {

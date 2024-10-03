@@ -1,8 +1,8 @@
-import { HttpService } from "~/services/api/services/HttpService";
-import type { IComponentService } from "~/services/api/interfaces/IComponentService";
+import type { IComponentService } from "~/services/api/services/interfaces/IComponentService";
 import type { IComponent } from "~/models/interfaces/IComponent";
+import {ApiHttpService} from "~/services/api/core/ApiHttpService";
 
-export class ComponentService extends HttpService implements IComponentService {
+export class ComponentService extends ApiHttpService implements IComponentService {
     private readonly baseUrl: string;
 
     constructor() {

@@ -1,4 +1,4 @@
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import type {IComponentOptions} from "~/models/IComponentOptions";
 
 export interface IComponent {
     id?: number,
@@ -11,6 +11,6 @@ export interface IComponent {
         projectId: number,
         parentId: number
     },
-    options?: IDroppableComponent
+    options?: IComponentOptions
     fileId: number
 }

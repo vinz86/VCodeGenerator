@@ -5,13 +5,16 @@ import {DIContainer} from "~/DIContainer/DIContainer";
 import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
-import type {ComponentAttribute} from "~/models/types/ComponentAttribute";
+import type {TComponentAttribute} from "~/models/types/TComponentAttribute";
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import {ECustomAttributesType} from "~/models/enum/ECustomAttributesType";
 import DialogManager from "~/manager/DialogManager";
 import InputByType from "~/components/form/InputByType.vue";
 
-const emit = defineEmits(['update:selectedComponent'])
+const emit = defineEmits(['update:selectedComponent']);
+
+const bind_checked = ref();
+
 //TODO: spostare nelle config
 const optionsToShow: Readonly<string[]> = ['className', 'inner', 'style', 'id', 'order'];
 
@@ -19,7 +22,7 @@ const factoryProvider: ComponentFactoryProvider = DIContainer.getService<Compone
 const componentFactory: ComponentFactory = factoryProvider.getFactory(EComponentTypes.PrimeVue);
 const selectedComponent: Ref<IComponentFactory | undefined> = defineModel<IComponentFactory>('selectedComponent');
 const components: Ref<IComponentFactory[] | undefined> = defineModel<IComponentFactory[]>('components');
-const newCustomAttr: Ref<ComponentAttribute<ECustomAttributesType>> = ref({} as ComponentAttribute<ECustomAttributesType>);
+const newCustomAttr: Ref<TComponentAttribute<ECustomAttributesType>> = ref({} as TComponentAttribute<ECustomAttributesType>);
 
 const newCustomAttrTypes: Ref<{key:string, value:ECustomAttributesType}[]> = ref([
   { key: 'String', value: ECustomAttributesType.STRING },
@@ -35,7 +38,7 @@ const addCustomAttr = async (event): Promise<void> => {
 
     selectedComponent.value.options['attributes'] = selectedComponent.value.options.attributes || {};
     if(newCustomAttr.value?.name?.trim().length > 0){
-      const newAttributes: ComponentAttribute<string | number | boolean | object> = {
+      const newAttributes: TComponentAttribute<string | number | boolean | object> = {
         ...selectedComponent.value.options?.attributes,
         [newCustomAttr.value?.name]: newCustomAttr.value?.value
       };
@@ -47,7 +50,7 @@ const addCustomAttr = async (event): Promise<void> => {
 
 const removeAttrs = (key: string) => {
   if(selectedComponent.value){
-    let newAttributes: ComponentAttribute<string> = selectedComponent.value.options.attributes;
+    let newAttributes: TComponentAttribute<string> = selectedComponent.value.options.attributes;
     delete newAttributes[key];
 
     selectedComponent.value = componentFactory.updateElement(selectedComponent.value, { attributes: newAttributes})
@@ -66,7 +69,7 @@ const removeAttrs = (key: string) => {
 
          <div v-for="(value, key) of selectedComponent?.options" :key="key" class="w-full">
            <div v-if="optionsToShow.includes(key)">
-             <label :for="`props-${key}`">{{ key }}</label><br>
+             <label cla :for="`props-${key}`">{{ key }}</label><br>
              <InputText
                  :disabled="key==='id'"
                  v-if="key !== 'style' && key !== 'style'"
@@ -94,7 +97,11 @@ const removeAttrs = (key: string) => {
 
              <div class="w-full">
                <div class="field grid">
-                 <span  class="col-fixed font-normal text-overflow-ellipsis overflow-hidden" style="width:25%; text-align:right">{{ key }}</span>
+                 <span  class="col-fixed font-normal text-overflow-ellipsis overflow-hidden" style="width:25%; text-align:right">
+                   {{ key }}
+<!--                 <ToggleButton onIcon="pi pi-check-circle" offIcon="pi pi-circle" class="w-full p-0" size="small" v-model="bind_checked" :onLabel="key" :offLabel="key" s />-->
+
+                 </span>
                  <div class="flex justify-content-between col">
 
                    <InputByType
@@ -105,15 +112,23 @@ const removeAttrs = (key: string) => {
                        :size="small"
                        @change="emit('update:selectedComponent', selectedComponent)"
                    />
+                   <div>
 
-                   <Button
+                     B
+                     <Checkbox
+                         :disabled="typeof selectedComponent.options.attributes[key] !== ECustomAttributesType.STRING"
+                         :binary="true"
+                     />
+                   </div>
+
+<!--                   <Button
                        text
                        :disabled="selectedComponent.options.attributes[key] === 'type'"
                        severity="danger"
                        outlined
                        icon="fa fa-times"
                        @click="removeAttrs(key?.toString())"
-                   />
+                   />-->
                  </div>
                </div>
 

@@ -4,7 +4,7 @@ import DroppableComponent from '~/components/DraggableComponents/Layout/Droppabl
 import { ProjectHelper } from '~/helper/ProjectHelper';
 import { DragDropHelper } from '~/helper/DragDropHelper';
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
-import type { DroppableProps } from '~/models/DroppableProps';
+import type { IComponentAttributes } from '~/models/IComponentAttributes';
 
 // Props and Events
 /*const props = defineProps({
@@ -92,7 +92,7 @@ const dragOverIndex = ref<number | null>(null);
           :style="component?.options?.style"
           :componentId="component?.options?.id"
           :parentComponents="component?.options?.children"
-          v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+          v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
           @updateSelectedComponent="handleComponentClick"
           @updateNestedComponents="emit('updateNestedComponents', $event)"
           @removeComponent="removeDraggedComponent($event)"

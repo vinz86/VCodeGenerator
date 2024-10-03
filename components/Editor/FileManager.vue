@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {computed, defineProps, nextTick, onMounted, type Ref, ref} from 'vue';
+import {computed, nextTick, onMounted, type Ref, ref} from 'vue';
 import type {TFile} from '~/models/types/TFile';
 import {DIContainer} from '~/DIContainer/DIContainer';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
@@ -8,47 +8,54 @@ import {EFileTypes} from '~/models/enum/EFileTypes';
 import type ContextMenu from "primevue/contextmenu";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
-import type {IFileService} from "~/services/api/interfaces/IFileService";
-import type {IComponentService} from "~/services/api/interfaces/IComponentService";
+import {Api} from "~/services/api/core/Api";
+import {ApiKeys} from "~/services/api/ApiKeys";
+import type {IFileService} from "~/services/api/services/interfaces/IFileService";
+import {EApiFilters} from "~/services/api/core/models/enum/EApiFilters";
+import {ApiFilterBuilder} from "~/services/api/core/ApiFilterBuilder";
+import {FileHelper} from "~/helper/FileHelper";
+import type {Project} from "~/models/interfaces/Project";
+import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
+import {useAppStore} from "~/store/AppStore";
+import AddFile from "~/components/modals/files/AddFile.vue";
+import type DialogManager from "~/manager/DialogManager";
+import ConfirmManager, {EConfirmType} from "~/manager/ConfirmManager";
 
 const emit = defineEmits(['selectFile']);
 
-const componentService: IComponentService = ApiContainer.getService<IComponentService>(EApiKeys.ComponentService);
-const fileService: IFileService = ApiContainer.getService<IFileService>(EApiKeys.FileService);
+const contextMenuFileRef = ref();
+
+const appStore = useAppStore();
+
+const fileService: IFileService = Api.getService<IFileService>(ApiKeys.FileService);
 
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+const dialogManager = DIContainer.getService<DialogManager>(EServiceKeys.DialogManager);
+const confirmManager = DIContainer.getService<ConfirmManager>(EServiceKeys.ConfirmManager);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
+const apiFilter = new ApiFilterBuilder();
+
 const files: Ref<File[]> = ref([]);
-const newFileName = ref('');
-const selectedNode = ref<TFile | null>(null);
-const renameDialog = ref(false);
 const contextMenu = ref<ContextMenu | null>(null);
-const addFileDialog = ref(false);
-const addFolderDialog = ref(false);
 const treeSelectedKey = ref();
 
-const props = defineProps({
-  projectId: {
-    type: Number,
-    required: true,
-  },
-});
+const selectedProject: Ref<Project> = defineModel<Project>('selectedProject');
+const selectedFile: Ref<TFile> = defineModel<File>('selectedFile');
 
-const contextMenuItems = computed(() => {
+const treeData = computed(() => formatTreeData(files.value));
+
+const contextMenuItems: ComputedRef<TItemContextMenu> = computed(() => {
   return [
     {
-      label: 'Aggiungi',
-      icon: 'pi pi-plus',
-      visible: selectedNode.value?.type === EFileTypes.Folder,
-      command: () => {
-        if (selectedNode.value) {
-          newFileName.value = '';
-          addFileDialog.value = true;
-        }
-      },
+      label: 'Aggiungi File',
+      icon: 'pi pi-file',
+      command: () => openCreateFileDialog(),
+    },
+    {
+      label: 'Aggiungi Cartella',
+      icon: 'pi pi-file',
+      command: () => openCreateFolderDialog(),
     },
     {
       label: 'Rinomina',
@@ -58,7 +65,14 @@ const contextMenuItems = computed(() => {
     {
       label: 'Elimina',
       icon: 'pi pi-trash',
-      command: () => handleDelete(),
+      command: () =>
+          confirmManager
+              .setMessage(`Confermi l'eliminazione del file ${selectedFile.value?.name}?`)
+              .setType(EConfirmType.DIALOG)
+              .setAcceptCallback(async () => {
+                await handleDelete();
+              })
+              .open(),
     },
   ];
 });
@@ -73,16 +87,22 @@ const formatTreeData: any = (files: TFile[]) => {
   }));
 };
 
-const treeData = computed(() => formatTreeData(files.value));
 
 const onComponentRightClick = (event) => {
   event.preventDefault();
-  selectFile(event.data)
-  if (selectedNode.value) {
+
+  const clickedFileId = event?.currentTarget?.id && parseInt(event.currentTarget.id);
+  if (!clickedFileId) return;
+
+  const file = FileHelper.findById(clickedFileId, files.value);
+  if (!file) return;
+
+  selectFile(file);
+
+  if (selectedFile.value) {
     nextTick(() => {
-      if (contextMenu.value) {
-        // console.log('Menu per:', selectedNode.value);
-        contextMenu.value.show(event);
+      if (contextMenuFileRef.value) {
+        contextMenuFileRef.value.show(event);
       } else {
         console.error('ContextMenu non trovato');
       }
@@ -93,116 +113,84 @@ const onComponentRightClick = (event) => {
 };
 
 const selectFile = (node: TFile) => {
-  selectedNode.value = node;
-  selectedNode.value?.id && localStorageService.save('selectedFileId', selectedNode.value.id);
-  // console.log('Selected node:', node);
-  emit('selectFile', node.id);
-};
-
-
-const renameFile = async () => {
-
-  if (!selectedNode.value || !newFileName.value.trim()) {
-    notifyManager.error('Seleziona un file/folder ed inserisci un nome valido');
+  selectedFile.value = node;
+  if(selectedFile.value?.id){
+    appStore.setFile(selectedFile.value);
+    appStore.setComponent({});
   }
-  try{
-    LoadingManager.getInstance().start();
-
-    if (selectedNode.value?.id && newFileName.value?.trim()) {
-
-      const result = await fileService.updateFile(selectedNode.value.id, {...selectedNode.value, name: newFileName.value.trim()});
-      await loadFiles();
-
-      selectedNode.value = result;
-      newFileName.value = '';
-      renameDialog.value = false;
-    }
-
-  } catch (e) { notifyManager.error(e)
-  } finally { LoadingManager.getInstance().stop(); }
 };
 
 const handleDelete = async () =>{
-  try{
-    LoadingManager.getInstance().start();
-
-    if (selectedNode.value) {
-      await fileService.deleteFile(selectedNode.value.id);
-      await loadFiles();
-      selectedNode.value = null;
-    }
-  } catch (e) { notifyManager.error(e)
-  } finally { LoadingManager.getInstance().stop(); }
+  await FileHelper.deleteFile(selectedFile.value?.id);
+  await getFiles();
+  selectFile({});
 }
 
 const handleRename = () =>{
-  if (selectedNode.value) {
-    newFileName.value = selectedNode.value.name;
-    renameDialog.value = true;
-  }
+  dialogManager.setComponent(AddFile).setTitle('Rinomina File').setProps({ style:{ width:'50%' } })
+      .setData({editMode: true, selectedFile: selectedFile.value})
+      .setOnClose((response)=> response.data?.edited && getFiles())
+      .open();
+
 }
 
-const handleAddFile = async (type: EFileTypes) => {
-  try{
-    LoadingManager.getInstance().start();
-
-    const storedSelectedProjectId = localStorageService.load('selectedProjectId')
-
-    const newFile: TFile = await fileService.createFile({
-      name: newFileName.value,
-      type: type,
-      projectId: storedSelectedProjectId,
-      parent: selectedNode.value || null,
-      parentId: selectedNode.value?.id || null,
-    })
-
-    //componentService.createComponent()
-    await loadFiles();
-    selectFile(newFile);
-
-    newFileName.value = '';
-    addFileDialog.value = false;
-    addFolderDialog.value = false;
-
-  } catch (e) { notifyManager.error(e);
-  } finally { LoadingManager.getInstance().stop(); }
-};
-
-// Funzioni per aprire i dialog
 const openCreateFileDialog = () => {
-  addFileDialog.value = true;
+  dialogManager.setComponent(AddFile).setTitle('Aggiungi').setProps({ style:{ width:'50%' } })
+      .setData({edit: false, type: EFileTypes.File, projectId: selectedProject.value?.id, selectedFile: selectedFile.value})
+      .setOnClose((response)=> response.data?.edited && getFiles())
+      .open();
+
 };
 
 const openCreateFolderDialog = () => {
-  addFolderDialog.value = true;
+  dialogManager.setComponent(AddFile).setTitle('Aggiungi').setProps({ style:{ width:'50%' } })
+      .setData({edit: true, type: EFileTypes.Folder, projectId: selectedProject.value?.id, selectedFile: selectedFile.value})
+      .setOnClose((response)=> response.data?.edited && getFiles())
+      .open();
 };
 
-const loadFiles = async () => {
-  files.value = await fileService.getFiles({ "projectId.equals": props.projectId });
+const getFiles = async () => {
+  const queryParams = apiFilter
+      .addFilter('projectId', EApiFilters.EQUALS, selectedProject.value?.id)
+      .build('json');
+  files.value = await fileService.getFiles(queryParams);
+  await nextTick();
 }
 
-onMounted(async ()=> {
+const loadFiles = async () => {
   try{
-    let selectedFile: TFile;
-    const selectedFileId: number = localStorageService.load('selectedFileId') || null;
-    await loadFiles();
-    if (!!selectedFileId && files.value?.length){
-      const selectedFile = files.value.find(file => file.id === selectedFileId);
+    if(selectedProject.value?.id){
+      await getFiles();
+      const selectedFileId: number = selectedFile.value.id || localStorageService.load('selectedFileId') || null;
 
-      if (selectedFile) {
-        selectFile(selectedFile);
+      if (!!selectedFileId && files.value?.length){
+        const selectedFile = FileHelper.findById(selectedFileId, files.value);
+
+        if (selectedFile) {
+          selectFile(selectedFile);
+        }
       }
+
     }
   }
   catch (e) { notifyManager.error(e); }
   finally { LoadingManager.getInstance().stop(); }
+}
+
+watch(selectedProject, async () => await loadFiles());
+
+onMounted(async ()=> {
+  await loadFiles();
 });
+
 </script>
 
 
 <template>
-  <div class="file-manager">
-    <div class="flex">
+  <div class="file-manager-wrapper">
+    <ContextMenu ref="contextMenuFileRef" :model="contextMenuItems" />
+
+    <div class="flex justify-content-around">
         <Button @click="openCreateFileDialog" text  severity="success">
           <i class="fa fa-file-circle-plus" />
         </Button>
@@ -212,74 +200,49 @@ onMounted(async ()=> {
         <Button @click="handleRename" text severity="info">
           <i class="fa fa-file-edit" />
         </Button>
-        <Button @click="handleDelete" text severity="danger">
+        <Button text severity="danger" @click="
+          confirmManager
+              .setMessage(`Confermi l'eliminazione del file ${selectedFile.name}?`)
+              .setType(EConfirmType.DIALOG)
+              .setAcceptCallback(async () => {
+                await handleDelete();
+              })
+              .open()"
+        >
           <i class="fa fa-trash" />
         </Button>
     </div>
 
-    <Tree class="p-1" v-if="treeData?.length"
-        v-model:selectionKeys="treeSelectedKey"
-        :value="treeData"
-        :selection-mode="'single'"
-        :filter="true"
-          filterMode="strict"
-        :metaKeySelection="false"
-        @node-select="(event) => {
-          //console.log('Node selected:', event.data);
-          selectFile(event.data);
+    <div v-if="treeData?.length" >
+      <Tree class="p-0"
+            :pt="{
+          pcFilterInput: { style: { width: '100%' } },
         }"
-        @contextmenu="(event) => {
-          //console.log('contextmenu:', event.data);
-          onComponentRightClick()
-        }"
-    />
-    <p class="ml-3" v-else>Nessun file</p>
+            v-model:selectionKeys="treeSelectedKey"
+            :value="treeData"
+            :selection-mode="'single'"
+            :filter="true"
+            filterMode="strict"
+            :metaKeySelection="false"
+            :highlight-on-select="true"
+            @node-select="(event) => selectFile(event.data)"
+      >
+        <template #default="slotProps">
+          <div
 
-    <Dialog header="Rinomina File/Cartella" v-model:visible="renameDialog">
-      <div class="p-fluid">
-        <InputText @keyup.enter="renameFile" class="mb-2" v-model="newFileName" placeholder="Nuovo Nome" />
-        <div class="dialog-footer">
-          <Button @click="renameFile" icon="pi pi-check" severity="success" label="Conferma" />
-          <Button class="ml-2" @click="() => renameDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
-        </div>
-      </div>
-    </Dialog>
+              :id="slotProps.node.key"
+              @contextmenu="onComponentRightClick"
+              :style="{ paddingLeft: `${slotProps.node.level * 20}px` }"
+          >
+            <span class="w-full">{{ slotProps.node.label }} {{slotProps.node.key}}</span>
+          </div>
+        </template>
+      </Tree>
+    </div>
+    <p class="m-3" v-else>Nessun file</p>
 
-    <Dialog header="Aggiungi File" v-model:visible="addFileDialog">
-      <div class="p-fluid">
-        <InputText class="mb-2" v-model="newFileName" placeholder="Nome File" @keyup.enter="handleAddFile(EFileTypes.File)" />
-        <div class="dialog-footer">
-          <Button @click="handleAddFile(EFileTypes.File)" icon="pi pi-check" severity="success" label="Aggiungi" />
-          <Button class="ml-2" @click="() => addFileDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
-        </div>
-      </div>
-    </Dialog>
-
-    <Dialog header="Aggiungi Cartella" v-model:visible="addFolderDialog">
-      <div class="p-fluid">
-        <InputText class="mb-2" v-model="newFileName" placeholder="Nome Cartella" @keyup.enter="handleAddFile(EFileTypes.Folder)" />
-        <div class="dialog-footer">
-          <Button @click="handleAddFile(EFileTypes.Folder)" icon="pi pi-check" severity="success" label="Aggiungi" />
-          <Button class="ml-2" @click="() => addFolderDialog = false" icon="pi pi-times" severity="danger" label="Annulla" />
-        </div>
-      </div>
-    </Dialog>
-
-    <ContextMenu ref="contextMenu" :model="contextMenuItems"/>
   </div>
 </template>
 
 <style scoped>
-.file-manager {
-  margin-top: 20px;
-}
-
-.add-file {
-  margin-top: 10px;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-}
 </style>

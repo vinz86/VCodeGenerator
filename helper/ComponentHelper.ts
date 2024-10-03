@@ -1,13 +1,13 @@
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import type {IComponentOptions} from "~/models/IComponentOptions";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import type {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
-import type {IComponentService} from "~/services/api/interfaces/IComponentService";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
+import type {IComponentService} from "~/services/api/services/interfaces/IComponentService";
+import {Api} from "~/services/api/core/Api";
+import {ApiKeys} from "~/services/api/ApiKeys";
 
 export class ComponentHelper {
 
-    public static createFactoryComponents(data: IDroppableComponent[], factoryProvider: ComponentFactoryProvider): IComponentFactory[] {
+    public static createFactoryComponents(data: IComponentOptions[], factoryProvider: ComponentFactoryProvider): IComponentFactory[] {
         return data.map((componentData) => {
             const newFactoryComponent =  factoryProvider.factory.createElement(componentData);
 
@@ -136,7 +136,7 @@ export class ComponentHelper {
     public static async updateComponentsOrder(components: IComponentFactory[]): Promise<void> {
         if (!components) return [];
 
-        const componentService: IComponentService = ApiContainer.getService<IComponentService>(EApiKeys.ComponentService);
+        const componentService: IComponentService = Api.getService<IComponentService>(ApiKeys.ComponentService);
         const updatePromises = components.map(component =>
             componentService.updateComponent(component.options.id, {id: component.options?.id, order: component.options?.order})
         );
@@ -168,4 +168,11 @@ export class ComponentHelper {
         return filteredProps;
     };
 
+    public static extractComponentsOptions(factories: IComponentFactory[]): IComponentOptions[] {
+        return factories.map(factory => {
+            const { options } = factory;
+
+            return { ...options };
+        });
+    }
 }

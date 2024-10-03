@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import type {DroppableProps} from "~/models/DroppableProps";
+import type {IComponentAttributes} from "~/models/IComponentAttributes";
 import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DragDropHelper} from "~/helper/DragDropHelper";
 import {nextTick, onMounted, onUnmounted, ref, type Ref} from "vue";
 import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
-import {ApiContainer} from "~/services/api/ApiContainer";
-import {EApiKeys} from "~/models/enum/EApiKeys";
+import {Api} from "~/services/api/Api";
+import {ApiKeys} from "~/models/enum/ApiKeys";
 import type {IComponentService} from "~/services/api/interfaces/IComponentService";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
@@ -16,7 +16,7 @@ import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {TFile} from "~/models/types/TFile";
-import type {IDroppableComponent} from "~/models/IDroppableComponent";
+import type {IComponentOptions} from "~/models/IComponentOptions";
 
 const emit = defineEmits(['updateComponents']);
 const props = defineProps({
@@ -37,7 +37,7 @@ const draggedComponentIndex: Ref<number|null> = ref(null);
 const draggedFrom: Ref<any> = ref(null);
 const dragOverIndex: Ref<any> = ref(null);
 
-const componentService: IComponentService = ApiContainer.getService<IComponentService>(EApiKeys.ComponentService);
+const componentService: IComponentService = Api.getService<IComponentService>(ApiKeys.ComponentService);
 const localStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 
@@ -89,7 +89,7 @@ const duplicateComponent = async (component: IComponentFactory) => {
 
     await addComponent(component, components.value);
     //TODO devo duplicare tutti i componenti contenuti al suo interno
-    let newComponentOptions: IDroppableComponent = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
+    let newComponentOptions: IComponentOptions = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
     newComponentOptions.className = (component?.options?.className || '').replace('selectedComponent', '');
     const newComponent: IComponentFactory = componentFactory.value.createElement(newComponentOptions);
 
@@ -331,7 +331,7 @@ onMounted(async () => {
             :style="component?.options?.style"
             :componentId="component?.options?.id"
             :parentComponents="component?.options?.children"
-            v-bind="ProjectHelper.getBindAttributes(component.options as DroppableProps) || {}"
+            v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
             @updateSelectedComponent="handleComponentClick"
             @updateNestedComponents="updateNestedComponents"
             @removeComponent="removeDraggedComponent($event)"

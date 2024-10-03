@@ -1,8 +1,8 @@
-import { HttpService } from "~/services/api/services/HttpService";
 import type {Project} from "~/models/interfaces/Project";
-import type {IProjectService} from "~/services/api/interfaces/IProjectService";
+import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
+import {ApiHttpService} from "~/services/api/core/ApiHttpService";
 
-export class ProjectService extends HttpService implements IProjectService{
+export class ProjectService extends ApiHttpService implements IProjectService{
     private readonly baseUrl: string
 
     constructor() {
@@ -10,8 +10,8 @@ export class ProjectService extends HttpService implements IProjectService{
         this.baseUrl = 'projects'
     }
 
-    public getProjects(): Promise<Project[]> {
-        return this.get<Project[]>(this.baseUrl);
+    public getProjects(queryParams: Partial<Project>): Promise<Project[]> {
+        return this.get<Project[]>(this.baseUrl, queryParams, 5000);
     }
 
     public getProjectById(id: string): Promise<Project> {
@@ -23,10 +23,14 @@ export class ProjectService extends HttpService implements IProjectService{
     }
 
     public updateProject(id: string, project: Partial<Project>): Promise<Project> {
-        return this.put<Project>(`${this.baseUrl}/${id}`, project);
+        return this.patch<Project>(`${this.baseUrl}/${id}`, project);
     }
 
     public deleteProject(id: string): Promise<void> {
         return this.delete<void>(`${this.baseUrl}/${id}`);
+    }
+
+    public count(): Promise<number> {
+        return this.get<number>(`${this.baseUrl}/count`);
     }
 }

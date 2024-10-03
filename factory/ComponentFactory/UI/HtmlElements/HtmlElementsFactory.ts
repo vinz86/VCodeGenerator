@@ -1,6 +1,6 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { ComponentFactory } from '~/models/interfaces/ComponentFactory';
-import type { IDroppableComponent } from '~/models/IDroppableComponent';
+import type { IComponentOptions } from '~/models/IComponentOptions';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
 import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
@@ -10,7 +10,7 @@ import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import type {IFlyweightComponent} from "~/models/interfaces/IFlyweightComponent";
 
 export class HtmlElementsFactory implements ComponentFactory {
-  private flyweight: IFlyweightComponent<IDroppableComponent>[] = [];
+  private flyweight: IFlyweightComponent<IComponentOptions>[] = [];
 
   private readonly creators: Map<string, () => IComponentFactory> = new Map([
     ['button', () => this.createButton()],
@@ -35,7 +35,7 @@ export class HtmlElementsFactory implements ComponentFactory {
     return new PrimeVueElement();
   }
 
-  createElement(options: IDroppableComponent): IComponentFactory {
+  createElement(options: IComponentOptions): IComponentFactory {
     if (!options?.tag) {
       console.warn('Nessun tag specificato, viene creato un elemento predefinito');
       return this.createGenericElement();
@@ -56,7 +56,7 @@ export class HtmlElementsFactory implements ComponentFactory {
     return element;
   }
 
-  updateElement(component: IComponentFactory, options: Partial<IDroppableComponent>): IComponentFactory {
+  updateElement(component: IComponentFactory, options: Partial<IComponentOptions>): IComponentFactory {
     if (!component) throw new Error('Componente non valido.')
     component.configure(options);
 
@@ -64,7 +64,7 @@ export class HtmlElementsFactory implements ComponentFactory {
   }
 
   setFlyweights(): void {
-    const flyweightFactory = DIContainer.getService<FlyweightFactory<Partial<IDroppableComponent>>>(EServiceKeys.FlyweightFactory);
+    const flyweightFactory = DIContainer.getService<FlyweightFactory<Partial<IComponentOptions>>>(EServiceKeys.FlyweightFactory);
     const commonOptions = {
       cat: 'PrimeVue',
       style: '',

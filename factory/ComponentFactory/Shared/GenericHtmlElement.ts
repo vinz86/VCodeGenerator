@@ -1,14 +1,14 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
-import type { IDroppableComponent } from '~/models/IDroppableComponent';
+import type { IComponentOptions } from '~/models/IComponentOptions';
 
 export class GenericHtmlElement implements IComponentFactory {
-    public options: IDroppableComponent;
+    public options: IComponentOptions;
 
-    constructor(options: IDroppableComponent) {
+    constructor(options: IComponentOptions) {
         this.options = options;
     }
 
-    configure(options: Partial<IDroppableComponent>): void {
+    configure(options: Partial<IComponentOptions>): void {
         this.options = { ...this.options, ...options };
     }
 
