@@ -1,20 +1,19 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import  Aura from '@primevue/themes/aura'
+import Lara from '@primevue/themes/lara'
+import Nora from '@primevue/themes/nora'
 
 export default defineNuxtConfig({
   ssr: false,
   components: true,
   devtools: { enabled: true },
-  modules: [
-    '@primevue/nuxt-module',
-    '@pinia/nuxt',
-  ],
+  modules: ['@primevue/nuxt-module', '@pinia/nuxt', "@nuxt/eslint"],
   primevue: {
     options: {
       ripple: true,
       inputVariant: 'filled',
       theme: {
-        preset: Aura,
+        preset: Lara,
         options: {
           prefix: 'p',
           darkModeSelector: '.app-dark', // system || classe da applicare al body
@@ -40,4 +39,3 @@ export default defineNuxtConfig({
     middleware: ['auth'],
   }
 })
-

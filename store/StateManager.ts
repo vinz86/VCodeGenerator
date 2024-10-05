@@ -37,8 +37,8 @@ export class StateManager<T extends Record<string, any>> {
 // }
 //
 // const stateManager = StateManager.getInstance<AppState>();
-// stateManager.setState('currentProject', { name: 'My Project' });
-// console.log(stateManager.getState('currentProject')); // Output: { name: 'My Project' }
+// stateManager.setState('currentProject', { name: 'My TProject' });
+// console.log(stateManager.getState('currentProject')); // Output: { name: 'My TProject' }
 //
 // // Clear state by key
 // stateManager.clearStateByKey('currentProject');

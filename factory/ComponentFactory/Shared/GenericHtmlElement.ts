@@ -1,14 +1,14 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
-import type { IComponentOptions } from '~/models/IComponentOptions';
+import type { TComponentOptions } from '~/models/types/TComponentOptions';
 
 export class GenericHtmlElement implements IComponentFactory {
-    public options: IComponentOptions;
+    public options: TComponentOptions;
 
-    constructor(options: IComponentOptions) {
+    constructor(options: TComponentOptions) {
         this.options = options;
     }
 
-    configure(options: Partial<IComponentOptions>): void {
+    configure(options: Partial<TComponentOptions>): void {
         this.options = { ...this.options, ...options };
     }
 

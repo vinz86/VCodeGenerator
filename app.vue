@@ -7,13 +7,13 @@ import type {IUserService} from "~/services/api/services/interfaces/IUserService
 import {Api} from "~/services/api/core/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {ILoggerDecorator} from "~/models/interfaces/ILoggerDecorator";
-import {LocalStorageService} from "~/services/LocalStorageService";
+import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {StateManager} from "~/store/StateManager";
 
-let notifyAndLog = DIContainer.getService<ILoggerDecorator<any>>(EServiceKeys.NotifyAndLog);
-let userService: IUserService = Api.getService<IUserService>(ApiKeys.UserService);
-let stateManager: StateManager<any> = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
-let localStorageService: LocalStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
+const notifyAndLog = DIContainer.getService<ILoggerDecorator<any>>(EServiceKeys.NotifyAndLog);
+const userService: IUserService = Api.getService<IUserService>(ApiKeys.UserService);
+const stateManager: StateManager<any> = DIContainer.getService<StateManager<any>>(EServiceKeys.StateManager);
+const localStorageService: LocalStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
 async function fetchData() {
   await userService.getUsers();
@@ -43,7 +43,7 @@ onMounted(async () => {
 <!--    <ConfirmPopup />-->
     <DynamicDialog />
     <Toast />
-    <ProgressBar mode="indeterminate" style="position:absolute; top:0; left:0; width:100%; height: 6px" v-if="LoadingManager.getInstance().isLoading().value"></ProgressBar>
+    <ProgressBar v-if="LoadingManager.getInstance().isLoading().value" mode="indeterminate" style="position:absolute; top:0; left:0; width:100%; height: 6px"/>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

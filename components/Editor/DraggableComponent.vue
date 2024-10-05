@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {availableComponents} from "~/components/DraggableComponents/ListDraggableComponents";
-import type {IComponentOptions} from "~/models/IComponentOptions";
+import type {TComponentOptions} from "~/models/types/TComponentOptions";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 
-const groupByCategory = (components: IComponentOptions[]) => {
-  return components.reduce((acc: any, component: IComponentOptions, currentIndex) => {
+const groupByCategory = (components: TComponentOptions[]) => {
+  return components.reduce((acc: any, component: TComponentOptions, currentIndex) => {
     (acc[component.cat||currentIndex] = acc[component.cat||currentIndex] || []).push(component);
     return acc;
   }, {});
@@ -12,7 +12,7 @@ const groupByCategory = (components: IComponentOptions[]) => {
 
 const groupedComponents = computed(() => groupByCategory(availableComponents));
 
-const onDragStart = (event: any, component: IComponentOptions): void => {
+const onDragStart = (event: any, component: TComponentOptions): void => {
     event.dataTransfer.setData('component', JSON.stringify(component));
 };
 </script>
@@ -20,7 +20,7 @@ const onDragStart = (event: any, component: IComponentOptions): void => {
 <template>
   <div>
 
-    <Accordion :activeIndex="0">
+    <Accordion :active-index="0">
 
       <AccordionTab v-for="(components, category) in groupedComponents" :key="category" :header="category.toString()">
         <div
@@ -28,15 +28,15 @@ const onDragStart = (event: any, component: IComponentOptions): void => {
           :key="component.name">
           <small> {{ component.label || component.name }}</small>
           <div
-              class="draggable-component inline-block"
               :id="ProjectHelper.getUniqueID().toString()+'container'"
+              class="draggable-component inline-block"
               draggable="true"
               @dragstart="onDragStart($event, component)"
           >
             <component
                 :is="component.tag"
-                class="w-full"
                 :id="ProjectHelper.getUniqueID().toString()"
+                class="w-full"
                 v-bind="component.options"
             >
               {{component?.inner || ''}}

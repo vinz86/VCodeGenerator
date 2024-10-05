@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import {computed, nextTick, onMounted, type Ref, ref} from 'vue';
+
 import type {TFile} from '~/models/types/TFile';
 import {DIContainer} from '~/DIContainer/DIContainer';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
@@ -14,12 +15,14 @@ import type {IFileService} from "~/services/api/services/interfaces/IFileService
 import {EApiFilters} from "~/services/api/core/models/enum/EApiFilters";
 import {ApiFilterBuilder} from "~/services/api/core/ApiFilterBuilder";
 import {FileHelper} from "~/helper/FileHelper";
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
 import {useAppStore} from "~/store/AppStore";
 import AddFile from "~/components/modals/files/AddFile.vue";
 import type DialogManager from "~/manager/DialogManager";
-import ConfirmManager, {EConfirmType} from "~/manager/ConfirmManager";
+import type ConfirmManager from "~/manager/ConfirmManager";
+import {EConfirmType} from "~/manager/ConfirmManager";
+import type {TreeNode} from "primevue/treenode";
 
 const emit = defineEmits(['selectFile']);
 
@@ -40,7 +43,7 @@ const files: Ref<File[]> = ref([]);
 const contextMenu = ref<ContextMenu | null>(null);
 const treeSelectedKey = ref();
 
-const selectedProject: Ref<Project> = defineModel<Project>('selectedProject');
+const selectedProject: Ref<TProject> = defineModel<TProject>('selectedProject');
 const selectedFile: Ref<TFile> = defineModel<File>('selectedFile');
 
 const treeData = computed(() => formatTreeData(files.value));
@@ -77,16 +80,17 @@ const contextMenuItems: ComputedRef<TItemContextMenu> = computed(() => {
   ];
 });
 
-const formatTreeData: any = (files: TFile[]) => {
-  return files.map(file => ({
-    key: file.id,
-    label: file.name,
-    data: file,
-    icon: file.type === EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
-    children: file.type === EFileTypes.Folder && file.children ? formatTreeData(file.children) : null,
-  }));
+const formatTreeData = (files: TFile[], parentId: string | null = null): TreeNode[] => {
+  return files
+      .filter(file => file.parentId === parentId)
+      .map(file => ({
+        key: file.id,
+        label: file.name,
+        data: file,
+        icon: file.type === EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
+        children: formatTreeData(files, file.id),
+      }));
 };
-
 
 const onComponentRightClick = (event) => {
   event.preventDefault();
@@ -151,7 +155,7 @@ const openCreateFolderDialog = () => {
 
 const getFiles = async () => {
   const queryParams = apiFilter
-      .addFilter('projectId', EApiFilters.EQUALS, selectedProject.value?.id)
+      .addFilter('projectId', selectedProject.value?.id, EApiFilters.EQUALS)
       .build('json');
   files.value = await fileService.getFiles(queryParams);
   await nextTick();
@@ -191,16 +195,17 @@ onMounted(async ()=> {
     <ContextMenu ref="contextMenuFileRef" :model="contextMenuItems" />
 
     <div class="flex justify-content-around">
-        <Button @click="openCreateFileDialog" text  severity="success">
+        <Button text severity="success"  @click="openCreateFileDialog">
           <i class="fa fa-file-circle-plus" />
         </Button>
-        <Button @click="openCreateFolderDialog" text severity="warning">
+        <Button text severity="warning" @click="openCreateFolderDialog">
           <i class="fa fa-folder-plus" />
         </Button>
-        <Button @click="handleRename" text severity="info">
+        <Button text severity="info" @click="handleRename">
           <i class="fa fa-file-edit" />
         </Button>
-        <Button text severity="danger" @click="
+        <Button
+text severity="danger" @click="
           confirmManager
               .setMessage(`Confermi l'eliminazione del file ${selectedFile.name}?`)
               .setType(EConfirmType.DIALOG)
@@ -214,32 +219,35 @@ onMounted(async ()=> {
     </div>
 
     <div v-if="treeData?.length" >
-      <Tree class="p-0"
-            :pt="{
-          pcFilterInput: { style: { width: '100%' } },
-        }"
-            v-model:selectionKeys="treeSelectedKey"
-            :value="treeData"
-            :selection-mode="'single'"
-            :filter="true"
-            filterMode="strict"
-            :metaKeySelection="false"
-            :highlight-on-select="true"
-            @node-select="(event) => selectFile(event.data)"
-      >
+<!--      <pre>
+        {{ treeData }}
+      </pre>-->
+      <Tree
+          v-model:selection-keys="treeSelectedKey"
+          class="p-0"
+          :pt="{
+    pcFilterInput: { style: { width: '100%' } },
+  }"
+          :value="treeData"
+          :selection-mode="'single'"
+          :filter="true"
+          filter-mode="strict"
+          :meta-key-selection="false"
+          :highlight-on-select="true"
+          @node-select="(event) => selectFile(event.data)"
+          @node-contextmenu="onComponentRightClick"
+          >
         <template #default="slotProps">
           <div
-
               :id="slotProps.node.key"
               @contextmenu="onComponentRightClick"
-              :style="{ paddingLeft: `${slotProps.node.level * 20}px` }"
           >
-            <span class="w-full">{{ slotProps.node.label }} {{slotProps.node.key}}</span>
+            <span class="w-full">{{ slotProps.node.label }}</span>
           </div>
         </template>
       </Tree>
     </div>
-    <p class="m-3" v-else>Nessun file</p>
+    <p v-else class="m-3">Nessun file</p>
 
   </div>
 </template>

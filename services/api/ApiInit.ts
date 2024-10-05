@@ -1,5 +1,6 @@
-import { EApiHttpClientType } from "~/services/api/core/models/enum/EApiHttpClientType";
-import { ApiClient, EApiAuthType } from "~/services/api/core/ApiClient";
+import type { EApiHttpClientType } from "~/services/api/core/models/enum/EApiHttpClientType";
+import type { EApiAuthType } from "~/services/api/core/ApiClient";
+import { ApiClient } from "~/services/api/core/ApiClient";
 import { FileService } from "~/services/api/services/FileService";
 import { Api } from "~/services/api/core/Api";
 import { UserService } from "~/services/api/services/UserService";

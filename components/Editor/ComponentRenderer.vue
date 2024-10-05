@@ -4,7 +4,7 @@ import DroppableComponent from '~/components/DraggableComponents/Layout/Droppabl
 import { ProjectHelper } from '~/helper/ProjectHelper';
 import { DragDropHelper } from '~/helper/DragDropHelper';
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
-import type { IComponentAttributes } from '~/models/IComponentAttributes';
+import type { TComponentAttributes } from '~/models/types/TComponentAttributes';
 
 // Props and Events
 /*const props = defineProps({
@@ -63,8 +63,8 @@ const dragOverIndex = ref<number | null>(null);
         [component?.options?.className]: component?.options?.className?.length,
       }"
         class="draggable-component"
-        @drop="onDropComponent(index, draggedComponentIndex, components, dragOverIndex)"
         draggable="true"
+        @drop="onDropComponent(index, draggedComponentIndex, components, dragOverIndex)"
         @dragstart="!component?.options?.locked ? onDragStart($event, index, components, draggedComponentIndex) : ''"
         @dragenter="dragOverIndex = index"
         @dragleave="dragOverIndex = null"
@@ -72,30 +72,30 @@ const dragOverIndex = ref<number | null>(null);
     >
       <template v-if="component.options?.name === 'DroppableComponent'">
         <DroppableComponent
+            v-model:selected-component="selectedComponent.options"
+            v-model:component-factory="componentFactory"
             :attributes="component?.options?.attributes"
             :component-id="component?.options?.id as string"
             :parent-components="component.options.slot"
-            v-model:selectedComponent="selectedComponent.options"
-            v-model:component-factory="componentFactory"
-            @updateSelectedComponent="handleComponentClick"
-            @updateNestedComponents="emit('updateNestedComponents', $event)"
-            @removeComponent="removeDraggedComponent($event)"
+            @update-selected-component="handleComponentClick"
+            @update-nested-components="emit('updateNestedComponents', $event)"
+            @remove-component="removeDraggedComponent($event)"
             @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component) : ''"
             @click.stop="handleComponentClick(component)"
         />
       </template>
       <component
-          v-else
-          v-model:selectedComponent="selectedComponent"
           :is="component.render()"
+          v-else
+          v-model:selected-component="selectedComponent"
           :class="component?.options?.className"
           :style="component?.options?.style"
-          :componentId="component?.options?.id"
-          :parentComponents="component?.options?.children"
-          v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
-          @updateSelectedComponent="handleComponentClick"
-          @updateNestedComponents="emit('updateNestedComponents', $event)"
-          @removeComponent="removeDraggedComponent($event)"
+          :component-id="component?.options?.id"
+          :parent-components="component?.options?.children"
+          v-bind="ProjectHelper.getBindAttributes(component.options as TComponentAttributes) || {}"
+          @update-selected-component="handleComponentClick"
+          @update-nested-components="emit('updateNestedComponents', $event)"
+          @remove-component="removeDraggedComponent($event)"
           @contextmenu.stop="!component?.options?.locked ? handleComponentRightClick($event, component) : ''"
           @click.stop="handleComponentClick(component)"
       />

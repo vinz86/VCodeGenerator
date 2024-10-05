@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { IUser} from "~/models/interfaces/IUser";
-import { LocalStorageService } from '~/services/LocalStorageService';
+import type { LocalStorageService } from '~/services/LocalStorageService';
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
@@ -74,8 +74,9 @@ onMounted(() => {
 
       <div class="field col-12">
         <label>Ruoli:&nbsp;</label>
-        <MultiSelect v-model="user.authorities" :options="ruoli" option-label="name" option-value="code" filter placeholder="Scegli Ruoli"
-                     display="chip" :maxSelectedLabels="10" class="w-full" disabled />
+        <MultiSelect
+v-model="user.authorities" :options="ruoli" option-label="name" option-value="code" filter placeholder="Scegli Ruoli"
+                     display="chip" :max-selected-labels="10" class="w-full" disabled />
       </div>
     </div>
   </div>

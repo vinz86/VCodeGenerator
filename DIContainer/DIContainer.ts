@@ -1,4 +1,4 @@
-import { EServiceKeys } from "~/models/enum/EServiceKeys";
+import type { EServiceKeys } from "~/models/enum/EServiceKeys";
 
 export type ServiceFactory<T> = () => T;
 export type AsyncServiceFactory<T> = () => Promise<T>;

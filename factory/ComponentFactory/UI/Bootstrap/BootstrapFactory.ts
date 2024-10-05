@@ -1,9 +1,9 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
 import type { ComponentFactory } from '~/models/interfaces/ComponentFactory';
-import type { IComponentOptions } from '~/models/IComponentOptions';
+import type { TComponentOptions } from '~/models/types/TComponentOptions';
 import { PrimeVueButton } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueButton';
 import { PrimeVueInput } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueInput';
-import { PrimeVueElement } from '~/factory/ComponentFactory/UI/PrimeVue/components/PrimeVueElement';
+import { GenericContainer } from '~/factory/ComponentFactory/Shared/GenericContainer';
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {FlyweightFactory} from "~/factory/FlyweightFactory/FlyweightFactory";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
@@ -12,7 +12,7 @@ import {BootstrapButton, BootstrapInput} from "~/factory/ComponentFactory/UI/Boo
 import {BootstrapElement} from "~/factory/ComponentFactory/UI/Bootstrap/components/BootstrapElement";
 
 export class BootstrapFactory implements ComponentFactory {
-  private flyweight: IFlyweightComponent<IComponentOptions>[] = [];
+  private flyweight: IFlyweightComponent<TComponentOptions>[] = [];
 
   private readonly creators: Map<string, () => IComponentFactory> = new Map([
     ['button', () => this.createButton()],
@@ -37,7 +37,7 @@ export class BootstrapFactory implements ComponentFactory {
     return new BootstrapElement();
   }
 
-  createElement(options: IComponentOptions): IComponentFactory {
+  createElement(options: TComponentOptions): IComponentFactory {
     if (!options?.tag) {
       console.warn('Nessun tag specificato, viene creato un elemento predefinito');
       return this.createGenericElement();
@@ -58,7 +58,7 @@ export class BootstrapFactory implements ComponentFactory {
     return element;
   }
 
-  updateElement(component: IComponentFactory, options: Partial<IComponentOptions>): IComponentFactory {
+  updateElement(component: IComponentFactory, options: Partial<TComponentOptions>): IComponentFactory {
     if (!component) throw new Error('Componente non valido.')
     component.configure(options);
 
@@ -66,7 +66,7 @@ export class BootstrapFactory implements ComponentFactory {
   }
 
   setFlyweights(): void {
-    const flyweightFactory = DIContainer.getService<FlyweightFactory<Partial<IComponentOptions>>>(EServiceKeys.FlyweightFactory);
+    const flyweightFactory = DIContainer.getService<FlyweightFactory<Partial<TComponentOptions>>>(EServiceKeys.FlyweightFactory);
     const commonOptions = {
       cat: 'Bootstrap',
       style: '',

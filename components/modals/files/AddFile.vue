@@ -67,8 +67,8 @@ onMounted(() => {
   <div class="flex m-o p-0 flex-column">
     <div class="grid mb-2">
 
-      <div class="col-4" v-if="!isEditMode && newFile.value?.parentId">Parent:</div>
-      <div class="col-8" v-if="!isEditMode && newFile.value?.parentId">{{selectedFile.name}}</div>
+      <div v-if="!isEditMode && newFile.value?.parentId" class="col-4">Parent:</div>
+      <div v-if="!isEditMode && newFile.value?.parentId" class="col-8">{{selectedFile.name}}</div>
 
       <div v-if="!isEditMode" class="col-12 flex justify-content-center">
         <SelectButton v-model="newFile.type" :options="options" aria-labelledby="basic" />
@@ -79,8 +79,8 @@ onMounted(() => {
         <InputText v-model="newFile.name" class="m-0" placeholder="Nome file" />
         <Button
             class="m-0"
-            @click="isEditMode ? editFile() : createFile()"
             :icon="isEditMode ? 'fa fa-edit' : 'fa fa-plus'"
+            @click="isEditMode ? editFile() : createFile()"
         />
         </InputGroup>
       </div>

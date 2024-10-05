@@ -1,4 +1,4 @@
-import type {IComponentOptions} from "~/models/IComponentOptions";
+import type {TComponentOptions} from "~/models/types/TComponentOptions";
 
 export interface IComponent {
     id?: number,
@@ -11,6 +11,6 @@ export interface IComponent {
         projectId: number,
         parentId: number
     },
-    options?: IComponentOptions
+    options?: TComponentOptions
     fileId: number
 }

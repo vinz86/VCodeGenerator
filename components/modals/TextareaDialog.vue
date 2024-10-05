@@ -24,7 +24,7 @@ const saveChanges = () => {
 </script>
 
 <template>
-  <Textarea placeholder="...inserisci il testo in formato JSON" v-model="textareaData" style="width: 80vw; height: 70vh" @keyup="saveChanges" >sss</Textarea>
+  <Textarea v-model="textareaData" placeholder="...inserisci il testo in formato JSON" style="width: 80vw; height: 70vh" @keyup="saveChanges" >sss</Textarea>
 </template>
 
 <style scoped>

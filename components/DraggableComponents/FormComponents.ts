@@ -1,7 +1,7 @@
 export const formComponents = [
 
     {
-        name: 'ButtonComponent',
+        name: 'Button',
         tag: 'button',
         cat: 'Form',
 
@@ -10,10 +10,17 @@ export const formComponents = [
         name: 'InputText',
         cat: 'Form',
         tag: 'input',
+        type: 'text',
     },
     {
-        name: 'DropDown',
+        name: 'InputNumber',
         cat: 'Form',
-        tag: 'dropdown',
+        tag: 'input',
+        type: 'number',
+    },
+    {
+        name: 'Select',
+        cat: 'Form',
+        tag: 'select',
     }
 ];

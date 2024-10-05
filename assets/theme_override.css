@@ -2,13 +2,13 @@ html {
     font-size: 14px;
 }
 
-.p-tree .p-tree-container .p-treenode .p-treenode-content {
+/*.p-tree .p-tree-container .p-treenode .p-treenode-content {
     padding: 0;
-}
-.p-tree-node-content.p-tree-node-selected {
+}*/
+/*.p-tree-node-content.p-tree-node-selected {
     background: #000000;
     color: #ffffff;
-}
+}*/
 
 .p-menubar-submenu {
 z-index:999 !important

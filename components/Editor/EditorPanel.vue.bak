@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import type {IComponentAttributes} from "~/models/IComponentAttributes";
+import type {TComponentAttributes} from "~/models/TComponentAttributes";
 import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DragDropHelper} from "~/helper/DragDropHelper";
@@ -16,7 +16,7 @@ import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {TFile} from "~/models/types/TFile";
-import type {IComponentOptions} from "~/models/IComponentOptions";
+import type {TComponentOptions} from "~/models/TComponentOptions";
 
 const emit = defineEmits(['updateComponents']);
 const props = defineProps({
@@ -89,7 +89,7 @@ const duplicateComponent = async (component: IComponentFactory) => {
 
     await addComponent(component, components.value);
     //TODO devo duplicare tutti i componenti contenuti al suo interno
-    let newComponentOptions: IComponentOptions = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
+    let newComponentOptions: TComponentOptions = component?.options && JSON.parse(JSON.stringify(component?.options)) || {};
     newComponentOptions.className = (component?.options?.className || '').replace('selectedComponent', '');
     const newComponent: IComponentFactory = componentFactory.value.createElement(newComponentOptions);
 
@@ -331,7 +331,7 @@ onMounted(async () => {
             :style="component?.options?.style"
             :componentId="component?.options?.id"
             :parentComponents="component?.options?.children"
-            v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
+            v-bind="ProjectHelper.getBindAttributes(component.options as TComponentAttributes) || {}"
             @updateSelectedComponent="handleComponentClick"
             @updateNestedComponents="updateNestedComponents"
             @removeComponent="removeDraggedComponent($event)"

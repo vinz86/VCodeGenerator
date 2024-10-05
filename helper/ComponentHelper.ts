@@ -1,4 +1,4 @@
-import type {IComponentOptions} from "~/models/IComponentOptions";
+import type {TComponentOptions} from "~/models/types/TComponentOptions";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import type {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import type {IComponentService} from "~/services/api/services/interfaces/IComponentService";
@@ -7,7 +7,7 @@ import {ApiKeys} from "~/services/api/ApiKeys";
 
 export class ComponentHelper {
 
-    public static createFactoryComponents(data: IComponentOptions[], factoryProvider: ComponentFactoryProvider): IComponentFactory[] {
+    public static createFactoryComponents(data: TComponentOptions[], factoryProvider: ComponentFactoryProvider): IComponentFactory[] {
         return data.map((componentData) => {
             const newFactoryComponent =  factoryProvider.factory.createElement(componentData);
 
@@ -168,7 +168,7 @@ export class ComponentHelper {
         return filteredProps;
     };
 
-    public static extractComponentsOptions(factories: IComponentFactory[]): IComponentOptions[] {
+    public static extractComponentsOptions(factories: IComponentFactory[]): TComponentOptions[] {
         return factories.map(factory => {
             const { options } = factory;
 

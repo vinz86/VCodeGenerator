@@ -6,7 +6,7 @@ import {DIContainer} from "~/DIContainer/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {LoadingManager} from "~/manager/LoadingManager";
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 
 export class FileHelper {
 
@@ -40,7 +40,6 @@ export class FileHelper {
     };
 
     public static async editFile (file: Partial<File>): Promise<File> {
-        debugger
         const fileService: IFileService = Api.getService<IFileService>(ApiKeys.FileService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
@@ -53,7 +52,6 @@ export class FileHelper {
     };
 
     public static async deleteFile (fileId: string) {
-        debugger
         const fileService: IFileService = Api.getService<IFileService>(ApiKeys.FileService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{

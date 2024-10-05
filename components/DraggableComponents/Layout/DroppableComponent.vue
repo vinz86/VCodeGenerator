@@ -2,7 +2,7 @@
 import { defineProps } from 'vue';
 import EditorPanel from "~/components/Editor/EditorPanel.vue";
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import type {IComponentAttributes} from "~/models/IComponentAttributes";
+import type {TComponentAttributes} from "~/models/types/TComponentAttributes";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 
 const emit = defineEmits(['updateComponents']);
@@ -34,18 +34,19 @@ const onUpdateComponents = ()=> {
 <template>
     <!-- Renderizza il componente padre -->
     <component
-        v-if="component && component.options"
-        v-model:selectedComponent="selectedComponent"
-        :data-drop-target="'droppable'"
-        class="droppable-component"
         :is="component?.options?.tag || 'div'"
+        v-if="component && component.options"
+        v-model:selected-component="selectedComponent"
+        :data-drop-target="'droppable'"
+        class="droppable-component p-2"
         :component-id="component?.options?.id"
         :style="component?.options?.style"
     >
-      <div v-if="component?.options?.inner">
+
+      <template v-if="component?.options?.inner">
         {{component?.options?.inner}}
-      </div>
-<!--      //v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"-->
+      </template>
+<!--      //v-bind="ProjectHelper.getBindAttributes(component.options as TComponentAttributes) || {}"-->
 
 <!--      <EditorPanel style="min-height: 40px" :components="children" :component-factory="props.componentFactory" />-->
 <!--      <EditorPanel
@@ -55,17 +56,20 @@ const onUpdateComponents = ()=> {
           :parentId="component?.options?.id"
           :file="props.file"
           class="child-components"
-          v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
+          v-bind="ProjectHelper.getBindAttributes(component.options as TComponentAttributes) || {}"
           @update-components="onUpdateComponents"
       ></EditorPanel>-->
       <EditorPanel
-          v-model:components="componentTree"
+          :id="component?.options?.id"
+          v-model:components="component.options.slot"
           v-model:selected-component="selectedComponent"
           v-model:project="selectedProject"
           v-model:file="selectedFile"
+          :class="component?.options?.class"
+          :style="component?.options?.style"
           :component-factory="componentFactory"
+          v-bind="ProjectHelper.getBindAttributes(component.options as TComponentAttributes) || {}"
           @update-components="getComponents()"
-          v-bind="ProjectHelper.getBindAttributes(component.options as IComponentAttributes) || {}"
       />
     </component>
 </template>

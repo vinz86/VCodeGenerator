@@ -1,6 +1,21 @@
+import type {TComponentAttributes} from "~/models/types/TComponentAttributes";
+import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
+
 export interface TComponentOptions {
-  class?: string;
-  style?: string;
-  inner?: string;
-  attributes?: Record<string, string>;
+    id?: string,
+    name?: string,
+    label?: string,
+    cat?: string,
+    tag: string,
+    fromEditor?: boolean,
+    fromDroppableComponent?: boolean,
+    locked?: boolean,
+    slot?: IComponentFactory[],
+    style?: string
+    className?: string;
+    inner?: string;
+    attributes?: TComponentAttributes;
+    parentId: number;
+    fileId: number;
+    order: number;
 }

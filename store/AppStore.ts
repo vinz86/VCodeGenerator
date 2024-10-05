@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type {IAppState} from "~/models/interfaces/IAppState";
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 
 export const useAppStore = defineStore('useAppStore', {
     state: (): IAppState => ({
@@ -21,13 +21,13 @@ export const useAppStore = defineStore('useAppStore', {
             this.selectedComponent = newState.selectedComponent || this.selectedComponent;
         },
 
-        setProject(project: Project): void {
+        setProject(project: TProject): void {
             this.selectedProject = project;
         },
-        setFile(project: Project): void {
+        setFile(project: TProject): void {
             this.selectedFile = project;
         },
-        setComponent(project: Project): void {
+        setComponent(project: TProject): void {
             this.selectedComponent = project;
         },
     },

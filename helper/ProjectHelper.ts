@@ -1,10 +1,10 @@
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
-import type {IComponentOptions} from "~/models/IComponentOptions";
-import type {IComponentAttributes} from "~/models/IComponentAttributes";
+import type {TComponentOptions} from "~/models/types/TComponentOptions";
+import type {TComponentAttributes} from "~/models/types/TComponentAttributes";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {Api} from "~/services/api/core/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 import {LoadingManager} from "~/manager/LoadingManager";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
@@ -12,7 +12,7 @@ import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 export class ProjectHelper {
 
-    public static async getProjects (payload: Partial<Project>): Promise<Project[]>{
+    public static async getProjects (payload: Partial<TProject>): Promise<TProject[]>{
         const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
@@ -21,14 +21,30 @@ export class ProjectHelper {
             if (Array.isArray(projectsData)) {
                 return projectsData;
             } else {
-                return [] as Project[];
+                return [] as TProject[];
             }
         }
         catch (e) { notifyManager.error(e?.message || e); }
         finally { LoadingManager.getInstance().stop(); }
     }
 
-    public static async addProject (project: Partial<Project>): Promise<Project> {
+    public static async getProjectById (id: number): Promise<TProject>{
+        const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+        try{
+            LoadingManager.getInstance().start();
+            const projectsData = await projectService.getProjectById(id);
+            if (projectsData) {
+                return projectsData;
+            } else {
+                return {} as TProject;
+            }
+        }
+        catch (e) { notifyManager.error(e?.message || e); }
+        finally { LoadingManager.getInstance().stop(); }
+    }
+
+    public static async addProject (project: Partial<TProject>): Promise<TProject> {
         const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
@@ -40,8 +56,7 @@ export class ProjectHelper {
         finally { LoadingManager.getInstance().stop(); }
     };
 
-    public static async editProject (project: Partial<Project>): Promise<Project> {
-        debugger
+    public static async editProject (project: Partial<TProject>): Promise<TProject> {
         const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
@@ -61,8 +76,7 @@ export class ProjectHelper {
             if (!projectId) notifyManager.error('ID Progetto non valido')
 
             // TODO: BE Cancellare anche tutti i file contenuti all'interno
-            await projectService.deleteProject(projectId)
-
+            const resultDelete = await projectService.deleteProject(projectId)
             return true;
         }
         catch (e) { notifyManager.error(e); return false; }
@@ -80,11 +94,11 @@ export class ProjectHelper {
         finally { LoadingManager.getInstance().stop(); }
     };
 
-    public static findProjectById(id: string, projects: Project[]): Project|null {
+    public static findProjectById(id: string, projects: TProject[]): TProject|null {
         return projects.find(p => p.id === id);
     }
 
-    public static removeProjectById(id: string, projects: Project[]): Project|null {
+    public static removeProjectById(id: string, projects: TProject[]): TProject|null {
         return projects.filter(p => p.id !== id);
     }
 
@@ -129,7 +143,7 @@ export class ProjectHelper {
         if (!component?.options || !component?.options.tag) {
             return code;
         }
-        const options: IComponentOptions = component?.options;
+        const options: TComponentOptions = component?.options;
 
         if (options) {
             code += `<${options?.tag} `;
@@ -170,7 +184,7 @@ export class ProjectHelper {
 
         return code;
     };
-    public static getBindAttributes (options: IComponentOptions){
+    public static getBindAttributes (options: TComponentOptions){
         if (!options) return;
 
         return {
@@ -215,7 +229,7 @@ export class ProjectHelper {
 
     public static stringToObject(str: string): object {
         try{
-            let objStr = str.replaceAll(/(\w+):/g, '"$1":').replaceAll(/'/g, '"');
+            const objStr = str.replaceAll(/(\w+):/g, '"$1":').replaceAll(/'/g, '"');
             return JSON.parse(objStr);
         } catch (e) {
             return {};

@@ -1,11 +1,11 @@
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 export class ExportHelper {
 
-    public static importProject(file: File): Promise<boolean|Project> {
+    public static importProject(file: File): Promise<boolean|TProject> {
         if (!file) return Promise.resolve(false);
 
         const notify = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
@@ -55,7 +55,7 @@ export class ExportHelper {
 
         const notify = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 
-        let template = `<template>\n${html}\n</template>`;
+        const template = `<template>\n${html}\n</template>`;
         const blob = new Blob([template], { type: 'text/html' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

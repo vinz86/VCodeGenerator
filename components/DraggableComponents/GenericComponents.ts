@@ -4,7 +4,7 @@ const defaultOptions = {
 
 export const genericComponents = [
     {
-        name: 'Paragraph',
+        name: 'Paragrafo',
         cat: 'Text',
         tag: 'p',
         inner: 'paragrafo',
@@ -17,14 +17,9 @@ export const genericComponents = [
         attributes: {for: 'test'}
     },
     {
-        name: 'Spacer',
-        cat: 'Text',
+        name: 'Div',
+        cat: 'Layout',
         tag: 'div',
-        style: 'flex-grow: 1'
-    },
-    {
-        name: 'Divider',
-        cat: 'Text',
-        tag: 'hr',
-    },
+        inner: 'div content'
+    }
 ];

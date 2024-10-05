@@ -2,7 +2,7 @@
 import {defineModel, type Ref} from 'vue';
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DIContainer} from "~/DIContainer/DIContainer";
-import {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
+import type {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import type {TComponentAttribute} from "~/models/types/TComponentAttribute";
@@ -50,7 +50,7 @@ const addCustomAttr = async (event): Promise<void> => {
 
 const removeAttrs = (key: string) => {
   if(selectedComponent.value){
-    let newAttributes: TComponentAttribute<string> = selectedComponent.value.options.attributes;
+    const newAttributes: TComponentAttribute<string> = selectedComponent.value.options.attributes;
     delete newAttributes[key];
 
     selectedComponent.value = componentFactory.updateElement(selectedComponent.value, { attributes: newAttributes})
@@ -60,7 +60,7 @@ const removeAttrs = (key: string) => {
  </script>
 
  <template>
-   <div class="flex flex-column h-full" id="component-options-wrapper">
+   <div id="component-options-wrapper" class="flex flex-column h-full">
      <div class="flex-grow-1 overflow-y-auto">
        <Panel  v-if="selectedComponent?.options" class="h-full" toggleable>
          <template #header>
@@ -71,17 +71,17 @@ const removeAttrs = (key: string) => {
            <div v-if="optionsToShow.includes(key)">
              <label cla :for="`props-${key}`">{{ key }}</label><br>
              <InputText
-                 :disabled="key==='id'"
                  v-if="key !== 'style' && key !== 'style'"
-                 v-model="selectedComponent.options[key]"
                  :id="`props-${key}`"
+                 v-model="selectedComponent.options[key]"
+                 :disabled="key==='id'"
                  class="w-full form-control"
                  @change="emit('update:selectedComponent', selectedComponent)"
              />
              <Textarea
                  v-else
-                 v-model="selectedComponent.options[key]"
                  :id="`props-${key}`"
+                 v-model="selectedComponent.options[key]"
                  class="w-full form-control"
                  @change="emit('update:selectedComponent', selectedComponent)"
              />
@@ -105,11 +105,11 @@ const removeAttrs = (key: string) => {
                  <div class="flex justify-content-between col">
 
                    <InputByType
-                       v-model="selectedComponent.options.attributes[key]"
-                       :type="typeof selectedComponent.options.attributes[key]"
                        :id="`attr-${key}`"
                        :key="key"
-                       :size="small"
+                       v-model="selectedComponent.options.attributes[key]"
+                       :type="typeof selectedComponent.options.attributes[key]"
+                       size="small"
                        @change="emit('update:selectedComponent', selectedComponent)"
                    />
                    <div>
@@ -139,7 +139,7 @@ const removeAttrs = (key: string) => {
      </div>
 
 
-     <div class="flex-none" v-if="selectedComponent?.options">
+     <div v-if="selectedComponent?.options" class="flex-none">
        <Panel toggleable collapsed>
          <template #header>
            <i class="fa fa-plus-circle" />&nbsp<small>Attributi personalizzati</small>
@@ -150,7 +150,7 @@ const removeAttrs = (key: string) => {
                <h5>Nuovo attributo</h5>
              </div>
              <div class="flex-column">
-               <Button outlined severity="success" @click="addCustomAttr" class="ml-3 flex-grow-1 font-bold" size="small" icon="fa fa-save" label="Aggiungi" />
+               <Button outlined severity="success" class="ml-3 flex-grow-1 font-bold" size="small" icon="fa fa-save" label="Aggiungi" @click="addCustomAttr" />
              </div>
            </div>
            <div class="grid">
@@ -158,7 +158,7 @@ const removeAttrs = (key: string) => {
                <div class="field grid">
                  <span  class="col-fixed font-normal text-overflow-ellipsis overflow-hidden" style="width:25%; text-align:right">Type:&nbsp;</span>
                  <div class="flex justify-content-between col">
-                   <Select v-model="newCustomAttr.type" :options="newCustomAttrTypes" optionLabel="key" optionValue="value" placeholder="Tipo" class="w-full md:w-56" />
+                   <Select v-model="newCustomAttr.type" :options="newCustomAttrTypes" option-label="key" option-value="value" placeholder="Tipo" class="w-full md:w-56" />
                  </div>
                </div>
 
@@ -169,7 +169,7 @@ const removeAttrs = (key: string) => {
                  </div>
                </div>
 
-               <div class="field grid" v-if="newCustomAttr.type">
+               <div v-if="newCustomAttr.type" class="field grid">
                  <span  class="col-fixed font-normal text-overflow-ellipsis overflow-hidden" style="width:25%; text-align:right">Value:&nbsp;</span>
                  <div class="flex justify-content-between col">
                    <InputByType

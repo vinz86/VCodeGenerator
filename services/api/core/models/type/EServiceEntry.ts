@@ -1,4 +1,4 @@
-import {ApiKeys} from "~/services/api/ApiKeys";
+import type {ApiKeys} from "~/services/api/ApiKeys";
 
 export type EServiceEntry = {
     key: ApiKeys;

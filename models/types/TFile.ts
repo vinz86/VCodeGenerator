@@ -7,4 +7,5 @@ export interface TFile {
     type: EFileTypes;
     contents?: IComponent[];
     children?: TFile[];
+
 }

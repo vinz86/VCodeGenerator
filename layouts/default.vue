@@ -7,10 +7,11 @@ import type DialogManager from "~/manager/DialogManager";
 import AddProject from "~/components/modals/project/AddProject.vue";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import UserProfile from "~/components/modals/UserProfile.vue";
-import {CookieService} from "~/services/CookieService";
+import type {CookieService} from "~/services/CookieService";
 import {useAppStore} from "~/store/AppStore";
 import {FileHelper} from "~/helper/FileHelper";
-import ConfirmManager, {EConfirmType} from "~/manager/ConfirmManager";
+import type ConfirmManager from "~/manager/ConfirmManager";
+import {EConfirmType} from "~/manager/ConfirmManager";
 
 const slotRef = ref();
 
@@ -22,6 +23,7 @@ const cookieService: CookieService = DIContainer.getService<CookieService>(EServ
 
 const projectStore = useAppStore();
 
+const project: ComputedRef<string> = computed(()=> projectStore?.selectedProject);
 const projectName: ComputedRef<string> = computed(()=> projectStore?.selectedProject?.name);
 const projectId: ComputedRef<string> = computed(()=> projectStore?.selectedProject?.id);
 
@@ -43,8 +45,15 @@ const isDarkMode = computed(() => {
       <template #start>
         <div class="logo">
           <span class="font-bold">{{configManager.getName()}}</span> <i class="text-sm">{{ configManager.getVersion() }} <small>{{ configManager.getVersionDate() }}</small></i>
-          <span class=" ml-5 opacity-80">· {{projectName}}</span>
-          <Button v-if="projectId" rounded text severity="danger" icon="pi pi-trash" @click="confirmManager
+          <span v-if="projectId" class=" ml-5 opacity-80">· {{projectName}}</span>
+          <Button
+              v-if="projectId"
+              text severity="info" icon="pi pi-pencil" @click="dialogManager.setComponent(AddProject).setTitle('Modifica Progetto').setProps({ style:{ width:'50%' } })
+            .setData({editMode: true, selectedProject: project })
+            .setOnClose((e)=> onEditProject(e))
+            .open()" />
+          <Button
+v-if="projectId" rounded text severity="danger" icon="pi pi-trash" @click="confirmManager
                   .setMessage(`Confermi l'eliminazione del Progetto '${projectName}'?`)
                   .setType(EConfirmType.DIALOG)
                   .setAcceptCallback(async () => {
@@ -55,11 +64,12 @@ const isDarkMode = computed(() => {
         </div>
       </template>
 
-      <template #center></template>
+      <template #center/>
 
       <template #end>
         <Button icon="pi pi-sun" class="mr-2" rounded text @click="toggleDarkMode" />
-        <Button icon="pi pi-user" class="mr-2" rounded text @click="dialogManager.
+        <Button
+icon="pi pi-user" class="mr-2" rounded text @click="dialogManager.
           setComponent(UserProfile)
           .setTitle('Profilo Utente')
           .open()" />
@@ -68,6 +78,8 @@ const isDarkMode = computed(() => {
     </Toolbar>
 
     <slot ref="slotRef" />
-    <div class="text-sm text-center font-light pt-1 pb-1">Copyright &copy; {{new Date().getFullYear()}} vcodegenerator.com. All right reserved</div>
+    <div class="w-full text-sm text-center font-light pt-1" style="border-top: 1px solid #dedede">
+      Copyright &copy; {{new Date().getFullYear()}} vcodegenerator.com. All right reserved
+    </div>
   </div>
 </template>

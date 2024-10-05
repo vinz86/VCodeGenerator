@@ -7,15 +7,15 @@ import {EServiceKeys} from "~/models/enum/EServiceKeys";
 import {LoggerDecorator} from "~/decorator/LoggerDecorator";
 import {ELoggerLevel} from "~/models/enum/ELoggerLevel";
 import {ELoggerOutput} from "~/models/enum/ELoggerOutput";
-import {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
-import {StateManager} from "~/store/StateManager";
-import {LocalStorageService} from "~/services/LocalStorageService";
+import type {ConfigurationManager} from "~/manager/ConfigurationManager/ConfigurationManager";
+import type {StateManager} from "~/store/StateManager";
+import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
 import {Api} from "~/services/api/core/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IAuthService} from "~/services/api/services/interfaces/IAuthService";
 import type {IUserService} from "~/services/api/services/interfaces/IUserService";
-import {CookieService} from "~/services/CookieService";
+import type {CookieService} from "~/services/CookieService";
 
 const authService: IAuthService = Api.getService<IAuthService>(ApiKeys.AuthService);
 const userService: IUserService = Api.getService<IAuthService>(ApiKeys.UserService);
@@ -86,12 +86,12 @@ const onLoginClick = async () => {
 
         <div class="flex align-items-center justify-content-between mb-6">
           <div class="flex align-items-center">
-            <Checkbox id="rememberme" v-model="formData.rememberMe" :binary="true" styleClass="mr-2"></Checkbox>
+            <Checkbox id="rememberme" v-model="formData.rememberMe" :binary="true" style-class="mr-2"/>
             <label for="rememberme" class="text-900">Ricordami</label>
           </div>
         </div>
 
-        <Button @click="onLoginClick" pRipple label="Login" icon="pi pi-user" class="w-full" />
+        <Button p-ripple label="Login" icon="pi pi-user" class="w-full" @click="onLoginClick" />
       </div>
     </div>
   </div>

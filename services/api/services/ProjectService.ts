@@ -1,4 +1,4 @@
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {ApiHttpService} from "~/services/api/core/ApiHttpService";
 
@@ -10,20 +10,20 @@ export class ProjectService extends ApiHttpService implements IProjectService{
         this.baseUrl = 'projects'
     }
 
-    public getProjects(queryParams: Partial<Project>): Promise<Project[]> {
-        return this.get<Project[]>(this.baseUrl, queryParams, 5000);
+    public getProjects(queryParams: Partial<TProject>): Promise<TProject[]> {
+        return this.get<TProject[]>(this.baseUrl, queryParams, 5000);
     }
 
-    public getProjectById(id: string): Promise<Project> {
-        return this.get<Project>(`${this.baseUrl}/${id}`);
+    public getProjectById(id: string): Promise<TProject> {
+        return this.get<TProject>(`${this.baseUrl}/${id}`);
     }
 
-    public createProject(project: Project): Promise<Project> {
-        return this.post<Project>(this.baseUrl, project);
+    public createProject(project: TProject): Promise<TProject> {
+        return this.post<TProject>(this.baseUrl, project);
     }
 
-    public updateProject(id: string, project: Partial<Project>): Promise<Project> {
-        return this.patch<Project>(`${this.baseUrl}/${id}`, project);
+    public updateProject(id: string, project: Partial<TProject>): Promise<TProject> {
+        return this.patch<TProject>(`${this.baseUrl}/${id}`, project);
     }
 
     public deleteProject(id: string): Promise<void> {

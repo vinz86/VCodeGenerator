@@ -1,10 +1,10 @@
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 
 export interface IProjectService {
-    getProjects(payload: Partial<Project>): Promise<Project[]>;
-    getProjectById(id: string): Promise<Project>;
-    createProject(project: Project): Promise<Project>;
-    updateProject(id: string, project: Partial<Project>): Promise<Project>;
+    getProjects(payload: Partial<TProject>): Promise<TProject[]>;
+    getProjectById(id: string): Promise<TProject>;
+    createProject(project: TProject): Promise<TProject>;
+    updateProject(id: string, project: Partial<TProject>): Promise<TProject>;
     deleteProject(id: string): Promise<void>;
     count(): Promise<number>;
 }

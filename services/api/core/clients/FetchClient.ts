@@ -1,5 +1,5 @@
-import { IHttpClient } from "~/models/interfaces/IHttpClient";
-import { IApiRequest } from "~/services/api/core/models/interface/IApiRequest";
+import type { IHttpClient } from "~/models/interfaces/IHttpClient";
+import type { IApiRequest } from "~/services/api/core/models/interface/IApiRequest";
 import type { IApiResponse } from "~/services/api/core/models/interface/IApiResponse";
 import { ConfigurationManager } from "~/manager/ConfigurationManager/ConfigurationManager";
 import type { IApiError } from "~/services/api/services/interfaces/IApiError";
@@ -65,14 +65,7 @@ export class FetchClient implements IHttpClient {
             };
 
         } catch (e) {
-            if (e instanceof Response) {
-                return this.convertToIApiError(e, e.statusText);
-            }
-            return {
-                message: 'Errore generico nella richiesta HTTP',
-                statusCode: 500,
-                originalError: e
-            };
+            throw e;
         }
     }
 }

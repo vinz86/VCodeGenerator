@@ -13,7 +13,7 @@ const generatedCode = defineModel();
         <div class="text-right text-green-400 mb-1">
           <Button size="small" outlined icon="fa fa-copy" @click="ProjectHelper.copyTextareaToClipboard('textarea-generated-code')" />
         </div>
-        <textarea id="textarea-generated-code" v-html="generatedCode" class="w-full h-10rem" disabled></textarea>
+        <textarea id="textarea-generated-code" class="w-full h-10rem" disabled v-html="generatedCode"/>
       </div>
     </template>
   </Panel>

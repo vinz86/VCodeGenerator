@@ -24,6 +24,7 @@ export default class DialogManager implements IDialogManager {
                 modal: true,
                 draggable: false,
                 showHeader: true,
+                blockScroll: true
             },
             data: {},
             onClose: null,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref} from "vue";
-import DialogManager from "~/manager/DialogManager";
+import type DialogManager from "~/manager/DialogManager";
 import AddProject from "~/components/modals/project/AddProject.vue";
 import SelectProject from "~/components/modals/project/SelectProject.vue";
 import {ProjectHelper} from "~/helper/ProjectHelper";
@@ -30,12 +30,6 @@ const onSelectProject = (e)=> {
   emit('selectProject', e?.data)
 }
 
-const onEditProject = (e)=> {
-  if(e?.data?.edited){
-    emit('editProject', e?.data);
-    notifyManager.success('Progetto modificato correttamente');
-  }
-}
 
 const onDeleteProject = (e)=> {
   emit('deleteProject', e?.data);
@@ -52,8 +46,9 @@ const itemsNavbar = ref([
           projectStore.setComponent(-1);
         }
       },
-      { label: 'Esporta file', icon: 'pi pi-save' },
-      { label: 'Esporta progetto', icon: 'pi pi-save' },
+      { label: 'Salva', icon: 'pi pi-save' },
+      { separator:true },
+      { label: 'Logout', icon: 'pi pi-sign-out' },
     ]
   },
   { label: 'Progetti', icon: 'pi pi-search', items: [
@@ -66,14 +61,15 @@ const itemsNavbar = ref([
               .open()
         }
       },
-      { label: 'Seleziona', icon: 'pi pi-arrow-right',
+      { label: 'Apri', icon: 'pi pi-arrow-right',
         command: ()=> {
-          dialogManager.setComponent(SelectProject).setTitle('Seleziona Progetto').setProps({ style:{ width:'70%' } })
-            .setOnClose((e)=> onSelectProject(e))
-            .open()
+          dialogManager.setComponent(SelectProject).setTitle('Apri Progetto').setProps({ style:{ width:'70%' } })
+              .setOnClose((e)=> onSelectProject(e))
+              .open()
         }
       },
-      { label: 'Modifica', icon: 'pi pi-pencil',
+      { separator:true },
+      { label: 'Modifica selezionato', icon: 'pi pi-pencil',
       command: ()=> {
         dialogManager.setComponent(AddProject).setTitle('Modifica Progetto').setProps({ style:{ width:'50%' } })
             .setData({editMode: true})
@@ -82,7 +78,7 @@ const itemsNavbar = ref([
         }
       },
       {
-        label: 'Elimina', icon: 'pi pi-trash',
+        label: 'Elimina selezionato', icon: 'pi pi-trash',
         command: () => {
           projectStore.selectedProject && ProjectHelper.deleteProject(projectStore.selectedProject.id)
           onDeleteProject(projectStore.selectedProject.id);
@@ -91,15 +87,16 @@ const itemsNavbar = ref([
     ]
   },
   { label: 'Files', icon: 'pi pi-file', items: [
-      { label: 'Nuovo', icon: 'pi pi-plus' },
-      { label: 'Seleziona', icon: 'pi pi-arrow-right' },
-      { label: 'Modifica', icon: 'pi pi-pencil' },
-      { label: 'Elimina', icon: 'pi pi-trash', }
+      { label: 'Nuovo file', icon: 'pi pi-file-plus' },
+      { label: 'Nuova cartella', icon: 'pi pi-folder-plus' },
+      { separator:true },
+      { label: 'Modifica selezionato', icon: 'pi pi-pencil' },
+      { label: 'Elimina selezionato', icon: 'pi pi-trash', }
     ]
   },
-  { label: 'Pannelli', icon: 'pi pi-file', items: [
-      { label: 'Pannello 1', icon: 'pi pi-check' },
-      { label: 'Pannello 2', icon: 'pi pi-times' },
+  { label: 'Export', icon: 'pi pi-file-export', items: [
+      { label: 'Esporta file', icon: 'pi pi-file-export' },
+      { label: 'Esporta progetto', icon: 'pi pi-save' },
     ]
   },
   { label: 'Info', icon: 'pi pi-info-circle'  }
@@ -107,7 +104,7 @@ const itemsNavbar = ref([
 </script>
 
 <template>
-  <Menubar class="flex-none p-0 surface-100"  :model="itemsNavbar" />
+  <Menubar class="flex-none p-0"  :model="itemsNavbar" />
 </template>
 
 <style scoped>

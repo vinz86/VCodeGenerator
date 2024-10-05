@@ -1,4 +1,4 @@
-import { IHttpClient} from "~/models/interfaces/IHttpClient";
+import type { IHttpClient} from "~/models/interfaces/IHttpClient";
 import { FetchClient} from "~/services/api/core/clients/FetchClient";
 import { AxiosClient} from "~/services/api/core/clients/AxiosClient";
 import {EApiHttpClientType} from "~/services/api/core/models/enum/EApiHttpClientType";

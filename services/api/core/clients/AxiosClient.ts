@@ -1,6 +1,7 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { IHttpClient } from "~/models/interfaces/IHttpClient";
-import { IApiRequest } from "~/services/api/core/models/interface/IApiRequest";
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { IHttpClient } from "~/models/interfaces/IHttpClient";
+import type { IApiRequest } from "~/services/api/core/models/interface/IApiRequest";
 import type { IApiResponse } from "~/services/api/core/models/interface/IApiResponse";
 import { ConfigurationManager } from "~/manager/ConfigurationManager/ConfigurationManager";
 import type { IApiError } from "~/services/api/services/interfaces/IApiError";

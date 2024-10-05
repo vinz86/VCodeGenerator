@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {type Ref, ref} from "vue";
-import type {IComponentOptions} from "~/models/IComponentOptions";
+import type {TComponentOptions} from "~/models/types/TComponentOptions";
 
 const contextMenu = ref();
 const itemsContextComponent: Ref<{label: string, icon: string, command: () => void}[]> = ref([
-  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as IComponentOptions)},
+  {label: 'Modifica', icon: 'fa fa-pencil', command: () => handleComponentClick(selectedComponent.value as TComponentOptions)},
   {label: 'Duplica', icon: 'fa fa-copy', command: () => selectedComponent.value && duplicateComponent(selectedComponent.value)},
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);

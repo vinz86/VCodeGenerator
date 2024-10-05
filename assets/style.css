@@ -24,9 +24,9 @@ html, body{
     margin: 15px 2% 0;
     border-bottom: 1px solid #ddd;
 }
-.container {
+.editor-container {
     display: flex;
-    height: calc(97vh - 35px);
+    height: calc(100vh - 135px);
     width: 100%;
     margin: 0;
     padding: 0;
@@ -35,8 +35,7 @@ html, body{
     height: 100%;
     width: 100%;
     flex-grow: 1;
-    /*    padding: 20px 10px 10px;
-        background-color: #eee;*/
+    /*    padding: 20px 10px 10px;*/
 }
 
 
@@ -47,7 +46,7 @@ html, body{
     /* flex-wrap: wrap; */
     /* flex-direction: column; */
     /* padding: 10px; */
-    /* min-height: 50px; */
+     min-height: 20px;
     height: 100%;
 }
 
@@ -73,7 +72,7 @@ html, body{
     position: relative;
     border: 1px dotted #ccc;
     /*min-height: 20px;*/
-    padding:5px;
+    /*padding:5px;*/
 }
 
 .draggable-component.drag-over {

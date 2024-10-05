@@ -1,21 +1,21 @@
 import type { IComponentFactory } from '~/models/interfaces/IComponentFactory';
-import type { IComponentOptions } from '~/models/IComponentOptions';
+import type { TComponentOptions } from '~/models/types/TComponentOptions';
 import type { IFlyweightComponent } from '~/models/interfaces/IFlyweightComponent';
 import { DIContainer } from "~/DIContainer/DIContainer";
 import type { FlyweightFactory } from "~/factory/FlyweightFactory/FlyweightFactory";
 import { EServiceKeys } from "~/models/enum/EServiceKeys";
 import Select from "primevue/select";
 
-export class PrimeVueDropdown implements IComponentFactory {
-    private flyweightFactory = DIContainer.getService<FlyweightFactory<IComponentOptions>>(EServiceKeys.FlyweightFactory);
-    private flyweight: IFlyweightComponent<IComponentOptions>;
-    public options: IComponentOptions = {} as IComponentOptions;
+export class PrimeVueSelect implements IComponentFactory {
+    private flyweightFactory = DIContainer.getService<FlyweightFactory<TComponentOptions>>(EServiceKeys.FlyweightFactory);
+    private flyweight: IFlyweightComponent<TComponentOptions>;
+    public options: TComponentOptions = {} as TComponentOptions;
 
-    constructor(options: IComponentOptions = {} as IComponentOptions) {
+    constructor(options: TComponentOptions = {} as TComponentOptions) {
         this.configure(options);
     }
 
-    configure(options: Partial<IComponentOptions> = {}): void {
+    configure(options: Partial<TComponentOptions> = {}): void {
         this.flyweight = this.flyweightFactory.getFlyweight('dropdown_PrimeVue', {
             cat: 'PrimeVue',
             className: '',

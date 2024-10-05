@@ -1,8 +1,7 @@
 import { reactive } from 'vue';
 import messages from "~/manager/ValidationManager/messages";
 import type { TValidationConfig } from "~/models/types/TValidationConfig";
-import type { IValidationManager } from "~/manager/ValidationManager/VValidateModels";
-import type { TValidationRule } from "~/manager/ValidationManager/VValidateModels";
+import type { IValidationManager , TValidationRule } from "~/manager/ValidationManager/VValidateModels";
 
 export class ValidationManager implements IValidationManager {
     private errors = reactive<{ [key: string]: string | null }>({});

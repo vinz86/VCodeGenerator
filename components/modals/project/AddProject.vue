@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {Project} from "~/models/interfaces/Project";
+import type {TProject} from "~/models/interfaces/TProject";
 import {ref, type Ref} from "vue";
 import type {TComponentFactoryDropdown} from "~/models/types/TComponentFactoryDropdown";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
@@ -7,6 +7,7 @@ import {ProjectHelper} from "~/helper/ProjectHelper";
 import {useAppStore} from "~/store/AppStore";
 import type {TFile} from "~/models/types/TFile";
 import {EFileTypes} from "~/models/enum/EFileTypes";
+import {EProjectTypes} from "~/models/enum/EProjectTypes";
 
 const projectStore = useAppStore();
 
@@ -20,9 +21,14 @@ const emit = defineEmits(['addProject']);
 const dialog = inject('dialogRef')
 const params: Ref<TDialogFileParams> = ref({} as TDialogFileParams);
 const isEditMode: Ref<boolean> = ref(false);
-const selectedProject: Ref<Project> = ref({} as Project);
+const selectedProject: Ref<TProject> = ref({} as TProject);
 
-const newProject: Ref<Project> = ref({} as Project);
+const newProject: Ref<TProject> = ref({} as TProject);
+
+const projectTypeValues: Ref<TComponentFactoryDropdown[]> = ref([
+  { name: 'HTML', code: EProjectTypes.HTML },
+  { name: 'Vue', code: EProjectTypes.VUE },
+]);
 
 const componentsTypeValues: Ref<TComponentFactoryDropdown[]> = ref([
   { name: 'Basic HTML', code: EComponentTypes.HtmlElements },
@@ -52,17 +58,27 @@ onMounted(() => {
   if(isEditMode.value && selectedProject.value){
     newProject.value = selectedProject.value;
   } else {
-    newProject.value = {} as Project;
+    newProject.value = {} as TProject;
   }
 })
 </script>
 
 <template>
-  <div class="flex m-o p-0 flex-column">
+  <div class="flex mb-0 p-0 flex-column">
+    <Select
+        v-model="newProject.projectType"
+        :disabled="isEditMode"
+        :options="projectTypeValues"
+        option-label="name"
+        option-value="code"
+        placeholder="Seleziona il tipo di progetto"
+        class="w-full mb-1"
+    />
     <Select
         v-model="newProject.componentsType"
+        :disabled="isEditMode"
         :options="componentsTypeValues"
-        optionLabel="name"
+        option-label="name"
         option-value="code"
         placeholder="Seleziona il tipo dei componenti"
         class="w-full mb-1"
@@ -71,8 +87,8 @@ onMounted(() => {
       <InputText v-model="newProject.name" class="m-0" placeholder="Nome progetto" />
       <Button
           class="m-0"
-          @click="params?.edit ? editProject() : createProject()"
-          :icon="params?.edit ? 'fa fa-edit' : 'fa fa-plus'"
+          :icon="isEditMode ? 'fa fa-edit' : 'fa fa-plus'"
+          @click="isEditMode ? editProject() : createProject()"
       />
     </InputGroup>
   </div>

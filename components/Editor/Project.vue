@@ -2,8 +2,8 @@
 import {onMounted, ref, type Ref} from 'vue';
 import {StateManager} from '~/store/StateManager';
 import {DIContainer} from '~/DIContainer/DIContainer';
-import {LocalStorageService} from '~/services/LocalStorageService';
-import type {Project} from '~/models/interfaces/Project';
+import type {LocalStorageService} from '~/services/LocalStorageService';
+import type {TProject} from '~/models/interfaces/TProject';
 import type {TComponentFactoryDropdown} from '~/models/types/TComponentFactoryDropdown';
 import {EComponentTypes} from '~/models/enum/EComponentTypes';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
@@ -15,7 +15,8 @@ import {Api} from "~/services/api/core/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {ProjectHelper} from "~/helper/ProjectHelper";
-import ConfirmManager, {EConfirmType} from "~/manager/ConfirmManager";
+import type ConfirmManager from "~/manager/ConfirmManager";
+import {EConfirmType} from "~/manager/ConfirmManager";
 import {useAppStore} from "~/store/AppStore";
 
 const emit = defineEmits([ 'selectProject', 'selectFile']);
@@ -28,10 +29,10 @@ const localStorageService = DIContainer.getService<LocalStorageService>(EService
 const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
 const confirmManager = DIContainer.getService<ConfirmManager>(EServiceKeys.ConfirmManager);
 
-const projects: Ref<Project[]> = ref([]);
+const projects: Ref<TProject[]> = ref([]);
 const selectedProjectId = ref<string | null>(null);
-const defaultProject: Partial<Project> = { name: '', componentsType: EComponentTypes.PrimeVue }
-const newProject: Ref<Partial<Project>> = ref(defaultProject);
+const defaultProject: Partial<TProject> = { name: '', componentsType: EComponentTypes.PrimeVue }
+const newProject: Ref<Partial<TProject>> = ref(defaultProject);
 
 const getProjects = async ()=>{
   try{
@@ -43,7 +44,7 @@ const getProjects = async ()=>{
   finally { LoadingManager.getInstance().stop(); }
 }
 
-const loadProjects = async (): Project => {
+const loadProjects = async (): TProject => {
   const storedSelectedProjectId: string = localStorageService.load('selectedProjectId');
 
   await getProjects();
@@ -82,7 +83,7 @@ onMounted(async ()=> {
 
 <template>
   <div class="project-manager w-full">
-<Button @click="getProjects()" icon="pi pi-refresh" />
+<Button icon="pi pi-refresh" @click="getProjects()" />
     <Accordion value="2">
 <!--      <AccordionPanel value="0">
         <AccordionHeader>Nuovo Progetto</AccordionHeader>
@@ -109,14 +110,14 @@ onMounted(async ()=> {
           <div class="flex m-o p-0 flex-column">
             <Select
                 v-if="projects?.length>0"
-                @change="selectedProjectId && selectProject(selectedProjectId)"
                 v-model="selectedProjectId"
                 :options="projects"
-                optionLabel="name"
-                optionValue="id"
+                option-label="name"
+                id="select-project"
+                option-value="id"
                 placeholder="Seleziona un progetto"
                 class="w-full mb-1"
-                id="select-project"
+                @change="selectedProjectId && selectProject(selectedProjectId)"
             >
               <template #option="slotProps">
                 <div class="flex w-full">
@@ -124,7 +125,8 @@ onMounted(async ()=> {
                     <div>{{ slotProps.option.name }}</div>
                   </div>
                   <div class="flex-none">
-                    <i class="fa fa-trash cursor-pointer text-red-800"
+                    <i
+class="fa fa-trash cursor-pointer text-red-800"
                       @click="confirmManager
                         .setMessage(`Confermi l'eliminazione dell'elemento con ID ${slotProps.option.id}?`)
                         .setType(EConfirmType.DIALOG)
@@ -152,8 +154,8 @@ onMounted(async ()=> {
         <AccordionContent>
           <FileManager
               v-if="selectedProjectId"
-              :projectId="selectedProjectId"
-              @selectFile="onSelectFile"
+              :project-id="selectedProjectId"
+              @select-file="onSelectFile"
           />
         </AccordionContent>
       </AccordionPanel>

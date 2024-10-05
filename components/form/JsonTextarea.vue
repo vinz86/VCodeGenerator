@@ -27,6 +27,6 @@ const updateValue = (value) => {
 };
 </script>
 <template>
-  <Textarea :fluid="true" rows="1" autoResize style="max-height: 300px;" :value="formattedValue" @change="updateValue($event.target.value)" />
+  <Textarea :fluid="true" rows="1" auto-resize style="max-height: 300px;" :value="formattedValue" @change="updateValue($event.target.value)" />
 </template>
 <style scoped></style>

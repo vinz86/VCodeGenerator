@@ -1,4 +1,4 @@
-import { EServiceKeys } from "~/models/enum/EServiceKeys";
+import type { EServiceKeys } from "~/models/enum/EServiceKeys";
 import type {IServiceConfig} from "~/services/api/core/models/interface/IServiceConfig";
 import type {IApi} from "~/services/api/core/models/interface/IApi";
 import type {TServiceFactoryType} from "~/services/api/core/models/type/TServiceFactoryType";
