@@ -6,7 +6,7 @@ const defaultConfig: TAppConfiguration = {
     appName: 'Default App',
     appVersion: '0.0.2',
     appVersionDate: '24/08/2024 02:57',
-    apiBase: 'https://api.default.com',
+    apiBase: '/vcodegenerator/',
     theme: 'light',
     featureX: true,
     featureY: false,

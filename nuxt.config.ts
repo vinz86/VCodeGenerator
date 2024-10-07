@@ -4,6 +4,9 @@ import Lara from '@primevue/themes/lara'
 import Nora from '@primevue/themes/nora'
 
 export default defineNuxtConfig({
+  app: {
+    baseURL: '/vcodegenerator/'
+  },
   ssr: false,
   components: true,
   devtools: { enabled: true },
@@ -37,5 +40,17 @@ export default defineNuxtConfig({
   },
   router: {
     middleware: ['auth'],
-  }
+    options: {
+      hashMode: true
+    }
+  },
+  nitro: {
+    devProxy: {
+      '/vcodegenerator/api/': {
+        target: 'http://localhost:8080/api/',
+        changeOrigin: true,
+        pathRewrite: { '^/vcodegenerator/': '' },
+      },
+    },
+  },
 })
