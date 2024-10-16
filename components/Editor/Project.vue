@@ -11,7 +11,7 @@ import FileManager from "~/components/Editor/FileManager.vue";
 import type {TFile} from "~/models/types/TFile";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {ProjectHelper} from "~/helper/ProjectHelper";
@@ -91,7 +91,7 @@ onMounted(async ()=> {
           <div class="flex m-o p-0 flex-column">
             <Select
                 v-model="newProject.componentsTypes"
-                :options="componentsTypeValues"
+                :options="componentsFactories"
                 optionLabel="name"
                 option-value="code"
                 placeholder="Seleziona il tipo dei componenti"

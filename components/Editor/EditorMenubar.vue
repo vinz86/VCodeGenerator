@@ -57,7 +57,7 @@ const itemsNavbar = ref([
           dialogManager.setComponent(AddProject).setTitle('Aggiungi Progetto').setProps({ style:{ width:'50%' } })
               .setOnClose((e)=> onAddProject(e))
               .setData({editMode: false})
-              .setCallback('save', (e)=> console.log('save', e))
+              .setCallback('onSave', (e)=> console.log('save', e))
               .open()
         }
       },
@@ -97,6 +97,15 @@ const itemsNavbar = ref([
   { label: 'Export', icon: 'pi pi-file-export', items: [
       { label: 'Esporta file', icon: 'pi pi-file-export' },
       { label: 'Esporta progetto', icon: 'pi pi-save' },
+    ]
+  },
+  { label: 'Pagine', icon: 'pi pi-file-export', items: [
+      { label: 'ProjectTypes', icon: 'pi pi-file-export', command: async ()=> await navigateTo('/CRUD/ProjectTypes')},
+      { label: 'ProjectStates', icon: 'pi pi-save', command: async () => await navigateTo('/CRUD/ProjectStates')},
+      { label: 'FileTypes', icon: 'pi pi-save', command: async () => await navigateTo('/CRUD/FileTypes')},
+      { label: 'ComponentTypes', icon: 'pi pi-save', command: async () => await navigateTo('/CRUD/ComponentTypes')},
+      { label: 'FileExtensions', icon: 'pi pi-save', command: async () => await navigateTo('/CRUD/FileExtensions')},
+      { label: 'ComponentPresets', icon: 'pi pi-save', command: async () => await navigateTo('/CRUD/ComponentPresets')},
     ]
   },
   { label: 'Info', icon: 'pi pi-info-circle'  }

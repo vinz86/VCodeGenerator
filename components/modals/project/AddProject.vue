@@ -6,8 +6,17 @@ import {EComponentTypes} from "~/models/enum/EComponentTypes";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import {useAppStore} from "~/store/AppStore";
 import type {TFile} from "~/models/types/TFile";
-import {EFileTypes} from "~/models/enum/EFileTypes";
 import {EProjectTypes} from "~/models/enum/EProjectTypes";
+import {LoadingManager} from "~/manager/LoadingManager";
+import {DIContainer} from "~/DIContainer/DIContainer";
+import {NotifyManagerFactory} from "~/factory/NotifyManagerFactory/NotifyManagerFactory";
+import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import type {INotifyManager} from "~/models/interfaces/INotifyManager";
+import {Api} from "~/services/api/Api";
+import {ProjectTypeService} from "~/services/api/services/ProjectTypeService";
+import {ApiKeys} from "~/services/api/ApiKeys";
+import type {IProjectTypeService} from "~/services/api/services/interfaces/IProjectTypeService";
+import type {IComponentFactoryService} from "~/services/api/services/interfaces/IComponentFactoryService";
 
 const projectStore = useAppStore();
 
@@ -17,25 +26,43 @@ type TDialogFileParams = {
 }
 
 // TODO: aggiungere validazione
-const emit = defineEmits(['addProject']);
+const emit = defineEmits(['save']);
 const dialog = inject('dialogRef')
+
+const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+
+const projectTypeService = Api.getService<IProjectTypeService>(ApiKeys.ProjectType)
+const componentFactoryService = Api.getService<IComponentFactoryService>(ApiKeys.ComponentFactory);
+
 const params: Ref<TDialogFileParams> = ref({} as TDialogFileParams);
 const isEditMode: Ref<boolean> = ref(false);
 const selectedProject: Ref<TProject> = ref({} as TProject);
 
 const newProject: Ref<TProject> = ref({} as TProject);
 
-const projectTypeValues: Ref<TComponentFactoryDropdown[]> = ref([
-  { name: 'HTML', code: EProjectTypes.HTML },
-  { name: 'Vue', code: EProjectTypes.VUE },
-]);
-
-const componentsTypeValues: Ref<TComponentFactoryDropdown[]> = ref([
+const projectTypes: Ref<TComponentFactoryDropdown[]> = ref([]);
+const componentsFactories: Ref<TComponentFactoryDropdown[]> = ref([
   { name: 'Basic HTML', code: EComponentTypes.HtmlElements },
   { name: 'PrimeVue', code: EComponentTypes.PrimeVue },
   { name: 'Bootstrap', code: EComponentTypes.Bootstrap },
 ]);
 
+
+const getProjectTypes = async () => {
+  try{
+    LoadingManager.getInstance().start();
+    projectTypes.value = await projectTypeService.getProjectTypes() || [];
+  } catch (e) { notifyManager.error(e?.message || e);
+  } finally { LoadingManager.getInstance().stop() }
+}
+
+const getComponentFactories = async () => {
+  try{
+    LoadingManager.getInstance().start();
+    componentsFactories.value = await componentFactoryService.getComponentFactories() || [];
+  } catch (e) { notifyManager.error(e?.message || e);
+  } finally { LoadingManager.getInstance().stop() }
+}
 const createProject = async () => {
   const result = await ProjectHelper.addProject(newProject.value);
   if(result){
@@ -50,7 +77,7 @@ const editProject = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   params.value = dialog?.value?.data;
   isEditMode.value = params.value.editMode;
   selectedProject.value = params.value.selectedProject || projectStore.selectedProject;
@@ -60,6 +87,13 @@ onMounted(() => {
   } else {
     newProject.value = {} as TProject;
   }
+
+  const promises = [
+    await getProjectTypes(),
+    await getComponentFactories(),
+  ]
+  await Promise.all(promises);
+  emit('save', 'testdata')
 })
 </script>
 
@@ -68,18 +102,18 @@ onMounted(() => {
     <Select
         v-model="newProject.projectType"
         :disabled="isEditMode"
-        :options="projectTypeValues"
-        option-label="name"
-        option-value="code"
+        :options="projectTypes"
+        option-label="label"
+        option-value="entityValue"
         placeholder="Seleziona il tipo di progetto"
         class="w-full mb-1"
     />
     <Select
         v-model="newProject.componentsType"
         :disabled="isEditMode"
-        :options="componentsTypeValues"
-        option-label="name"
-        option-value="code"
+        :options="componentsFactories"
+        option-label="label"
+        option-value="entityValue"
         placeholder="Seleziona il tipo dei componenti"
         class="w-full mb-1"
     />

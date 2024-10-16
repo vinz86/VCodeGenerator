@@ -16,7 +16,7 @@ import {SaveManager} from "~/manager/SaveManager";
 import {EFileTypes} from "~/models/enum/EFileTypes";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {IFileService} from "~/services/api/services/interfaces/IFileService";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IComponentService} from "~/services/api/services/interfaces/IComponentService";
 import type {TComponentOptions} from "~/models/types/TComponentOptions";
@@ -158,6 +158,17 @@ const unselectProject = () => {
   appStore.setProject({})
 }
 
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
+    event.preventDefault();
+    undo();
+  } else if (event.ctrlKey && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
+    event.preventDefault();
+    redo();
+  }
+};
+
 watch(selectedFile, async () => await getComponents(selectedFile.value?.id));
 
 onMounted(async () => {
@@ -171,26 +182,14 @@ onMounted(async () => {
     console.log(e)
   }
 
-
-
-
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
-      event.preventDefault();
-      undo();
-    } else if (event.ctrlKey && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
-      event.preventDefault();
-      redo();
-    }
-  };
-
   window.addEventListener('keydown', handleKeyDown);
   //saveManager.startAutoSave(components, 5000);
+});
 
-  onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-    //saveManager.stopAutoSave();
-  });
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  // saveManager.stopAutoSave();
 });
 
 defineExpose({unselectProject})

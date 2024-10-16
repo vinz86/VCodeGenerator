@@ -2,6 +2,7 @@
 import  Aura from '@primevue/themes/aura'
 import Lara from '@primevue/themes/lara'
 import Nora from '@primevue/themes/nora'
+import {createProxyMiddleware} from "http-proxy-middleware";
 
 export default defineNuxtConfig({
   app: {
@@ -44,13 +45,45 @@ export default defineNuxtConfig({
       hashMode: true
     }
   },
+/*  routeRules: {
+    '/vcodegenerator/api/!**': { proxy: { to: 'http://localhost:8080/api/!**' } }
+  },*/
+/*  routeRules: {
+    'http://localhost:3000/vcodegenerator/api/!**': {
+      proxy: 'http://localhost:8080/api/!**',
+    },
+  },*/
+
+/*  serverMiddleware: [
+    {
+      path: '/vcodegenerator/',
+      handler: createProxyMiddleware({
+        target: 'http://localhost:8080/api',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/vcodegenerator/': '',
+        },
+      }),
+    },
+  ],*/
+
+/*    routeRules: {
+      '/vcodegenerator/api/!**': { proxy: { to: 'http://localhost:8080/api/!**' } }
+    },
+    routeRules: {
+      'http://localhost:3000/vcodegenerator/api/!**': {
+        proxy: 'http://localhost:8080/api/!**',
+      },
+    },*/
   nitro: {
     devProxy: {
       '/vcodegenerator/api/': {
         target: 'http://localhost:8080/api/',
         changeOrigin: true,
-        pathRewrite: { '^/vcodegenerator/': '' },
       },
     },
   },
+
+
 })
+

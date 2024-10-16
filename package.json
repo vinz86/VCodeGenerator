@@ -13,11 +13,12 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^0.5.7",
+    "@nuxtjs/proxy": "^2.1.0",
     "@pinia/nuxt": "^0.5.5",
     "@primevue/themes": "^4.0.5",
     "axios": "^1.7.5",
     "crypto-js": "^4.2.0",
-    "nuxt": "^3.11.2",
+    "nuxt": "^3.13.2",
     "pinia": "^2.2.4",
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",

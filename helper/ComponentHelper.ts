@@ -2,7 +2,7 @@ import type {TComponentOptions} from "~/models/types/TComponentOptions";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import type {ComponentFactoryProvider} from "~/factory/ComponentFactory/ComponentFactoryProvider";
 import type {IComponentService} from "~/services/api/services/interfaces/IComponentService";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 
 export class ComponentHelper {

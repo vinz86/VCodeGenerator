@@ -6,4 +6,10 @@ export enum ApiKeys {
     FileService = 'fileService',
     ComponentService = 'componentService',
     CodeGeneratorService = 'codeGeneratorService',
+    FileExtensionsService = 'fileExtensionsService',
+    ComponentPreset = 'componentPreset',
+    ProjectType = 'projectType',
+    FileType = 'fileType',
+    ComponentFactory = 'componentFactory',
+    ProjectState = 'projectState',
 }

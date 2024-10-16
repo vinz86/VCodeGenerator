@@ -2,7 +2,7 @@ import type { EApiHttpClientType } from "~/services/api/core/models/enum/EApiHtt
 import type { EApiAuthType } from "~/services/api/core/ApiClient";
 import { ApiClient } from "~/services/api/core/ApiClient";
 import { FileService } from "~/services/api/services/FileService";
-import { Api } from "~/services/api/core/Api";
+import { Api } from "~/services/api/Api";
 import { UserService } from "~/services/api/services/UserService";
 import { AuthService } from "~/services/api/services/AuthService";
 import { ProjectService } from "~/services/api/services/ProjectService";
@@ -11,6 +11,12 @@ import { ComponentService } from "~/services/api/services/ComponentService";
 import { ApiHttpService } from "~/services/api/core/ApiHttpService";
 import { CodeGeneratorService } from "~/services/api/services/CodeGeneratorService";
 import type {EServiceEntry} from "~/services/api/core/models/type/EServiceEntry";
+import {FileExtensionService} from "~/services/api/services/FileExtensionService";
+import {ComponentPresetService} from "~/services/api/services/ComponentPresetService";
+import {ProjectTypeService} from "~/services/api/services/ProjectTypeService";
+import {FileTypeService} from "~/services/api/services/FileTypeService";
+import {ComponentFactoryService} from "~/services/api/services/ComponentFactoryService";
+import {ProjectStateService} from "~/services/api/services/ProjectStateService";
 
 //da chiamare (una sola volta) in un plugin o all'avvio dell'applicazione
 export class ApiInit {
@@ -23,6 +29,12 @@ export class ApiInit {
         { key: ApiKeys.FileService, service: FileService },
         { key: ApiKeys.ComponentService, service: ComponentService },
         { key: ApiKeys.CodeGeneratorService, service: CodeGeneratorService },
+        { key: ApiKeys.FileExtensionsService, service: FileExtensionService },
+        { key: ApiKeys.ComponentPreset, service: ComponentPresetService },
+        { key: ApiKeys.ProjectType, service: ProjectTypeService },
+        { key: ApiKeys.FileType, service: FileTypeService },
+        { key: ApiKeys.ComponentFactory, service: ComponentFactoryService },
+        { key: ApiKeys.ProjectState, service: ProjectStateService },
     ];
 
     private constructor(

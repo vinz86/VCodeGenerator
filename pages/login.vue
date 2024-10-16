@@ -11,11 +11,12 @@ import type {ConfigurationManager} from "~/manager/ConfigurationManager/Configur
 import type {StateManager} from "~/store/StateManager";
 import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {IAuthorize} from "~/models/interfaces/DTO/IAuthorize";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IAuthService} from "~/services/api/services/interfaces/IAuthService";
 import type {IUserService} from "~/services/api/services/interfaces/IUserService";
 import type {CookieService} from "~/services/CookieService";
+import {useUserStore} from "~/store/useUserStore";
 
 const authService: IAuthService = Api.getService<IAuthService>(ApiKeys.AuthService);
 const userService: IUserService = Api.getService<IAuthService>(ApiKeys.UserService);
@@ -27,6 +28,7 @@ const stateManager: StateManager<AppState> = DIContainer.getService<StateManager
 const localStorageService: LocalStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 const cookieService: CookieService = DIContainer.getService<CookieService>(EServiceKeys.CookieService);
 
+const userStore = useUserStore();
 definePageMeta({
   layout: 'empty'
 })
@@ -35,8 +37,7 @@ definePageMeta({
 const formData: IAuthorize = ref({} as IAuthorize);
 const login = async () => {
     const result = await authService.login(formData.value);
-
-    console.log('Login Ok: ', result);
+// TODO: cookie o localSTorage?
     const token = result.id_token;
     if(token){
       //stateManager.setState('authToken', token);
@@ -48,11 +49,7 @@ const login = async () => {
 }
 
 const getAccount = async () => {
-    const result = await userService.getAccount();
-
-    console.log('account Ok: ', result);
-    stateManager.setState('currentUser', result);
-    localStorageService.save('currentUser', result);
+  await userStore.fetchUser();
 }
 
 const onLoginClick = async () => {
@@ -78,20 +75,22 @@ const onLoginClick = async () => {
       </div>
 
       <div>
-        <label for="user" class="block text-900 font-medium mb-2">Nome Utente</label>
-        <InputText id="user" v-model="formData.username" placeholder="Nome Utente" class="w-full mb-3" />
+        <form>
+          <label for="user" class="block text-900 font-medium mb-2">Nome Utente</label>
+          <InputText id="user" v-model="formData.username" placeholder="Nome Utente" class="w-full mb-3" />
 
-        <label for="password" class="block text-900 font-medium mb-2">Password</label>
-        <Password id="password" v-model="formData.password" type="password" placeholder="Password" class="w-full mb-3" style="width:100%" />
+          <label for="password" class="block text-900 font-medium mb-2">Password</label>
+          <Password id="password" v-model="formData.password" type="password" placeholder="Password" autocomplete="current-password" class="w-full mb-3" style="width:100%" />
 
-        <div class="flex align-items-center justify-content-between mb-6">
-          <div class="flex align-items-center">
-            <Checkbox id="rememberme" v-model="formData.rememberMe" :binary="true" style-class="mr-2"/>
-            <label for="rememberme" class="text-900">Ricordami</label>
+          <div class="flex align-items-center justify-content-between mb-6">
+            <div class="flex align-items-center">
+              <Checkbox id="rememberme" v-model="formData.rememberMe" :binary="true" style-class="mr-2"/>
+              <label for="rememberme" class="text-900">Ricordami</label>
+            </div>
           </div>
-        </div>
 
-        <Button p-ripple label="Login" icon="pi pi-user" class="w-full" @click="onLoginClick" />
+          <Button p-ripple label="Login" icon="pi pi-user" class="w-full" @click="onLoginClick" />
+        </form>
       </div>
     </div>
   </div>

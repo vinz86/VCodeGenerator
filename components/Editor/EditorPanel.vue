@@ -5,7 +5,7 @@ import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import {DragDropHelper} from "~/helper/DragDropHelper";
 import {nextTick, onMounted, onUnmounted, ref, type Ref} from "vue";
 import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IComponentService} from "~/services/api/services/interfaces/IComponentService";
 import {DIContainer} from "~/DIContainer/DIContainer";

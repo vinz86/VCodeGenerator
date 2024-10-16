@@ -2,7 +2,7 @@ import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import type {TComponentOptions} from "~/models/types/TComponentOptions";
 import type {TComponentAttributes} from "~/models/types/TComponentAttributes";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {TProject} from "~/models/interfaces/TProject";
 import {LoadingManager} from "~/manager/LoadingManager";

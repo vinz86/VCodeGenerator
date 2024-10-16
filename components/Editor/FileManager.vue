@@ -9,7 +9,7 @@ import {EFileTypes} from '~/models/enum/EFileTypes';
 import type ContextMenu from "primevue/contextmenu";
 import {LoadingManager} from "~/manager/LoadingManager";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
-import {Api} from "~/services/api/core/Api";
+import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
 import type {IFileService} from "~/services/api/services/interfaces/IFileService";
 import {EApiFilters} from "~/services/api/core/models/enum/EApiFilters";
@@ -39,12 +39,12 @@ const localStorageService = DIContainer.getService<LocalStorageService>(EService
 
 const apiFilter = new ApiFilterBuilder();
 
-const files: Ref<File[]> = ref([]);
+const files: Ref<TFileFile[]> = ref([]);
 const contextMenu = ref<ContextMenu | null>(null);
 const treeSelectedKey = ref();
 
 const selectedProject: Ref<TProject> = defineModel<TProject>('selectedProject');
-const selectedFile: Ref<TFile> = defineModel<File>('selectedFile');
+const selectedFile: Ref<TFile> = defineModel<TFile>('selectedFile');
 
 const treeData = computed(() => formatTreeData(files.value));
 
@@ -85,7 +85,7 @@ const formatTreeData = (files: TFile[], parentId: string | null = null): TreeNod
       .filter(file => file.parentId === parentId)
       .map(file => ({
         key: file.id,
-        label: file.name,
+        label: file.type === EFileTypes.File ? `${file.name}.${file.extension}` : `${file.name}`,
         data: file,
         icon: file.type === EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
         children: formatTreeData(files, file.id),
@@ -201,10 +201,11 @@ onMounted(async ()=> {
         <Button text severity="warning" @click="openCreateFolderDialog">
           <i class="fa fa-folder-plus" />
         </Button>
-        <Button text severity="info" @click="handleRename">
+        <Button text severity="info" :disabled="!selectedFile || Object.keys(selectedFile)?.length<1" @click="handleRename">
           <i class="fa fa-file-edit" />
         </Button>
         <Button
+            :disabled="!selectedFile || Object.keys(selectedFile)?.length<1"
 text severity="danger" @click="
           confirmManager
               .setMessage(`Confermi l'eliminazione del file ${selectedFile.name}?`)
@@ -218,6 +219,7 @@ text severity="danger" @click="
         </Button>
     </div>
 
+    <Button text>/</Button>
     <div v-if="treeData?.length" >
 <!--      <pre>
         {{ treeData }}
@@ -247,7 +249,16 @@ text severity="danger" @click="
         </template>
       </Tree>
     </div>
-    <p v-else class="m-3">Nessun file</p>
+    <p v-else class="m-3">
+
+      <Button text severity="info"  @click="openCreateFileDialog">
+        <i class="fa fa-file-circle-plus" /> Nuovo file
+      </Button>
+      <Button text severity="warn" @click="openCreateFolderDialog">
+        <i class="fa fa-folder-plus" /> Nuova Cartella
+      </Button>
+
+    </p>
 
   </div>
 </template>

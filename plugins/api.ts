@@ -5,5 +5,5 @@ import {EApiAuthType} from "~/services/api/core/models/enum/EApiAuthType";
 
 export default defineNuxtPlugin(nuxtApp => {
     //registro i servizi
-    ApiInit.getInstance(EApiHttpClientType.Fetch, 10000, EApiAuthType.LOCALSTORAGE);
+    ApiInit.getInstance(EApiHttpClientType.Fetch, 1000*60*5, EApiAuthType.LOCALSTORAGE);
 });
