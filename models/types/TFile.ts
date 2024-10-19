@@ -1,20 +1,20 @@
-import type {EFileTypes} from "~/models/enum/EFileTypes";
-import type {IComponent} from "~/models/interfaces/IComponent";
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
+import type {TUser} from "~/models/types/TUser";
+import type {TFileType} from "~/models/types/TFileType";
+import type {TFileExtension} from "~/models/types/TFileExtension";
 
 export type TFile = {
-    id: number;
+    id?: number;
     name: string;
-    type: EFileTypes;
-    extension: string | null;
-    mimeType: string | null;
-    createdAt: string | null;
-    updatedAt: string | null;
-    tUser: number | null;
-    contents: IComponent[];
-    children: TFile[];
-    projectId: number;
-    parentId: number | null;
-    parent: TFile | null;
-    project: TProject;
+    mimeType?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: number;
+    updatedBy?: number;
+    deletedAt?: string;
+    user: TUser;
+    type?: TFileType;
+    extension?: TFileExtension;
+    project?: TProject;
+    parent?: TFile;
 }

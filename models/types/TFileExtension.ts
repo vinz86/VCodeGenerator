@@ -1,5 +1,7 @@
+import type {EFileTypes} from "~/models/enum/EFileTypes";
+
 export type TFileExtension = {
     id: number;
-    name: string;
-    extension: string;
+    label: string;
+    entityValue: EFileTypes;
 }

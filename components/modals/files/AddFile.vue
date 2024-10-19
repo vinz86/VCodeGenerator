@@ -4,6 +4,7 @@ import type {TFile} from "~/models/types/TFile";
 import {EFileTypes} from "~/models/enum/EFileTypes";
 import {FileHelper} from "~/helper/FileHelper";
 import type {TFileExtension} from "~/models/types/TFileExtension";
+import type {TFileType} from "~/models/types/TFileType";
 
 type TDialogFileParams = {
   editMode: boolean,
@@ -12,26 +13,21 @@ type TDialogFileParams = {
 }
 
 // TODO: aggiungere validazione
-const emit = defineEmits(['addFile']);
 
 const dialog = inject('dialogRef')
 const params: Ref<TDialogFileParams> = ref({} as TDialogFileParams);
 const isEditMode: Ref<boolean> = ref(false);
 const projectId: Ref<number> = ref();
 const extensionsValues: Ref<TFileExtension[]> = ref([]);
+const fileTypes: Ref<TFileType[]> = ref([]);
 const selectedFile: Ref<Tfile> = ref({} as TFile);
 
 const newFile: Ref<TFile> = ref({
   name: '',
   parentId: null,
-  type: EFileTypes.File
+  type: {} as TFileType,
+  project: {}
 } as TFile);
-
-const options = ref([
-  { name: 'File', value: EFileTypes.File, icon: 'pi pi-file' },
-  { name: 'Cartella', value: EFileTypes.Folder, icon: 'pi pi-folder' },
-]);
-
 
 const createFile = async () => {
   const result = await FileHelper.addFile(newFile.value);
@@ -54,13 +50,20 @@ const getExtensions = async(): void =>{
   }
 }
 
+const getFileTypes = async(): void =>{
+  fileTypes.value = await FileHelper.getFileTypes();
+  if(fileTypes.value?.length && !isEditMode.value){
+    newFile.value['type'] = fileTypes.value?.at(0);
+  }
+}
+
 onMounted(async () => {
   params.value = dialog?.value?.data
   isEditMode.value = !!params.value?.editMode;
   projectId.value = params.value?.projectId;
   selectedFile.value = params.value?.selectedFile;
 
-  newFile.value.projectId = projectId.value;
+  newFile.value.project['id'] = projectId.value;
 
   if(!isEditMode.value) {
     newFile.value.type = params.value?.type;
@@ -74,7 +77,9 @@ onMounted(async () => {
   }
 
   await getExtensions();
+  await getFileTypes()
 })
+
 </script>
 
 <template>
@@ -85,9 +90,9 @@ onMounted(async () => {
       <div v-if="!isEditMode && newFile.value?.parentId" class="col-8">{{selectedFile.name}}</div>
 
       <div v-if="!isEditMode" class="col-12 flex justify-content-center">
-        <SelectButton v-model="newFile.type" :options="options" aria-labelledby="basic" option-value="value" >
+        <SelectButton v-model="newFile.type" :options="fileTypes" aria-labelledby="basic">
           <template #option="slotProps">
-            <i class="mr-2" :class="slotProps.option.icon" />{{slotProps.option.name}}
+            <i class="mr-2" :class="FileHelper.getFileIconFromLabel(slotProps.option.label)" />{{slotProps.option.label}}
           </template>
         </SelectButton>
       </div>
@@ -97,11 +102,10 @@ onMounted(async () => {
         <InputText v-model="newFile.name" class="m-0" placeholder="Nome file" />
 
           <Select
-              v-if="newFile.type!==EFileTypes.Folder"
+              v-if="newFile.type?.label !== EFileTypes.Folder"
               v-model="newFile.extension"
               :options="extensionsValues"
               option-label="label"
-              option-value="entityValue"
               placeholder=".ext"
               style="max-width: 100px"
           />

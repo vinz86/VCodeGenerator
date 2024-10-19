@@ -3,7 +3,7 @@ import {onMounted, ref, type Ref} from 'vue';
 import {StateManager} from '~/store/StateManager';
 import {DIContainer} from '~/DIContainer/DIContainer';
 import type {LocalStorageService} from '~/services/LocalStorageService';
-import type {TProject} from '~/models/interfaces/TProject';
+import type {TProject} from '~/models/types/TProject';
 import type {TComponentFactoryDropdown} from '~/models/types/TComponentFactoryDropdown';
 import {EComponentTypes} from '~/models/enum/EComponentTypes';
 import {EServiceKeys} from '~/models/enum/EServiceKeys';
@@ -31,7 +31,7 @@ const confirmManager = DIContainer.getService<ConfirmManager>(EServiceKeys.Confi
 
 const projects: Ref<TProject[]> = ref([]);
 const selectedProjectId = ref<string | null>(null);
-const defaultProject: Partial<TProject> = { name: '', componentsType: EComponentTypes.PrimeVue }
+const defaultProject: Partial<TProject> = { name: '', componentFactory: EComponentTypes.PrimeVue }
 const newProject: Ref<Partial<TProject>> = ref(defaultProject);
 
 const getProjects = async ()=>{

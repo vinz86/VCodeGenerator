@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type {IAppState} from "~/models/interfaces/IAppState";
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 
 export const useAppStore = defineStore('useAppStore', {
     state: (): IAppState => ({

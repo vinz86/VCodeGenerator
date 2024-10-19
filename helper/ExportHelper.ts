@@ -1,4 +1,4 @@
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";

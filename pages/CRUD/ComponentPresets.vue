@@ -5,7 +5,7 @@ import { ApiKeys } from "~/services/api/ApiKeys";
 import type {EComponentTypes} from "~/models/enum/EComponentTypes";
 import type {IComponentPresetService} from "~/services/api/services/interfaces/IComponentPresetService";
 
-const componentPresetService: IComponentPresetService = Api.getService<IComponentPresetService>(ApiKeys.OptionsPreset);
+const componentPresetService: IComponentPresetService = Api.getService<IComponentPresetService>(ApiKeys.ComponentPreset);
 
 
 

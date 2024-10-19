@@ -1,6 +1,8 @@
 import type {EProjectTypes} from "~/models/enum/EProjectTypes";
+import type {EFileTypes} from "~/models/enum/EFileTypes";
 
 export type TProjectType = {
-    name: string;
-    value: EProjectTypes;
+    id?: number;
+    label: string;
+    entityValue: EFileTypes;
 }

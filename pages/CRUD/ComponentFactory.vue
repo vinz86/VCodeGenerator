@@ -2,9 +2,8 @@
 import type { IComponentFactoryService } from "~/services/api/services/interfaces/IComponentFactoryService";
 import { Api } from "~/services/api/Api";
 import { ApiKeys } from "~/services/api/ApiKeys";
-import type { EComponentTypes } from "~/models/enum/EComponentTypes";
 
-const componentTypeService: IComponentFactoryService = Api.getService<IComponentFactoryService>(ApiKeys.ComponentType);
+const componentFactoryService: IComponentFactoryService = Api.getService<IComponentFactoryService>(ApiKeys.ComponentFactory);
 
 const fields = [
   { name: 'label', type: 'text', header: 'Label', disabled: false },
@@ -18,7 +17,7 @@ const columns = [
 </script>
 
 <template>
-  <CRUD entity="ComponentType" :service="componentTypeService" :fields="fields" :columns="columns">
+  <CRUD entity="ComponentFactory" :service="componentFactoryService" :fields="fields" :columns="columns">
     <template #columns />
     <template #fields />
   </CRUD>

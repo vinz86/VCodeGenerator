@@ -2,8 +2,9 @@ export class CRUDManager<T> {
     constructor(private service: any, private entity: any) {}
 
     async getAll(params?: Partial<T>): Promise<T[]> {
-        const methodName = `get${this.entity}s`;
-        debugger
+        const methodName = this.entity.endsWith('y')
+            ? `get${this.entity.slice(0, -1)}ies`
+            : `get${this.entity}s`;
         return await this.service[methodName](params);
     }
 

@@ -7,7 +7,7 @@ import {DIContainer} from "~/DIContainer/DIContainer";
 import type {IComponentFactory} from "~/models/interfaces/IComponentFactory";
 import DraggableComponent from "~/components/Editor/DraggableComponent.vue";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
-import type {TProject as IProject} from '~/models/interfaces/TProject';
+import type {TProject as IProject} from '~/models/types/TProject';
 import type {ComponentFactory} from "~/models/interfaces/ComponentFactory";
 import type {LocalStorageService} from "~/services/LocalStorageService";
 import type {TFile} from "~/models/types/TFile";
@@ -37,7 +37,7 @@ const selectedFile: Ref<TFile | null> = ref<TFile | null>(null);
 const componentsType: Ref<IComponentFactory> = ref({} as IComponentFactory);
 const generatedCode: Ref<string> = ref('');
 const keyEditor: Ref<number> = ref(0);
-const isEditorEnabled: Ref<boolean> = computed(()=>!!selectedFile.value && selectedFile.value.type===EFileTypes.File);
+const isEditorEnabled: Ref<boolean> = computed(()=>!!selectedFile.value && selectedFile.value.type?.label===EFileTypes.File);
 const isSavingState: Ref<boolean> = ref(false);
 
 const projectRef = ref();
@@ -116,30 +116,24 @@ const onFileChange = async (fileId: number) => {
   finally { LoadingManager.getInstance().stop(); }
 };
 
-const onProjectChange = async (project: Project) => {
+const loadProject = async (project: Project) => {
   if (!project) return;
 
   selectedProject.value = project;
   componentFactory.value = factoryProvider.getFactory(project.componentsTypes);
   appStore.setProject(project)
   localStorageService.save('selectedProject', project);
-  appStore.setFile({})
   appStore.setComponent({})
 
   if (project.files?.length > 0) {
     const file = project.files[0] as TFile;
     await onFileChange(file)
+    appStore.setFile(file)
   } else {
     selectedFile.value = {};
+    appStore.setFile({})
     components.value = []
   }
-};
-
-const selectedTreeKey = ref();
-const onTreeNodeSelect = (node) => {
-  console.log('Nodo selezionato:', node);
-  selectedComponent.value = node.data
-  console.warn('Selezionare il componente')
 };
 
 watch(components, async ()=>{
@@ -173,9 +167,10 @@ watch(selectedFile, async () => await getComponents(selectedFile.value?.id));
 
 onMounted(async () => {
   try{
+    // TODO aggiungere il servizio che recupera il progetto corrente e lo tiene nello stato
     const lsProject = localStorageService.load('selectedProject');
     if(lsProject){
-      await onProjectChange(lsProject);
+      await loadProject(lsProject);
     }
   }
   catch (e){
@@ -200,10 +195,10 @@ defineExpose({unselectProject})
         v-if="Object.keys(selectedProject).length"
         class="pt-1 pb-1 border-round"
         style="background-color: rgba(239,239,239,0.6); border-top:1px solid #dedede; border-bottom:1px solid #dedede;"
-        @add-project="onProjectChange($event)"
-        @edit-project="onProjectChange($event)"
-        @select-project="onProjectChange($event)"
-        @delete-project="onProjectChange($event)"
+        @add-project="loadProject($event)"
+        @edit-project="loadProject($event)"
+        @select-project="loadProject($event)"
+        @delete-project="loadProject($event)"
     />
   </div>
   <div class="flex">
@@ -230,7 +225,7 @@ defineExpose({unselectProject})
         <div class="editor-container flex flex-column">
 
           <div v-if="!Object.keys(selectedProject).length" class="editor">
-            <NoProjectSelected @select-project="onProjectChange($event)" />
+            <NoProjectSelected @select-project="loadProject($event)" />
           </div>
 
           <Splitter v-else class="w-full m-0 flex-grow-1 border-none" layout="horizontal" >

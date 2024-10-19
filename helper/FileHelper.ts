@@ -10,6 +10,9 @@ import type {TFileExtension} from "~/models/types/TFileExtension";
 import type {IFileService} from "~/services/api/services/interfaces/IFileService";
 import {EFileTypes} from "~/models/enum/EFileTypes";
 import {useUserStore} from "~/store/useUserStore";
+import FileTypes from "~/pages/CRUD/FileTypes.vue";
+import type {TFileType} from "~/models/types/TFileType";
+import type {IFileTypeService} from "~/services/api/services/interfaces/IFileTypeService";
 
 export class FileHelper {
 
@@ -40,7 +43,10 @@ export class FileHelper {
                     delete file.extension;
                 } catch(e) {}
             }
-            file.userId = useUserStore().user.id
+            file.user= {
+                id: useUserStore().user.id,
+                login: useUserStore().user.login
+            }
             return await fileService.createFile(file)
         }
         catch (e) { notifyManager.error(e) }
@@ -75,7 +81,7 @@ export class FileHelper {
         finally { LoadingManager.getInstance().stop(); }
     };
 
-    public static async getExtensions (): Promise<FileExtensions[]> {
+    public static async getExtensions (): Promise<TFileExtension[]> {
         const fileExtensionsService: IFileExtensionService = Api.getService<IFileExtensionService>(ApiKeys.FileExtensionsService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
         try{
@@ -92,7 +98,28 @@ export class FileHelper {
         finally { LoadingManager.getInstance().stop(); }
     };
 
+    public static async getFileTypes (): Promise<TFileType[]> {
+        const fileTypeService: IFileTypeService = Api.getService<IFileTypeService>(ApiKeys.FileType);
+        const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
+        try{
+            LoadingManager.getInstance().start();
+
+            const filesExtensions = await fileTypeService.getFileTypes()
+            if (Array.isArray(filesExtensions)) {
+                return filesExtensions;
+            } else {
+                return [] as TFileExtension[];
+            }
+        }
+        catch (e) { notifyManager.error(e); return false; }
+        finally { LoadingManager.getInstance().stop(); }
+    };
+
     public static findById (id: number, files: TFile[]): TFile {
         return files.find(file => file.id === id);
+    }
+
+    public static getFileIconFromLabel (label: string): string {
+        return label===EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file';
     }
 }

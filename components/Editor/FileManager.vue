@@ -15,7 +15,7 @@ import type {IFileService} from "~/services/api/services/interfaces/IFileService
 import {EApiFilters} from "~/services/api/core/models/enum/EApiFilters";
 import {ApiFilterBuilder} from "~/services/api/core/ApiFilterBuilder";
 import {FileHelper} from "~/helper/FileHelper";
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 import type {TItemContextMenu} from "~/models/types/TItemContextMenu";
 import {useAppStore} from "~/store/AppStore";
 import AddFile from "~/components/modals/files/AddFile.vue";
@@ -82,13 +82,13 @@ const contextMenuItems: ComputedRef<TItemContextMenu> = computed(() => {
 
 const formatTreeData = (files: TFile[], parentId: string | null = null): TreeNode[] => {
   return files
-      .filter(file => file.parentId === parentId)
+      .filter(file => file.parent?.id === parentId)
       .map(file => ({
-        key: file.id,
-        label: file.type === EFileTypes.File ? `${file.name}.${file.extension}` : `${file.name}`,
+        key: file.id.toString(),
+        label: file.type.label === EFileTypes.File ? `${file.name}.${file.extension.label}` : `${file.name}`,
         data: file,
-        icon: file.type === EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
-        children: formatTreeData(files, file.id),
+        icon: file.type.label === EFileTypes.Folder ? 'pi pi-folder' : 'pi pi-file',
+        children: formatTreeData(files, file.id.toString()),
       }));
 };
 

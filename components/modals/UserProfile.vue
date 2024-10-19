@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import type { IUser} from "~/models/interfaces/IUser";
+import type { TUser} from "~/models/types/TUser";
 import type { LocalStorageService } from '~/services/LocalStorageService';
 import {DIContainer} from "~/DIContainer/DIContainer";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
 
 const localStorageService: LocalStorageService = DIContainer.getService<LocalStorageService>(EServiceKeys.LocalStorageService);
 
-const user = ref<IUser | null>(null);
+const user = ref<TUser | null>(null);
 
 const ruoli = ref([
   { name: 'Administrator', code: 'ROLE_ADMIN' },
@@ -15,7 +15,7 @@ const ruoli = ref([
 ]);
 
 onMounted(() => {
-  user.value = localStorageService.load('currentUser') as IUser;
+  user.value = localStorageService.load('currentUser') as TUser;
 });
 </script>
 

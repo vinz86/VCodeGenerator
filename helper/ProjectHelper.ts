@@ -4,11 +4,12 @@ import type {TComponentAttributes} from "~/models/types/TComponentAttributes";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {Api} from "~/services/api/Api";
 import {ApiKeys} from "~/services/api/ApiKeys";
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 import {LoadingManager} from "~/manager/LoadingManager";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type {INotifyManager} from "~/models/interfaces/INotifyManager";
 import {EServiceKeys} from "~/models/enum/EServiceKeys";
+import {useUserStore} from "~/store/useUserStore";
 
 export class ProjectHelper {
 
@@ -44,29 +45,45 @@ export class ProjectHelper {
         finally { LoadingManager.getInstance().stop(); }
     }
 
-    public static async addProject (project: Partial<TProject>): Promise<TProject> {
+    public static async addProject(project: Partial<TProject>): Promise<TProject> {
         const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-        try{
-            LoadingManager.getInstance().start();
+        const userStore = useUserStore();
 
-            return await projectService.createProject(project)
+        try {
+            LoadingManager.getInstance().start();
+            const payload = {
+                name: project.name,
+                projectType: project.projectType,
+                componentFactory: project.componentFactory,
+                user: {id: userStore.user.id, login: userStore.user.login}
+            };
+            return await projectService.createProject(payload);
+        } catch (e) {
+            notifyManager.error(e);
+        } finally {
+            LoadingManager.getInstance().stop();
         }
-        catch (e) { notifyManager.error(e) }
-        finally { LoadingManager.getInstance().stop(); }
     };
 
-    public static async editProject (project: Partial<TProject>): Promise<TProject> {
+    public static async editProject(project: Partial<TProject>): Promise<TProject> {
         const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);
         const notifyManager = DIContainer.getService<INotifyManager>(EServiceKeys.NotifyManager);
-        try{
+        try {
             LoadingManager.getInstance().start();
+            const payload = {
+                ...project,
+                componentFactory: project.componentFactory,
+            };
 
-            return await projectService.updateProject(project.id, project)
+            return await projectService.updateProject(project.id, payload);
+        } catch (e) {
+            notifyManager.error(e);
+        } finally {
+            LoadingManager.getInstance().stop();
         }
-        catch (e) { notifyManager.error(e) }
-        finally { LoadingManager.getInstance().stop(); }
     };
+
 
     public static async deleteProject (projectId: string) {
         const projectService: IProjectService = Api.getService<IProjectService>(ApiKeys.ProjectService);

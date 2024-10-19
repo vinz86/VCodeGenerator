@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 import {ref, type Ref} from "vue";
 import type {TComponentFactoryDropdown} from "~/models/types/TComponentFactoryDropdown";
 import {EComponentTypes} from "~/models/enum/EComponentTypes";
@@ -93,7 +93,6 @@ onMounted(async () => {
     await getComponentFactories(),
   ]
   await Promise.all(promises);
-  emit('save', 'testdata')
 })
 </script>
 
@@ -104,16 +103,14 @@ onMounted(async () => {
         :disabled="isEditMode"
         :options="projectTypes"
         option-label="label"
-        option-value="entityValue"
         placeholder="Seleziona il tipo di progetto"
         class="w-full mb-1"
     />
     <Select
-        v-model="newProject.componentsType"
+        v-model="newProject.componentFactory"
         :disabled="isEditMode"
         :options="componentsFactories"
         option-label="label"
-        option-value="entityValue"
         placeholder="Seleziona il tipo dei componenti"
         class="w-full mb-1"
     />

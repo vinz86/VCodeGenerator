@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref, type Ref} from "vue";
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 import {ProjectHelper} from "~/helper/ProjectHelper";
 import {DIContainer} from "~/DIContainer/DIContainer";
 import type ConfirmManager from "~/manager/ConfirmManager";
@@ -53,8 +53,8 @@ onMounted(async ()=>{
       <DataTable v-model:selection="selectedProject" data-key="id" :value="projects" selection-mode="single" scroll-height="flex">
         <Column selection-mode="single" header-style="width: 2rem"/>
         <Column field="name" header="Nome"/>
-        <Column field="projectType" header="Tipo Progetto"/>
-        <Column field="componentsType" header="Componenti"/>
+        <Column field="projectType.entityValue" header="Tipo Progetto"/>
+        <Column field="componentFactory.entityValue" header="Componenti"/>
         <Column>
           <template #body="slotProps">
             <Button

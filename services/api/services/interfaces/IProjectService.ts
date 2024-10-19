@@ -1,4 +1,4 @@
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 
 export interface IProjectService {
     getProjects(payload: Partial<TProject>): Promise<TProject[]>;

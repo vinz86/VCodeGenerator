@@ -1,4 +1,4 @@
-import type {TProject} from "~/models/interfaces/TProject";
+import type {TProject} from "~/models/types/TProject";
 import type {IProjectService} from "~/services/api/services/interfaces/IProjectService";
 import {ApiHttpService} from "~/services/api/core/ApiHttpService";
 
