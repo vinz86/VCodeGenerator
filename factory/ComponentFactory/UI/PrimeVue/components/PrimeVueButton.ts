@@ -32,9 +32,7 @@ export class PrimeVueButton implements IComponentFactory {
                 loading: false,
                 unstyled: false,
             },
-            templates:{
-                option: ''
-            }
+            templates:''
         });
 
         this.options = { ...this.flyweight.options, ...options };

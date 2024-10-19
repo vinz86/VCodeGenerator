@@ -19,6 +19,7 @@ import type {TComponentOptions} from "~/models/types/TComponentOptions";
 import {ComponentHelper} from "~/helper/ComponentHelper";
 import DroppableComponent from "~/components/DraggableComponents/Layout/DroppableComponent.vue";
 import {useAppStore} from "~/store/AppStore";
+import {useUserStore} from "~/store/useUserStore";
 
 const emit = defineEmits(['updateComponents']);
 const props = defineProps({
@@ -56,8 +57,6 @@ const itemsContextComponent: Ref<TItemContextMenu[]> = ref([
   {label: 'Cancella', icon: 'fa fa-trash', command: () => removeComponent()},
 ]);
 
-
-
 //#
 const addComponent = async (component: IComponentFactory, parentId: string = null, dropIndex?: number) => {
   try {
@@ -69,6 +68,10 @@ const addComponent = async (component: IComponentFactory, parentId: string = nul
         fileId: selectedFile.value?.id,
         order: dropIndex,
         parentId: parentId,
+        user: {
+          id: useUserStore().user.id,
+          login: useUserStore().user.login
+        }
       });
 
       const resultCreateComponent = await componentService.createComponent(newFactoryComponent?.options);

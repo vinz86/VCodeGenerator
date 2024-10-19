@@ -13,21 +13,20 @@ export type TComponentOptions = {
     className: string;
     tag: string;
     componentId: string;
-    attributes: TComponentAttributes;
+    attributes: string;
     templates: string;
     order: number;
     inner: string;
-    createdAt: string;
-    updatedAt: string;
-    createdBy: number;
-    updatedBy: number;
-    deletedAt: string;
-    parents: string[];
-    user: TUser;
+    children: string[];
+    user: TUser
     file: TFile;
-    preset: TComponentPreset;
-    children: string;
+    parent: string;
     userId: number;
     fileId: number;
-    childrenId: number;
+    parentId: number;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date;
+    createdBy: number;
+    updatedBy: number;
 }
